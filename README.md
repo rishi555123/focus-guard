@@ -91,7 +91,7 @@ Uninstalling the extension deletes all of its data.
 Ideas, bug reports and pull requests are all welcome!
 
 - **Found a bug or have an idea?** Open an issue and tell us what happened or what you'd like to see.
-- **Want to add a site to the default list?** Add it to `DEFAULT_SITES` at the top of `background.js`.
+- **Want to add a site to the default list?** Add it to `DEFAULT_SITES` at the top of `src/background/background.js`.
 - **Making a change?** Keep it small and focused. Reload the extension in `chrome://extensions` and test it by starting a session, visiting a blocked site and going through the unlock flow.
 
 There's no build step. It's plain HTML, CSS and JavaScript, so you can start editing right away.
@@ -101,7 +101,9 @@ Here's a quick map of the files:
 | File | What it does |
 | --- | --- |
 | `manifest.json` | Extension settings and permissions |
-| `background.js` | Runs sessions, timers, blocking rules and stats |
-| `popup.html` / `popup.js` | The toolbar popup |
-| `blocked.html` / `blocked.js` | The "Your brain first." page |
-| `style.css` | Shared graph-paper styling |
+| `src/background/background.js` | Runs sessions, timers, blocking rules and stats |
+| `src/popup/popup.html` / `popup.js` | The toolbar popup |
+| `src/blocked/blocked.html` / `blocked.js` | The "Your brain first." page |
+| `src/shared/style.css` | Shared graph-paper styling |
+| `icons/` | Extension and toolbar icons |
+| `docs/screenshots/` | Screenshots for the docs |

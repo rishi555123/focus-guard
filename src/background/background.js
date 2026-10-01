@@ -4,7 +4,7 @@ const DEFAULT_SITES = [
   "poe.com", "grok.com", "you.com", "phind.com"
 ];
 const PASS_MINUTES = 5;
-const BLOCK_PAGE = () => chrome.runtime.getURL("blocked.html");
+const BLOCK_PAGE = () => chrome.runtime.getURL("src/blocked/blocked.html");
 const emptyStats = () => ({ blocked: 0, sessions: 0, minutes: 0, unlocks: 0, log: [] });
 
 chrome.runtime.onInstalled.addListener(async () => {
