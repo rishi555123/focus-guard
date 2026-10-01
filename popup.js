@@ -33,7 +33,7 @@ $("saveSites").onclick = async () => {
 async function render() {
   const { session, sites = [], stats = {}, passUntil = 0 } =
     await chrome.storage.local.get(["session", "sites", "stats", "passUntil"]);
-  const active = session && session.endsAt > Date.now();
+  const active = !!session && session.endsAt > Date.now();
 
   $("idle").classList.toggle("hidden", active);
   $("active").classList.toggle("hidden", !active);
@@ -44,7 +44,7 @@ async function render() {
 
   // No editing the blocklist mid-session, so you can't cheat yourself
   $("sites").value = sites.join("\n");
-  $("sites").disabled = $("saveSites").disabled = !!active;
+  $("sites").disabled = $("saveSites").disabled = active;
 
   clearInterval(timer);
   if (active) {
