@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Your brain first</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+<style>
+  main { max-width: 620px; margin: 0 auto; padding: 56px 24px; }
+  h1 { font-size: clamp(36px, 7vw, 60px); line-height: 1.05; margin: 0 0 12px; letter-spacing: -1.5px; }
+  .site { font: 14px var(--code); color: var(--redpen); text-decoration: line-through; margin: 0 0 28px; word-break: break-all; }
+  .sheet { background: var(--white); border: 2px solid var(--ink); border-radius: 8px; padding: 20px 22px; margin-bottom: 18px; }
+  h2 { font-size: 17px; margin: 0 0 10px; }
+  label.check { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; line-height: 1.45; cursor: pointer; }
+  label.check input { margin-top: 4px; accent-color: var(--ink); width: 16px; height: 16px; }
+  label.check:has(input:checked) span { color: var(--pencil); text-decoration: line-through; }
+  textarea { height: 96px; margin: 8px 0 6px; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  #count { font: 600 13px var(--code); }
+  @media (prefers-reduced-motion: no-preference) { h1 { animation: in .5s ease-out; } }
+  @keyframes in { from { opacity: 0; transform: translateY(8px); } }
+</style></head>
+<body><main>
+  <h1>Your brain <span class="mark">first.</span></h1>
+  <p class="site" id="site"></p>
+
+  <div class="sheet">
+    <h2>Before you ask an AI, have you&hellip;</h2>
+    <label class="check"><input type="checkbox"><span>Read the full error message, including the line number and stack trace?</span></label>
+    <label class="check"><input type="checkbox"><span>Added a print / console.log right before where it breaks?</span></label>
+    <label class="check"><input type="checkbox"><span>Explained the problem out loud, line by line (rubber duck)?</span></label>
+    <label class="check"><input type="checkbox"><span>Checked the official docs for the function you're using?</span></label>
+    <label class="check"><input type="checkbox"><span>Shrunk it down to the smallest piece of code that still fails?</span></label>
+    <label class="check"><input type="checkbox"><span>Taken a 5-minute walk away from the screen?</span></label>
+  </div>
+
+  <div class="sheet">
+    <h2>Still truly stuck?</h2>
+    <p class="muted" style="margin:0">Write what you've tried. You'll get a 5-minute pass after a 60-second wait.</p>
+    <textarea id="reason" placeholder="I tried ... and I expected ... but got ..."></textarea>
+    <div class="row">
+      <button id="unlock" disabled>Start 60-second wait</button>
+      <span id="count" class="muted">Write at least 60 characters</span>
+    </div>
+  </div>
+
+  <button class="ghost" id="back">Back to my code</button>
+</main>
+<script src="blocked.js"></script>
+</body></html>

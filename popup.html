@@ -1,0 +1,52 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="style.css">
+<style>
+  body { width: 320px; padding: 16px; }
+  h1 { font-size: 18px; margin: 0 0 2px; }
+  .sub { font-size: 12px; margin: 0 0 14px; }
+  .durations { display: flex; gap: 6px; margin-bottom: 10px; }
+  .durations button { flex: 1; }
+  .durations button[aria-pressed="false"] { background: var(--white); color: var(--ink); }
+  #start, #stop { width: 100%; }
+  .clock { font: 700 46px/1 var(--code); text-align: center; margin: 6px 0 4px; letter-spacing: -1px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; font-size: 12px;
+           background: var(--white); border: 2px solid var(--ink); border-radius: 6px; padding: 10px; margin: 14px 0; }
+  .stats b { display: block; font-size: 18px; }
+  details summary { cursor: pointer; font-size: 13px; font-weight: 600; }
+  details textarea { height: 140px; margin: 8px 0; }
+  .hidden { display: none; }
+</style></head>
+<body>
+  <h1>Focus Guard</h1>
+  <p class="sub muted">AI chat sites are blocked while a session runs.</p>
+
+  <section id="idle">
+    <div class="durations" role="group" aria-label="Session length">
+      <button data-min="25" aria-pressed="true">25 min</button>
+      <button data-min="50" aria-pressed="false">50 min</button>
+      <button data-min="90" aria-pressed="false">90 min</button>
+    </div>
+    <button id="start">Start coding session</button>
+  </section>
+
+  <section id="active" class="hidden">
+    <div class="clock" id="clock">25:00</div>
+    <p class="sub muted" style="text-align:center" id="passNote">Solve it yourself. You've got this.</p>
+    <button id="stop" class="ghost">End session early</button>
+  </section>
+
+  <div class="stats">
+    <div><b id="sSessions">0</b>sessions finished</div>
+    <div><b id="sMinutes">0</b>focused minutes</div>
+    <div><b id="sBlocked">0</b>AI visits blocked</div>
+    <div><b id="sUnlocks">0</b>passes used</div>
+  </div>
+
+  <details>
+    <summary>Blocked sites</summary>
+    <textarea id="sites" aria-label="Blocked sites, one per line"></textarea>
+    <button id="saveSites" class="ghost">Save sites</button>
+    <span id="saved" class="muted" style="font-size:12px"></span>
+  </details>
+  <script src="popup.js"></script>
+</body></html>
