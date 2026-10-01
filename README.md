@@ -107,3 +107,4 @@ Here's a quick map of the files:
 | `src/shared/style.css` | Shared graph-paper styling |
 | `icons/` | Extension and toolbar icons |
 | `docs/screenshots/` | Screenshots for the docs |
+| `tests/` | Tests for the background logic (run with `node --test`) |

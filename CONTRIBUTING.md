@@ -14,6 +14,18 @@ Focus Guard is plain HTML, CSS and JavaScript. There's nothing to install or bui
 
 To test, start a session from the popup and open a blocked site such as `chatgpt.com`. Then go through the unlock flow.
 
+## Run the tests
+
+The tests check the background logic (sessions, blocking rules, passes) without opening Chrome. You only need [Node.js](https://nodejs.org) 18 or newer. There's nothing to install.
+
+From the `focus-guard` folder, run:
+
+```bash
+node --test
+```
+
+Every test should show a ✔. The tests are in `tests/background.test.js`. If you change `src/background/background.js`, add a test for your change there too.
+
 ## Report a bug
 
 Open an issue on the repository's **Issues** tab and include:
@@ -34,7 +46,7 @@ Have an idea for a new feature? Open an issue for that too. Check [ROADMAP.md](R
    ```
 
 2. Make your change. Keep it small and focused on one thing.
-3. Reload the extension and check that everything still works.
+3. Run `node --test`, then reload the extension and check that everything still works.
 4. Commit and push your branch:
 
    ```bash

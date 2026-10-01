@@ -3,6 +3,12 @@ const DEFAULT_SITES = [
   "copilot.microsoft.com", "perplexity.ai", "chat.deepseek.com",
   "poe.com", "grok.com", "you.com", "phind.com"
 ];
+// Old addresses that now redirect to another site. A pass for either one
+// covers both, so the redirect doesn't land back on the block page.
+const SITE_ALIASES = {
+  "chat.openai.com": "chatgpt.com",
+  "bard.google.com": "gemini.google.com"
+};
 const PASS_MINUTES = 5;
 const BLOCK_PAGE = () => chrome.runtime.getURL("src/blocked/blocked.html");
 const emptyStats = () => ({ blocked: 0, sessions: 0, minutes: 0, unlocks: 0, log: [] });
@@ -37,13 +43,24 @@ async function getBlockState() {
   return { sites, pass: pass && pass.until > now ? pass : null };
 }
 
+// The final site plus every old address that redirects to it
+function passDomains(entry) {
+  const final = SITE_ALIASES[entry] || entry;
+  const aliases = Object.keys(SITE_ALIASES).filter((a) => SITE_ALIASES[a] === final);
+  return [...new Set([final, entry, ...aliases])];
+}
+
+// Passes saved before aliases existed only have `domain`
+const coveredBy = (pass) => pass.domains || [pass.domain];
+
 function isBlockedUrl(url, state) {
   if (!state || !isListed(url, state.sites)) return false;
-  return !(state.pass && onSite(hostOf(url), state.pass.domain));
+  const host = hostOf(url);
+  return !(state.pass && coveredBy(state.pass).some((d) => onSite(host, d)));
 }
 
 // Turn the blocklist into redirect rules (only while a session is active).
-// A pass adds one higher-priority allow rule for just that site.
+// A pass adds higher-priority allow rules for just that site and its aliases.
 async function syncRules() {
   const state = await getBlockState();
   const old = await chrome.declarativeNetRequest.getDynamicRules();
@@ -55,12 +72,12 @@ async function syncRules() {
       action: { type: "redirect", redirect: { regexSubstitution: BLOCK_PAGE() + "?u=\\0" } },
       condition: { regexFilter: siteRegex(domain), resourceTypes: ["main_frame"] }
     }));
-    if (state.pass) addRules.push({
-      id: state.sites.length + 1,
+    if (state.pass) coveredBy(state.pass).forEach((domain, i) => addRules.push({
+      id: state.sites.length + 1 + i,
       priority: 2,
       action: { type: "allow" },
-      condition: { regexFilter: siteRegex(state.pass.domain), resourceTypes: ["main_frame"] }
-    });
+      condition: { regexFilter: siteRegex(domain), resourceTypes: ["main_frame"] }
+    }));
   }
   await chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: old.map((r) => r.id),
@@ -173,11 +190,13 @@ async function handleMessage(msg) {
     }
     // Use the most specific matching entry so the pass covers as little as possible
     const host = hostOf(msg.url);
-    const domain = state.sites.filter((d) => onSite(host, d)).sort((a, b) => b.length - a.length)[0];
-    if (!domain) throw new Error("Not a blocked site: " + (msg.url || "(no address)"));
+    const entry = state.sites.filter((d) => onSite(host, d)).sort((a, b) => b.length - a.length)[0];
+    if (!entry) throw new Error("Not a blocked site: " + (msg.url || "(no address)"));
+    const domains = passDomains(entry);
+    const domain = domains[0];
     // Pass, alarm and rules first, so a stats failure can't leave a pass that never ends
     const until = Date.now() + PASS_MINUTES * 60000;
-    await chrome.storage.local.set({ pass: { domain, until } });
+    await chrome.storage.local.set({ pass: { domain, domains, until } });
     chrome.alarms.create("passEnd", { when: until });
     await syncRules();
     await blockOpenTabs(); // re-block the previous pass's site, if there was one
