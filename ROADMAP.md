@@ -15,6 +15,8 @@ Here's what's done and what's coming next for Focus Guard.
 - [ ] Weekly focus chart
 - [ ] Dark mode
 - [ ] Extension icons
+- [ ] Path-based blocking for AI features inside normal sites, such as `github.com/copilot`, `x.com/i/grok`, `bing.com/chat`, `huggingface.co/chat` and Google Search AI Mode (`google.com/search?udm=50`), without blocking the rest of the site
+- [ ] Optional "AI app builders" group, off by default: `v0.app`, `bolt.new`, `lovable.dev`
 
 ## v2.0
 

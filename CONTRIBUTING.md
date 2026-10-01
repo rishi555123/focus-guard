@@ -16,7 +16,7 @@ To test, start a session from the popup and open a blocked site such as `chatgpt
 
 ## Run the tests
 
-The tests check the background logic (sessions, blocking rules, passes) without opening Chrome. You only need [Node.js](https://nodejs.org) 18 or newer. There's nothing to install.
+The tests check the background logic (sessions, blocking rules, passes) and the blocklist input cleaning without opening Chrome. You only need [Node.js](https://nodejs.org) 18 or newer. There's nothing to install.
 
 From the `focus-guard` folder, run:
 
@@ -24,7 +24,7 @@ From the `focus-guard` folder, run:
 node --test
 ```
 
-Every test should show a ✔. The tests are in `tests/background.test.js`. If you change `src/background/background.js`, add a test for your change there too.
+Every test should show a ✔. The tests are in the `tests/` folder: `background.test.js` covers `src/background/background.js`, and `sites.test.js` covers `src/shared/sites.js`. If you change one of those files, add a test for your change too.
 
 ## Report a bug
 

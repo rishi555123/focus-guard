@@ -10,11 +10,12 @@ const vm = require("node:vm");
 const SOURCE = fs.readFileSync(path.join(__dirname, "../src/background/background.js"), "utf8");
 const REASON = "I tried reading the error, logging the values and the docs, still stuck.";
 
-// Load a fresh copy of background.js with its own fake chrome
-async function load() {
+// Load a fresh copy of background.js with its own fake chrome.
+// `saved` is what chrome.storage.local already holds before install/update runs.
+async function load(saved = {}) {
   const listeners = {};
   const ev = (name) => ({ addListener: (fn) => (listeners[name] = fn) });
-  const env = { store: {}, rules: [], alarms: {}, tabs: [], updates: [], errors: [] };
+  const env = { store: structuredClone(saved), rules: [], alarms: {}, tabs: [], updates: [], errors: [] };
 
   const chrome = {
     runtime: {
@@ -53,7 +54,9 @@ async function load() {
     action: { setBadgeText() {}, setBadgeBackgroundColor() {} }
   };
   const quietConsole = { ...console, error: (...a) => env.errors.push(a.join(" ")) };
-  vm.runInNewContext(SOURCE, { chrome, console: quietConsole, structuredClone, URL });
+  const context = vm.createContext({ chrome, console: quietConsole, structuredClone, URL });
+  vm.runInContext(SOURCE, context);
+  env.get = (name) => structuredClone(vm.runInContext(name, context)); // read a top-level const
 
   env.send = (msg) => new Promise((resolve) => listeners.message(msg, {}, resolve));
   env.fire = listeners;
@@ -228,6 +231,62 @@ test("reconcile recreates lost alarms and clears the old passUntil key", async (
   await env.fire.startup();
   assert.ok(env.alarms.sessionEnd && env.alarms.tick);
   assert.equal("passUntil" in env.store, false);
+});
+
+test("a pass from kimi.moonshot.cn covers kimi.com, where it redirects", async () => {
+  const env = await inSession();
+  const res = await env.send({ type: "unlock", reason: REASON, url: "https://kimi.moonshot.cn/" });
+  assert.equal(res.domain, "kimi.com");
+  assert.deepEqual(env.store.pass.domains, ["kimi.com", "kimi.moonshot.cn"]);
+});
+
+// #8: new defaults reach existing installs
+
+test("a fresh install gets the full default list", async () => {
+  const env = await load();
+  assert.deepEqual(env.store.sites, env.get("DEFAULT_SITES"));
+  assert.ok(env.get("DEFAULT_SITES").every((d) => env.store.knownDefaults.includes(d)));
+});
+
+test("updating from v1.0 adds the new defaults and keeps custom sites", async () => {
+  const env0 = await load();
+  const v1 = env0.get("V1_DEFAULTS");
+  const env = await load({ sites: [...v1, "mysite.dev"] });
+  const sites = env.store.sites;
+
+  assert.ok(sites.includes("mysite.dev"));
+  assert.ok(env.get("DEFAULT_SITES").every((d) => sites.includes(d)), "every new default added");
+  assert.equal(sites.includes("chat.deepseek.com"), false, "chat.deepseek.com swapped for deepseek.com");
+  assert.equal(new Set(sites).size, sites.length, "no duplicates");
+});
+
+test("updating from v1.0 doesn't bring back defaults the user deleted", async () => {
+  const env0 = await load();
+  const v1 = env0.get("V1_DEFAULTS");
+  const kept = v1.filter((d) => d !== "claude.ai" && d !== "chat.deepseek.com");
+  const env = await load({ sites: kept });
+
+  assert.equal(env.store.sites.includes("claude.ai"), false);
+  assert.equal(env.store.sites.includes("deepseek.com"), false, "deleted DeepSeek stays deleted");
+  assert.ok(env.store.sites.includes("chat.mistral.ai"), "other new defaults still added");
+});
+
+test("a new default deleted after updating isn't re-added on the next update", async () => {
+  const first = await load({ sites: ["chatgpt.com"], knownDefaults: ["chatgpt.com"] });
+  const sites = first.store.sites.filter((d) => d !== "pi.ai");
+  const env = await load({ sites, knownDefaults: first.store.knownDefaults });
+  assert.equal(env.store.sites.includes("pi.ai"), false);
+  assert.deepEqual(env.store.sites, sites);
+});
+
+test("every default site and alias passes the blocklist input check", async () => {
+  const env = await load();
+  const ctx = vm.createContext({ URL });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/shared/sites.js"), "utf8"), ctx);
+  const cleanSite = vm.runInContext("cleanSite", ctx);
+  const aliases = env.get("SITE_ALIASES");
+  const all = [...env.get("DEFAULT_SITES"), ...Object.keys(aliases), ...Object.values(aliases)];
+  for (const d of all) assert.equal(cleanSite(d), d, d);
 });
 
 test("missing stats don't break an unlock", async () => {

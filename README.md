@@ -58,23 +58,48 @@ To update it after you change the code, go back to `chrome://extensions` and cli
 5. Work through the checklist. Still stuck? Write what you've tried, wait out the 60 seconds and use your 5-minute pass.
 6. When the timer runs out, the session counts as finished and sites unblock automatically. You can also click **End session early**, but then it won't count as finished.
 
-To change which sites are blocked, open the popup when no session is running. Expand **Blocked sites**, put one domain per line and click **Save sites**. Subdomains are covered automatically.
+To change which sites are blocked, open the popup when no session is running. Expand **Blocked sites**, put one domain per line and click **Save sites**. Subdomains are covered automatically. You can paste full links too: `https://www.chatgpt.com/c/123` is saved as `chatgpt.com`. If a line isn't a valid domain, nothing is saved and the popup tells you which line to fix.
 
 ## Blocked sites
 
-These are blocked by default:
+These are blocked by default, including all their subdomains:
 
-- `chatgpt.com`
-- `chat.openai.com`
-- `gemini.google.com`
-- `claude.ai`
-- `copilot.microsoft.com`
-- `perplexity.ai`
-- `chat.deepseek.com`
-- `poe.com`
-- `grok.com`
-- `you.com`
-- `phind.com`
+| Service | Domains |
+| --- | --- |
+| ChatGPT | `chatgpt.com`, `chat.openai.com` |
+| Google Gemini and AI Studio | `gemini.google.com`, `aistudio.google.com` |
+| Claude | `claude.ai` |
+| Microsoft Copilot | `copilot.microsoft.com`, `copilot.cloud.microsoft` |
+| Perplexity | `perplexity.ai` |
+| DeepSeek | `deepseek.com` |
+| Mistral Le Chat | `chat.mistral.ai` |
+| Meta AI | `meta.ai` |
+| Qwen | `chat.qwen.ai` |
+| Kimi | `kimi.com`, `kimi.moonshot.cn` |
+| Z.ai (GLM) | `chat.z.ai` |
+| Grok | `grok.com` |
+| Poe | `poe.com` |
+| You.com | `you.com` |
+| Phind | `phind.com` |
+| Blackbox AI | `blackbox.ai` |
+| LMArena | `lmarena.ai` |
+| Duck.ai | `duck.ai` |
+| Pi | `pi.ai` |
+| T3 Chat | `t3.chat` |
+| TypingMind | `typingmind.com` |
+
+If you already have Focus Guard, new sites on this list are added to your blocklist when the extension updates. Any site you removed yourself stays removed.
+
+## Known limitations
+
+Focus Guard blocks websites by their address, so some AI tools are out of its reach:
+
+- **AI built into the browser**, like the Gemini button in Chrome or the Copilot sidebar in Edge. These aren't web pages, so an extension can't block them. You can turn them off in your browser's settings.
+- **AI assistants in your code editor**, like GitHub Copilot, Cursor or other extensions in VS Code and JetBrains. Focus Guard only works inside Chrome. Most editors let you pause their AI features while you practise.
+- **Google AI Overviews**, the AI summaries at the top of normal Google search results. They're part of the search page itself, so blocking them would mean blocking Google Search.
+- **AI features inside normal sites**, like `github.com/copilot`, `x.com/i/grok` or Google's AI Mode. Blocking the whole site would be wrong here, so they aren't blocked yet. Blocking just those pages is planned. See [ROADMAP.md](ROADMAP.md).
+- **Incognito windows**, unless you allow Focus Guard there. Go to `chrome://extensions`, click **Details** on Focus Guard and turn on **Allow in Incognito**.
+- **Desktop and phone apps**, like the ChatGPT or Claude apps. These run outside Chrome.
 
 ## Privacy
 
@@ -105,6 +130,7 @@ Here's a quick map of the files:
 | `src/popup/popup.html` / `popup.js` | The toolbar popup |
 | `src/blocked/blocked.html` / `blocked.js` | The "Your brain first." page |
 | `src/shared/style.css` | Shared graph-paper styling |
+| `src/shared/sites.js` | Cleans and checks what you type into the blocklist |
 | `icons/` | Extension and toolbar icons |
 | `docs/screenshots/` | Screenshots for the docs |
-| `tests/` | Tests for the background logic (run with `node --test`) |
+| `tests/` | Tests for the background logic and blocklist input (run with `node --test`) |

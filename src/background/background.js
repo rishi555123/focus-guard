@@ -1,24 +1,47 @@
 const DEFAULT_SITES = [
+  "chatgpt.com", "chat.openai.com", "gemini.google.com", "aistudio.google.com",
+  "claude.ai", "copilot.microsoft.com", "copilot.cloud.microsoft", "perplexity.ai",
+  "deepseek.com", "chat.mistral.ai", "meta.ai", "chat.qwen.ai", "kimi.com",
+  "kimi.moonshot.cn", "chat.z.ai", "grok.com", "poe.com", "you.com", "phind.com",
+  "blackbox.ai", "lmarena.ai", "duck.ai", "pi.ai", "t3.chat", "typingmind.com"
+];
+// The v1.0 list, for installs from before knownDefaults was saved
+const V1_DEFAULTS = [
   "chatgpt.com", "chat.openai.com", "gemini.google.com", "claude.ai",
   "copilot.microsoft.com", "perplexity.ai", "chat.deepseek.com",
   "poe.com", "grok.com", "you.com", "phind.com"
 ];
+// Old default entries that were swapped for a broader one
+const REPLACED_DEFAULTS = { "chat.deepseek.com": "deepseek.com" };
 // Old addresses that now redirect to another site. A pass for either one
 // covers both, so the redirect doesn't land back on the block page.
 const SITE_ALIASES = {
   "chat.openai.com": "chatgpt.com",
-  "bard.google.com": "gemini.google.com"
+  "bard.google.com": "gemini.google.com",
+  "kimi.moonshot.cn": "kimi.com"
 };
 const PASS_MINUTES = 5;
 const BLOCK_PAGE = () => chrome.runtime.getURL("src/blocked/blocked.html");
 const emptyStats = () => ({ blocked: 0, sessions: 0, minutes: 0, unlocks: 0, log: [] });
 
 chrome.runtime.onInstalled.addListener(async () => {
-  const s = await chrome.storage.local.get(["sites", "stats"]);
-  if (!s.sites) await chrome.storage.local.set({ sites: DEFAULT_SITES });
+  const s = await chrome.storage.local.get(["sites", "stats", "knownDefaults"]);
+  const sites = s.sites ? mergeDefaults(s.sites, s.knownDefaults || V1_DEFAULTS) : DEFAULT_SITES;
+  const knownDefaults = [...new Set([...(s.knownDefaults || V1_DEFAULTS), ...DEFAULT_SITES])];
+  await chrome.storage.local.set({ sites, knownDefaults });
   if (!s.stats) await chrome.storage.local.set({ stats: emptyStats() });
   await reconcile();
 });
+
+// Add defaults that are new since the user last got the list, without
+// bringing back any default they deleted themselves
+function mergeDefaults(sites, known) {
+  const deleted = known.filter((d) => !sites.includes(d));
+  const skip = new Set([...known, ...deleted.map((d) => REPLACED_DEFAULTS[d]).filter(Boolean)]);
+  const merged = sites.map((d) => REPLACED_DEFAULTS[d] || d);
+  for (const d of DEFAULT_SITES) if (!skip.has(d)) merged.push(d);
+  return [...new Set(merged)];
+}
 chrome.runtime.onStartup.addListener(reconcile);
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

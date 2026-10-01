@@ -21,11 +21,16 @@ $("stop").onclick = async () => {
 };
 
 $("saveSites").onclick = async () => {
-  const sites = $("sites").value.split("\n")
-    .map((s) => s.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0])
-    .filter(Boolean);
-  await chrome.storage.local.set({ sites: [...new Set(sites)] });
+  const { sites, invalid } = parseSites($("sites").value); // from shared/sites.js
+  if (invalid.length) {
+    $("saved").className = "error";
+    $("saved").textContent = "Not saved. These don't look like domains: " + invalid.join(", ");
+    return;
+  }
+  await chrome.storage.local.set({ sites });
   await chrome.runtime.sendMessage({ type: "sitesChanged" });
+  $("sites").value = sites.join("\n");
+  $("saved").className = "muted";
   $("saved").textContent = "Saved";
   setTimeout(() => ($("saved").textContent = ""), 1500);
 };
