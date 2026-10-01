@@ -31,8 +31,8 @@ $("saveSites").onclick = async () => {
 };
 
 async function render() {
-  const { session, sites = [], stats = {}, passUntil = 0 } =
-    await chrome.storage.local.get(["session", "sites", "stats", "passUntil"]);
+  const { session, sites = [], stats = {}, pass } =
+    await chrome.storage.local.get(["session", "sites", "stats", "pass"]);
   const active = !!session && session.endsAt > Date.now();
 
   $("idle").classList.toggle("hidden", active);
@@ -52,8 +52,8 @@ async function render() {
       const ms = Math.max(0, session.endsAt - Date.now());
       const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000);
       $("clock").textContent = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-      $("passNote").textContent = passUntil > Date.now()
-        ? `Pass active for ${Math.ceil((passUntil - Date.now()) / 60000)} more min`
+      $("passNote").textContent = pass && pass.until > Date.now()
+        ? `Pass for ${pass.domain}: ${Math.ceil((pass.until - Date.now()) / 60000)} more min`
         : "Solve it yourself. You've got this.";
       if (ms === 0) render();
     };

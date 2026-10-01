@@ -4,7 +4,12 @@ let target = raw;
 try { target = decodeURIComponent(raw); } catch (_) {}
 
 document.getElementById("site").textContent = target || "AI chat site";
-chrome.runtime.sendMessage({ type: "blocked" });
+
+// Counts this visit, or reopens the site if it isn't blocked any more
+// (session over, or a pass covers it). Only listed sites are ever reopened.
+chrome.runtime.sendMessage({ type: "blocked", url: target }).then((res) => {
+  if (res?.ok && res.reopen) location.replace(target);
+});
 
 const reason = document.getElementById("reason");
 const btn = document.getElementById("unlock");
@@ -26,9 +31,20 @@ btn.addEventListener("click", () => {
     count.textContent = `Wait ${s}s. Try one more idea while you wait.`;
     if (s <= 0) {
       clearInterval(t);
-      await chrome.runtime.sendMessage({ type: "unlock", reason: reason.value.trim() });
-      count.textContent = "Pass granted for 5 minutes";
-      if (target.startsWith("http")) location.href = target;
+      const res = await chrome.runtime.sendMessage({ type: "unlock", reason: reason.value.trim(), url: target });
+      if (!res?.ok) {
+        count.textContent = "Couldn't grant a pass: " + (res?.error || "no reply from Focus Guard");
+        return;
+      }
+      if (res.granted) {
+        count.textContent = `Pass granted for ${res.domain} for 5 minutes`;
+        location.href = target;
+      } else if (res.reopen) {
+        count.textContent = "No session is running, so this site isn't blocked";
+        location.href = target;
+      } else {
+        count.textContent = "No session is running, so there's nothing to unlock";
+      }
     }
   }, 1000);
 });

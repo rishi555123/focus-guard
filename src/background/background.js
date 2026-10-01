@@ -16,60 +16,79 @@ chrome.runtime.onInstalled.addListener(async () => {
 chrome.runtime.onStartup.addListener(reconcile);
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const siteRegex = (domain) => "^https?://([^/]*\\.)?" + escapeRe(domain) + "(/.*)?$";
+const onSite = (host, domain) => host === domain || host.endsWith("." + domain);
 
-async function isBlocking() {
-  const { session, passUntil = 0 } = await chrome.storage.local.get(["session", "passUntil"]);
-  return !!(session && session.endsAt > Date.now() && passUntil < Date.now());
+function hostOf(url) {
+  try { return new URL(url).hostname; } catch (_) { return ""; } // missing or unparseable URL
 }
 
-// Turn the blocklist into redirect rules (only while a session is active)
+const isListed = (url, sites) => {
+  const host = hostOf(url);
+  return !!host && sites.some((d) => onSite(host, d));
+};
+
+// What's blocked right now: null outside a session, otherwise the blocklist
+// plus the one site a pass has unlocked (if any)
+async function getBlockState() {
+  const now = Date.now();
+  const { session, sites = [], pass } = await chrome.storage.local.get(["session", "sites", "pass"]);
+  if (!session || session.endsAt <= now) return null;
+  return { sites, pass: pass && pass.until > now ? pass : null };
+}
+
+function isBlockedUrl(url, state) {
+  if (!state || !isListed(url, state.sites)) return false;
+  return !(state.pass && onSite(hostOf(url), state.pass.domain));
+}
+
+// Turn the blocklist into redirect rules (only while a session is active).
+// A pass adds one higher-priority allow rule for just that site.
 async function syncRules() {
-  const { sites = [] } = await chrome.storage.local.get("sites");
-  const active = await isBlocking();
+  const state = await getBlockState();
   const old = await chrome.declarativeNetRequest.getDynamicRules();
-  const addRules = active
-    ? sites.map((domain, i) => ({
-        id: i + 1,
-        priority: 1,
-        action: { type: "redirect", redirect: { regexSubstitution: BLOCK_PAGE() + "?u=\\0" } },
-        condition: {
-          regexFilter: "^https?://([^/]*\\.)?" + escapeRe(domain) + "(/.*)?$",
-          resourceTypes: ["main_frame"]
-        }
-      }))
-    : [];
+  const addRules = [];
+  if (state) {
+    state.sites.forEach((domain, i) => addRules.push({
+      id: i + 1,
+      priority: 1,
+      action: { type: "redirect", redirect: { regexSubstitution: BLOCK_PAGE() + "?u=\\0" } },
+      condition: { regexFilter: siteRegex(domain), resourceTypes: ["main_frame"] }
+    }));
+    if (state.pass) addRules.push({
+      id: state.sites.length + 1,
+      priority: 2,
+      action: { type: "allow" },
+      condition: { regexFilter: siteRegex(state.pass.domain), resourceTypes: ["main_frame"] }
+    });
+  }
   await chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: old.map((r) => r.id),
     addRules
   });
   await updateBadge();
-  return active;
+  return !!state;
 }
 
 const blockUrl = (url) => BLOCK_PAGE() + "?u=" + encodeURIComponent(url);
 
-function isBlockedUrl(url, sites) {
-  try {
-    const host = new URL(url).hostname;
-    return sites.some((d) => host === d || host.endsWith("." + d));
-  } catch (_) { return false; } // missing or unparseable URL
-}
-
-// Catch AI tabs that were already open before the session started
+// Catch AI tabs that were already open before the session started (or before a pass ended)
 async function blockOpenTabs() {
-  const { sites = [] } = await chrome.storage.local.get("sites");
+  const state = await getBlockState();
+  if (!state) return;
   const tabs = await chrome.tabs.query({});
   for (const tab of tabs) {
-    if (isBlockedUrl(tab.url, sites)) chrome.tabs.update(tab.id, { url: blockUrl(tab.url) }).catch(() => {});
+    if (isBlockedUrl(tab.url, state)) chrome.tabs.update(tab.id, { url: blockUrl(tab.url) }).catch(() => {});
   }
 }
 
 // Backup for navigations the redirect rules never see: back/forward cache,
 // prerendered pages and in-page navigation on single-page apps
 chrome.tabs.onUpdated.addListener(async (tabId, change) => {
-  if (!change.url || !(await isBlocking())) return;
-  const { sites = [] } = await chrome.storage.local.get("sites");
-  if (isBlockedUrl(change.url, sites)) chrome.tabs.update(tabId, { url: blockUrl(change.url) }).catch(() => {});
+  if (!change.url) return;
+  if (isBlockedUrl(change.url, await getBlockState())) {
+    chrome.tabs.update(tabId, { url: blockUrl(change.url) }).catch(() => {});
+  }
 });
 
 async function updateBadge() {
@@ -95,7 +114,7 @@ async function finishSession(completed) {
   if (!session) return;
   const mins = Math.round((Math.min(Date.now(), session.endsAt) - session.startedAt) / 60000);
   await addStats((s) => { s.minutes += mins; if (completed) s.sessions += 1; });
-  await chrome.storage.local.remove(["session", "passUntil"]);
+  await chrome.storage.local.remove(["session", "pass", "passUntil"]);
   chrome.alarms.clearAll();
   await syncRules();
 }
@@ -104,13 +123,14 @@ async function finishSession(completed) {
 // so rebuild them from storage (or finish a session that ran out meanwhile)
 async function reconcile() {
   const now = Date.now();
-  const { session, passUntil = 0 } = await chrome.storage.local.get(["session", "passUntil"]);
+  const { session, pass } = await chrome.storage.local.get(["session", "pass"]);
   if (session && session.endsAt <= now) return finishSession(true);
-  if (passUntil && passUntil <= now) await chrome.storage.local.remove("passUntil");
+  await chrome.storage.local.remove("passUntil"); // all-sites pass from before passes were per site
+  if (pass && pass.until <= now) await chrome.storage.local.remove("pass");
   if (session) {
     if (!(await chrome.alarms.get("sessionEnd"))) chrome.alarms.create("sessionEnd", { when: session.endsAt });
     if (!(await chrome.alarms.get("tick"))) chrome.alarms.create("tick", { periodInMinutes: 1 });
-    if (passUntil > now && !(await chrome.alarms.get("passEnd"))) chrome.alarms.create("passEnd", { when: passUntil });
+    if (pass && pass.until > now && !(await chrome.alarms.get("passEnd"))) chrome.alarms.create("passEnd", { when: pass.until });
   }
   if (await syncRules()) await blockOpenTabs();
 }
@@ -119,8 +139,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === "sessionEnd") await finishSession(true);
   if (alarm.name === "tick") await updateBadge();
   if (alarm.name === "passEnd") {
-    await chrome.storage.local.remove("passUntil");
-    if (await syncRules()) blockOpenTabs();
+    await chrome.storage.local.remove("pass");
+    if (await syncRules()) await blockOpenTabs();
   }
 });
 
@@ -136,25 +156,44 @@ async function handleMessage(msg) {
     await blockOpenTabs();
   }
   if (msg.type === "stop") await finishSession(false);
-  if (msg.type === "blocked") await addStats((s) => { s.blocked += 1; });
+  if (msg.type === "blocked") {
+    // Only count real blocks. A leftover block page for a listed site that isn't
+    // blocked right now (session over, or a pass covers it) is told to reopen it.
+    const { sites = [] } = await chrome.storage.local.get("sites");
+    const state = await getBlockState();
+    const blocked = msg.url ? isBlockedUrl(msg.url, state) : !!state;
+    if (blocked) await addStats((s) => { s.blocked += 1; });
+    return { blocked, reopen: !blocked && isListed(msg.url, sites) };
+  }
   if (msg.type === "unlock") {
+    const state = await getBlockState();
+    if (!state) {
+      const { sites = [] } = await chrome.storage.local.get("sites");
+      return { granted: false, reopen: isListed(msg.url, sites) }; // no session, nothing to unlock
+    }
+    // Use the most specific matching entry so the pass covers as little as possible
+    const host = hostOf(msg.url);
+    const domain = state.sites.filter((d) => onSite(host, d)).sort((a, b) => b.length - a.length)[0];
+    if (!domain) throw new Error("Not a blocked site: " + (msg.url || "(no address)"));
     // Pass, alarm and rules first, so a stats failure can't leave a pass that never ends
     const until = Date.now() + PASS_MINUTES * 60000;
-    await chrome.storage.local.set({ passUntil: until });
+    await chrome.storage.local.set({ pass: { domain, until } });
     chrome.alarms.create("passEnd", { when: until });
     await syncRules();
+    await blockOpenTabs(); // re-block the previous pass's site, if there was one
     await addStats((s) => {
       s.unlocks += 1;
-      s.log.unshift({ at: Date.now(), reason: msg.reason });
+      s.log.unshift({ at: Date.now(), domain, reason: msg.reason });
       s.log = s.log.slice(0, 20);
     });
+    return { granted: true, domain };
   }
   if (msg.type === "sitesChanged") await syncRules();
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   handleMessage(msg).then(
-    () => reply({ ok: true }),
+    (result) => reply({ ok: true, ...result }),
     (err) => { console.error("Focus Guard:", msg.type, err); reply({ ok: false, error: String(err) }); }
   );
   return true;

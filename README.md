@@ -22,7 +22,7 @@ While a coding session is running, AI chat sites are swapped out for a "Your bra
 
 1. Write down what you've tried (at least 60 characters).
 2. Wait 60 seconds. Use the time to try one more idea.
-3. Get a 5-minute pass, and you're sent back to the site.
+3. Get a 5-minute pass for that one site, and you're sent back to it. Every other AI site stays blocked.
 
 Most of the time, writing the problem down or waiting that minute is enough to get you unstuck on your own. When it isn't, the AI is still there.
 
@@ -32,7 +32,7 @@ Most of the time, writing the problem down or waiting that minute is enough to g
 - **Blocks AI chat sites only during a session.** Outside a session, everything works normally.
 - **Catches tabs that are already open.** Any AI tabs open when you start a session get redirected too.
 - **Debugging checklist** on the block page: read the error, add a print, rubber-duck it, check the docs, shrink the failing code, take a walk.
-- **Earned 5-minute passes** after you write a note and wait 60 seconds.
+- **Earned 5-minute passes** after you write a note and wait 60 seconds. A pass only unlocks the site you were stuck on.
 - **Your own blocklist.** Add or remove sites from the popup. The list is locked during a session so you can't quietly remove a site to get around the block.
 - **Simple stats**: sessions finished, focused minutes, AI visits blocked and passes used.
 
