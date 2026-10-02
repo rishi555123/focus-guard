@@ -133,6 +133,7 @@ Note "AI visits blocked" and "passes used" in the popup before each step.
 - [ ] 8.6 **Send test notification** shows a Focus Guard notification, and the page says "Sent".
 - [ ] 8.7 With Windows **Do not disturb** on, the test says "Sent" but no notification appears, matching the hint on the page.
 - [ ] 8.8 In DevTools on the welcome page, the **Issues** tab shows no warnings from the page.
+- [ ] 8.9 On Focus Guard's **Details** page at `chrome://extensions`, the permissions list access to all websites and notifications, but not your browsing history.
 
 The first-install check (the welcome page opening on its own) is in section 11, because it means removing the extension.
 
@@ -185,5 +186,6 @@ Use a separate install in Edge. Turn on **Developer mode** at `edge://extensions
 - [ ] 13.10 **Back to my code** in a window's only tab, with nothing to go back to, shows Edge's new tab page.
 - [ ] 13.11 Turn on **Allow in InPrivate**. During a session, `chatgpt.com` in an InPrivate window shows Edge's error page, not the block page. That's expected (see Known limitations in the README).
 - [ ] 13.12 Open Edge's Copilot sidebar during a session and note what it shows. Focus Guard isn't designed to block it (see Known limitations), so it may work normally. Report it if it shows Focus Guard's block page or an error instead.
-- [ ] 13.13 The Focus Guard card on `edge://extensions` shows version **1.0.0-beta.1**.
+- [ ] 13.13 The Focus Guard card on `edge://extensions` shows version **1.0.0**.
+- [ ] 13.15 On Focus Guard's **Details** page at `edge://extensions`, the permissions list access to all websites and notifications, but not your browsing history.
 - [ ] 13.14 Click **Remove** on Focus Guard. A tab opens on the README's **Removed Focus Guard?** section, which includes the Copilot in Edge steps.

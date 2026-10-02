@@ -2,13 +2,13 @@
 
 All notable changes to Focus Guard are listed here.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Chrome only allows numbers in an extension's `version`, so pre-releases keep `"version": "1.0.0"` in `manifest.json` and show the full name, like `1.0.0-beta.1`, through `version_name`.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The version in `manifest.json` matches the newest entry here.
 
 ## [Unreleased]
 
-## [1.0.0-beta.1] - 2026-10-02
+## [1.0.0] - 2026-10-02
 
-The first public beta, for Microsoft Edge (from the Edge Add-ons store) and Google Chrome (from GitHub releases).
+The first public release, for Microsoft Edge (from the Edge Add-ons store) and Google Chrome (from GitHub releases).
 
 ### Added
 
@@ -69,5 +69,5 @@ The first public beta, for Microsoft Edge (from the Edge Add-ons store) and Goog
 
 Known limitations, like Chrome's built-in Gemini panel, Edge's Copilot sidebar and the block page in private windows, are listed in the [README](README.md#known-limitations).
 
-[Unreleased]: https://github.com/rishi555123/focus-guard/compare/v1.0.0-beta.1...HEAD
-[1.0.0-beta.1]: https://github.com/rishi555123/focus-guard/releases/tag/v1.0.0-beta.1
+[Unreleased]: https://github.com/rishi555123/focus-guard/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/rishi555123/focus-guard/releases/tag/v1.0.0

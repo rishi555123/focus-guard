@@ -19,6 +19,23 @@ function linkOf(url) {
 }
 const REASON = "I tried reading the error, logging the values and the docs, still stuck.";
 
+// Like Chrome, only show a tab's url and pendingUrl if the real manifest grants the
+// "tabs" permission or a matching host permission. Chrome's docs: Tab.url "is only
+// present if the extension has the "tabs" permission or has host permissions for the page".
+const MANIFEST = JSON.parse(fs.readFileSync(path.join(__dirname, "../manifest.json"), "utf8"));
+const ALL_URLS_SCHEMES = /^(https?|wss?|ftp|file|data|urn):/; // what <all_urls> matches
+function canSeeUrl(url) {
+  if (!url) return false;
+  if ((MANIFEST.permissions || []).includes("tabs")) return true;
+  return (MANIFEST.host_permissions || []).some((p) => p === "<all_urls>" && ALL_URLS_SCHEMES.test(url));
+}
+function scrubTab(tab) {
+  const seen = { ...tab };
+  if (!canSeeUrl(tab.url)) { delete seen.url; delete seen.title; delete seen.favIconUrl; }
+  if (!canSeeUrl(tab.pendingUrl)) delete seen.pendingUrl;
+  return seen;
+}
+
 // Load a fresh copy of background.js with its own fake chrome.
 // `saved` is what chrome.storage.local already holds before install/update runs.
 // With nothing saved it's a first install; with saved data it's an update.
@@ -66,7 +83,7 @@ async function load(saved = {}, reason = Object.keys(saved).length ? "update" : 
       onAlarm: ev("alarm")
     },
     tabs: {
-      query: async () => env.tabs,
+      query: async () => env.tabs.map(scrubTab), // addresses hidden unless the manifest allows them
       update: (id, o) => { env.updates.push({ id, url: o.url }); return Promise.resolve(); },
       create: (o) => { env.created.push(o.url); return Promise.resolve({ id: 100 + env.created.length }); },
       onUpdated: ev("tabUpdated")
@@ -88,6 +105,13 @@ async function load(saved = {}, reason = Object.keys(saved).length ? "update" : 
 
   env.send = (msg) => new Promise((resolve) => listeners.message(msg, {}, resolve));
   env.fire = listeners;
+  // Chrome leaves changeInfo.url out unless the extension may see that address
+  const tabUpdated = listeners.tabUpdated;
+  listeners.tabUpdated = (tabId, change, tab = {}) => {
+    const seen = { ...change };
+    if (!canSeeUrl(change.url)) delete seen.url;
+    return tabUpdated(tabId, seen, scrubTab({ ...tab, url: change.url || tab.url }));
+  };
   env.redirects = () => env.rules.filter((r) => r.action.type === "redirect");
   env.allows = () => env.rules.filter((r) => r.action.type === "allow");
   env.updatedTabs = () => env.updates.map((u) => u.id);
@@ -100,6 +124,37 @@ async function inSession() {
   await env.send({ type: "start", minutes: 25 });
   return env;
 }
+
+// Without the "tabs" permission, Focus Guard relies on <all_urls> to see tab addresses
+
+test("the fake Chrome hides tab addresses the manifest doesn't allow", () => {
+  assert.equal((MANIFEST.permissions || []).includes("tabs"), false, "these tests run without the tabs permission");
+  assert.equal(canSeeUrl("https://chatgpt.com/"), true, "<all_urls> covers web pages");
+  assert.equal(canSeeUrl("http://claude.ai/"), true);
+  assert.equal(canSeeUrl("chrome://settings/"), false, "browser pages are hidden");
+  assert.equal(canSeeUrl("edge://newtab/"), false);
+  assert.equal(scrubTab({ id: 1, url: "edge://newtab/", title: "New tab" }).url, undefined);
+});
+
+test("already-open AI tabs are found and blocked using only host permissions", async () => {
+  const env = await load();
+  env.tabs = [
+    { id: 1, url: "https://chatgpt.com/c/1" },
+    { id: 2, url: "https://example.com/", pendingUrl: "https://claude.ai/new" },
+    { id: 3, url: "edge://newtab/" },
+    { id: 4, url: "chrome://settings/" }
+  ];
+  await env.send({ type: "start", minutes: 25 });
+  assert.deepEqual(env.updatedTabs(), [1, 2], "web tabs found; browser pages skipped without errors");
+});
+
+test("the backup listener still sees navigations to AI sites using only host permissions", async () => {
+  const env = await inSession();
+  await env.fire.tabUpdated(5, { url: "https://chatgpt.com/" });
+  await env.fire.tabUpdated(6, { url: "edge://settings/" });
+  await env.fire.tabUpdated(7, { status: "complete" });
+  assert.deepEqual(env.updatedTabs(), [5]);
+});
 
 test("starting a session adds one redirect rule per site", async () => {
   const env = await inSession();

@@ -61,10 +61,23 @@ test("the block page and every file it loads are exposed to websites", () => {
 
 test("the permissions the background script uses are declared", () => {
   const source = fs.readFileSync(path.join(ROOT, "src/background/background.js"), "utf8");
-  for (const api of ["declarativeNetRequest", "storage", "alarms", "tabs", "notifications"]) {
+  for (const api of ["declarativeNetRequest", "storage", "alarms", "notifications"]) {
     if (source.includes("chrome." + api)) assert.ok(manifest.permissions.includes(api), api + " permission is missing");
   }
-  assert.ok(manifest.permissions.includes("notifications"));
+  assert.deepEqual([...manifest.permissions].sort(), ["alarms", "declarativeNetRequest", "notifications", "storage"]);
+});
+
+// chrome.tabs needs no permission to create, update, remove or query tabs. Reading a
+// tab's url or pendingUrl needs "tabs" OR a host permission for that page, and Focus
+// Guard has <all_urls>, which covers every web page it could block. So "tabs" would
+// only add a "Read your browsing history" warning without giving it anything new.
+test("the tabs permission isn't requested; <all_urls> covers reading tab addresses", () => {
+  assert.equal(manifest.permissions.includes("tabs"), false);
+  assert.ok(manifest.host_permissions.includes("<all_urls>"));
+  for (const file of files.filter((f) => f.endsWith(".js"))) {
+    const js = fs.readFileSync(file, "utf8");
+    assert.doesNotMatch(js, /\.favIconUrl|\btab\.title\b/, `${path.relative(ROOT, file)} reads a tab property only "tabs" guarantees`);
+  }
 });
 
 test("the welcome page and its scripts exist", () => {
@@ -104,19 +117,20 @@ test("the README explains why the block page doesn't show in Incognito", () => {
   assert.match(limits, /unlock the site from a normal window/i);
 });
 
-// Chrome only accepts 1 to 4 dot-separated numbers in "version"; pre-release
-// names like 1.0.0-beta.1 go in "version_name", which Chrome shows to users
-test("version is numbers only, and version_name builds on it", () => {
-  assert.match(manifest.version, /^\d+(\.\d+){0,3}$/, "Chrome rejects anything but numbers in version");
-  if (manifest.version_name !== undefined) {
-    assert.ok(manifest.version_name.startsWith(manifest.version),
-      `version_name "${manifest.version_name}" should start with version "${manifest.version}"`);
-  }
+// Chrome and Edge only accept 1 to 4 dot-separated numbers in "version"
+test("version is numbers only", () => {
+  assert.match(manifest.version, /^\d+(\.\d+){0,3}$/, "the browser rejects anything but numbers in version");
+});
+
+// Releases are plain versions like 1.0.0. The Edge Add-ons store doesn't allow
+// "non-production builds", so there's no pre-release name like 1.0.0-beta.1.
+test("there's no version_name, so the store shows the plain version", () => {
+  assert.equal(manifest.version_name, undefined, `remove "version_name": "${manifest.version_name}"`);
 });
 
 test("CHANGELOG.md has a dated entry and a link for this release", () => {
   const changelog = fs.readFileSync(path.join(ROOT, "CHANGELOG.md"), "utf8");
-  const release = manifest.version_name || manifest.version;
+  const release = manifest.version;
   const escaped = release.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   assert.match(changelog, /^## \[Unreleased\]$/m, "Keep a Changelog: an Unreleased section");
   assert.match(changelog, new RegExp(`^## \\[${escaped}\\] - \\d{4}-\\d{2}-\\d{2}$`, "m"), `no dated "## [${release}]" entry`);

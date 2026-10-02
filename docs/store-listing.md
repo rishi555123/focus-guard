@@ -4,24 +4,22 @@ Drafts for submitting Focus Guard through [Microsoft Partner Center](https://par
 
 The listing deliberately doesn't mention other browsers: policy 1.1.2 says an extension "must not reference other browsers".
 
-## Before you submit
+## Decisions
 
-These need a decision from you. None of them were changed here, because this task didn't touch extension code.
-
-1. **Drop "beta" from the store build.** The manifest's `version_name` is `1.0.0-beta.1`. Microsoft's policies don't allow "non-production builds", like an extension "still in an experimental stage". For the store package, consider removing `version_name` so the listing shows plain `1.0.0`, and don't describe it as a beta.
-2. **Consider removing the `tabs` permission.** Chrome's tabs documentation says host permissions already allow reading a tab's `url` and `pendingUrl`, which is all Focus Guard uses `tabs` for, and Focus Guard has `<all_urls>`. Policy 1.6 says to "only request those permissions that are necessary". Removing it needs a test run first (TESTING.md sections 2, 3 and 4). If you keep it, the justification below is accurate.
-3. **Add an Edge screenshot of the setup checklist** if you want one. `docs/screenshots/welcome.png` shows the Chrome setup steps, so it isn't used for this listing.
-4. **The short description comes from `manifest.json`**, and Partner Center won't let you edit it there (see below).
+- **Version:** a plain `1.0.0`, with no `version_name`. Microsoft's policies don't allow "non-production builds", like an extension "still in an experimental stage", so the listing never calls it a beta.
+- **Permissions:** the `tabs` permission was removed. Chrome's tabs documentation says a tab's `url` and `pendingUrl` are present if the extension "has the "tabs" permission or has host permissions for the page", and Focus Guard has `<all_urls>`. Creating, navigating, removing and finding tabs need no permission. Policy 1.6 says to "only request those permissions that are necessary".
+- **Short description:** kept as the manifest's `description`. The full description carries the Flaticon credit.
+- **Not included for now:** an Edge screenshot of the setup checklist (`docs/screenshots/welcome.png` shows the Chrome steps, so it isn't used), and the optional promotional tiles.
 
 ## Package
 
-Upload `dist/focus-guard-1.0.0-beta.1.zip`, built with:
+Upload `dist/focus-guard-1.0.0.zip`, built with:
 
 ```bash
-git -c core.autocrlf=false archive --format=zip -9 -o dist/focus-guard-<version>.zip HEAD manifest.json src icons
+git -c core.autocrlf=false archive --format=zip -9 -o dist/focus-guard-1.0.0.zip HEAD manifest.json src icons
 ```
 
-It contains `manifest.json` at the root plus `src/` and `icons/`, nothing else. If you change the manifest (items 1 and 2 above), rebuild it.
+It contains `manifest.json` at the root plus `src/` and `icons/`, nothing else. `core.autocrlf=false` keeps the files byte for byte as they are in the repository, with no Windows line endings. Rebuild it from the commit you're releasing whenever anything changes.
 
 ## Availability
 
@@ -48,8 +46,7 @@ It contains `manifest.json` at the root plus `src/` and `icons/`, nothing else. 
 | Permission | Justification |
 | --- | --- |
 | `declarativeNetRequest` | During a coding session, Focus Guard uses redirect rules to send the user from AI chat sites on their blocklist to the extension's own block page. When the user earns a 5-minute pass, it adds a higher-priority allow rule for that one site, and removes it when the pass ends. All rules are built locally from the user's blocklist. None are downloaded. |
-| `<all_urls>` (host permission) | A `declarativeNetRequest` redirect only works on sites the extension has host permission for, and users can add any website to their blocklist, so the sites aren't known in advance. The host permission also lets Focus Guard check the address of tabs that are already open, so AI tabs open when a session starts are sent to the block page too. Focus Guard has no content scripts, never reads page content, and makes no network requests. |
-| `tabs` | Reads the address (`url` and `pendingUrl`) of open tabs, to find AI chat tabs that were already open or still loading when a session starts or a pass ends, and to catch navigations the redirect rules don't see, like Back and Forward. Addresses are only compared with the blocklist, never stored or sent. |
+| `<all_urls>` (host permission) | A `declarativeNetRequest` redirect only works on sites the extension has host permission for, and users can add any website to their blocklist, so the sites aren't known in advance. The same host permission lets Focus Guard read the address of open tabs, instead of requesting the `tabs` permission. It uses this to find AI chat tabs that were already open or still loading when a session starts or a pass ends, and to catch navigations the redirect rules don't see, like Back and Forward. Addresses are only compared with the blocklist, never stored or sent. Focus Guard has no content scripts, never reads page content, and makes no network requests. |
 | `alarms` | Ends the coding session on time, ends 5-minute passes, shows a warning one minute before a pass ends, and updates the minutes left on the toolbar badge. Alarms keep working while the background service worker is asleep. |
 | `storage` | Saves the user's blocklist, the current session and pass, simple stats, the user's last 20 unlock notes and a few settings in `chrome.storage.local` on their device. Nothing is synced or sent anywhere. |
 | `notifications` | Tells the user one minute before a pass ends, when it ends, and when it moves to another site. Notifications contain only the site's name and follow the user's notification settings. |
