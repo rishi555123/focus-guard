@@ -32,6 +32,8 @@ The **Needs first** column says what has to be running before you use a command.
 
 An active pass also means a running session, since passes only exist during one.
 
+Chrome can delay alarms by up to about 30 seconds, so a notification may take a while to appear after you run a shortcut. Wait at least 30 seconds before reporting it as failed.
+
 ## 1. Sessions
 
 - [ ] 1.1 With no session running, the popup shows the 25, 50 and 90 minute buttons and **Start coding session**.
