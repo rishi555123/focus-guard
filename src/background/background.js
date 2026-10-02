@@ -24,6 +24,9 @@ const PASS_MINUTES = 5;
 const PASS_WARN_MS = 60000; // "1 minute left" notification
 const SESSION_LENGTHS = [25, 50, 90];
 const NOTIFY_ID = "focus-guard-pass"; // one id, so a newer pass notification replaces an older one
+const WELCOME_PAGE = "src/welcome/welcome.html";
+// Opened by Chrome after Focus Guard is removed: how to turn Gemini in Chrome back on
+const UNINSTALL_URL = "https://github.com/rishi555123/focus-guard#removed-focus-guard";
 const BLOCK_PAGE = () => chrome.runtime.getURL("src/blocked/blocked.html");
 const emptyStats = () => ({ blocked: 0, sessions: 0, minutes: 0, unlocks: 0, log: [] });
 
@@ -37,14 +40,24 @@ function serial(fn) {
   return run;
 }
 
-chrome.runtime.onInstalled.addListener(() => serial(async () => {
+// Runs on first install, on updates (including clicking reload on an unpacked
+// extension) and on Chrome updates. Only a first install opens the welcome page.
+chrome.runtime.onInstalled.addListener((details) => serial(async () => {
   const s = await chrome.storage.local.get(["sites", "stats", "knownDefaults"]);
   const sites = s.sites ? mergeDefaults(s.sites, s.knownDefaults || V1_DEFAULTS) : DEFAULT_SITES;
   const knownDefaults = [...new Set([...(s.knownDefaults || V1_DEFAULTS), ...DEFAULT_SITES])];
   await chrome.storage.local.set({ sites, knownDefaults });
   if (!s.stats) await chrome.storage.local.set({ stats: emptyStats() });
+  setUninstallPage();
   await reconcile();
+  if (details?.reason === "install") {
+    await chrome.tabs.create({ url: chrome.runtime.getURL(WELCOME_PAGE) }).catch(() => {});
+  }
 }));
+
+function setUninstallPage() {
+  chrome.runtime.setUninstallURL(UNINSTALL_URL).catch(() => {});
+}
 
 // Add defaults that are new since the user last got the list, without
 // bringing back any default they deleted themselves
@@ -55,7 +68,10 @@ function mergeDefaults(sites, known) {
   for (const d of DEFAULT_SITES) if (!skip.has(d)) merged.push(d);
   return [...new Set(merged)];
 }
-chrome.runtime.onStartup.addListener(() => serial(reconcile));
+chrome.runtime.onStartup.addListener(() => serial(async () => {
+  setUninstallPage();
+  await reconcile();
+}));
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const siteRegex = (domain) => "^https?://([^/]*\\.)?" + escapeRe(domain) + "(/.*)?$";
@@ -169,13 +185,16 @@ async function updateBadge() {
   }
 }
 
+const notification = (message) => ({
+  type: "basic",
+  iconUrl: chrome.runtime.getURL("icons/icon128.png"),
+  title: "Focus Guard",
+  message
+});
+
 function notify(message) {
-  return chrome.notifications.create(NOTIFY_ID, {
-    type: "basic",
-    iconUrl: chrome.runtime.getURL("icons/icon128.png"),
-    title: "Focus Guard",
-    message
-  }).catch(() => {}); // notifications are a nice-to-have; never let them break a pass
+  // Notifications are a nice-to-have; never let them break a pass
+  return chrome.notifications.create(NOTIFY_ID, notification(message)).catch(() => {});
 }
 
 // A pass only ends with its site blocked again if the session outlasts it.
@@ -296,6 +315,10 @@ async function handleMessage(msg) {
     return { granted: true, domain };
   }
   if (msg.type === "sitesChanged") await syncRules();
+  if (msg.type === "testNotification") {
+    // Not through notify(), so a failure reaches the welcome page instead of being hidden
+    await chrome.notifications.create(NOTIFY_ID, notification("This is a test. Pass notifications will look like this."));
+  }
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {

@@ -16,15 +16,16 @@
   details textarea { height: 140px; margin: 8px 0; }
   .hidden { display: none; }
   #saved.error { display: block; margin-top: 6px; color: var(--redpen); }
-  .note { font-size: 12px; line-height: 1.45; margin: 0 0 12px; padding: 8px 10px;
+  .note { font-size: 12px; line-height: 1.45; margin: 10px 0 0; padding: 6px 9px;
           background: var(--white); border: 2px solid var(--marker); border-radius: 6px; }
+  .note label { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-weight: 600; cursor: pointer; }
+  .note input { margin: 0; accent-color: var(--ink); }
   button.link { padding: 0; border: 0; background: none; color: var(--ink); text-decoration: underline; }
+  .footer { margin: 12px 0 0; font-size: 12px; text-align: right; }
 </style></head>
 <body>
   <h1>Focus Guard</h1>
   <p class="sub muted">AI chat sites are blocked while a session runs.</p>
-  <p class="note hidden" id="incognito">Incognito windows aren't blocked yet.
-    <button class="link" id="openSettings">Allow Focus Guard in Incognito</button></p>
 
   <section id="idle">
     <div class="durations" role="group" aria-label="Session length">
@@ -41,6 +42,13 @@
     <button id="stop" class="ghost">End session early</button>
   </section>
 
+  <!-- Reminders sit below the session controls so they never push them down -->
+  <div class="note" id="geminiNote" hidden>Chrome's built-in Gemini isn't blocked.
+    <button class="link" id="openGemini">Turn it off</button>
+    <label><input type="checkbox" id="geminiOff"> I turned off Gemini in Chrome</label></div>
+  <p class="note" id="incognito" hidden>Incognito windows aren't blocked yet.
+    <button class="link" id="openSettings">Allow Focus Guard in Incognito</button></p>
+
   <div class="stats">
     <div><b id="sSessions">0</b>sessions finished</div>
     <div><b id="sMinutes">0</b>focused minutes</div>
@@ -54,6 +62,8 @@
     <button id="saveSites" class="ghost">Save sites</button>
     <span id="saved" class="muted" style="font-size:12px"></span>
   </details>
+  <p class="footer"><button class="link" id="openChecklist">Setup checklist</button></p>
   <script src="../shared/sites.js"></script>
+  <script src="../shared/setup.js"></script>
   <script src="popup.js"></script>
 </body></html>

@@ -67,6 +67,26 @@ test("the permissions the background script uses are declared", () => {
   assert.ok(manifest.permissions.includes("notifications"));
 });
 
+test("the welcome page and its scripts exist", () => {
+  for (const file of ["src/welcome/welcome.html", "src/welcome/welcome.js", "src/shared/setup.js"]) {
+    assert.ok(fs.existsSync(path.join(ROOT, file)), file);
+  }
+  const html = fs.readFileSync(path.join(ROOT, "src/welcome/welcome.html"), "utf8");
+  assert.match(html, /src="\.\.\/shared\/setup\.js"/);
+  assert.match(html, /src="welcome\.js"/);
+});
+
+test("the uninstall page points at a README heading that exists", () => {
+  const source = fs.readFileSync(path.join(ROOT, "src/background/background.js"), "utf8");
+  const url = source.match(/UNINSTALL_URL = "([^"]+)"/)[1];
+  assert.match(url, /^https:\/\/github\.com\/rishi555123\/focus-guard#/);
+  // GitHub's heading anchors: lowercase, punctuation removed, spaces become dashes
+  const slug = (heading) => heading.toLowerCase().replace(/[^\w\- ]/g, "").replace(/ /g, "-");
+  const readme = fs.readFileSync(path.join(ROOT, "README.md"), "utf8");
+  const anchors = [...readme.matchAll(/^#{1,6} (.+)$/gm)].map((m) => slug(m[1].trim()));
+  assert.ok(anchors.includes(url.split("#")[1]), "README has no heading for #" + url.split("#")[1]);
+});
+
 test("nothing else is exposed to websites", () => {
   const exposed = manifest.web_accessible_resources.flatMap((w) => w.resources);
   assert.deepEqual(exposed.sort(), [

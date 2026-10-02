@@ -9,7 +9,8 @@ const path = require("node:path");
 const ROOT = path.join(__dirname, "..");
 const PAGES = [
   { html: "src/popup/popup.html", script: "src/popup/popup.js" },
-  { html: "src/blocked/blocked.html", script: "src/blocked/blocked.js" }
+  { html: "src/blocked/blocked.html", script: "src/blocked/blocked.js" },
+  { html: "src/welcome/welcome.html", script: "src/welcome/welcome.js" }
 ];
 const read = (file) => fs.readFileSync(path.join(ROOT, file), "utf8");
 const idsIn = (html) => new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));

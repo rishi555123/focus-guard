@@ -48,6 +48,8 @@ Focus Guard isn't on the Chrome Web Store yet. You load it straight from this fo
 5. Select the `focus-guard` folder (the one with `manifest.json` in it).
 6. Optional: click the puzzle-piece icon in the toolbar and pin Focus Guard so it's easy to reach.
 
+When you first install it, Focus Guard opens a short setup checklist: turn off Gemini in Chrome, allow Focus Guard in Incognito, and allow Chrome notifications in Windows. You can reopen it any time from the **Setup checklist** link in the popup.
+
 To update it after you change the code, go back to `chrome://extensions` and click the reload icon on the Focus Guard card.
 
 ## How to use it
@@ -98,8 +100,10 @@ Focus Guard blocks websites by their address, so some AI tools are out of its re
 - **AI built into the browser**, like Chrome's "Ask Gemini" button and side panel, or the Copilot sidebar in Edge. Chrome's Gemini panel is part of Chrome itself, not a tab, and Chrome deliberately keeps extensions out of it for security, so no extension can block it. You can turn it off yourself:
   1. Open Chrome's menu (the three dots, top right) and go to **Settings**.
   2. Click **AI innovations**, then **Gemini in Chrome**. On some Chrome versions this section is called **Google AI** or **AI Premium**.
-  3. Turn off every switch there. That removes the side panel, the keyboard shortcut and the "Ask Gemini" prompts.
+  3. Turn off every switch there, including **Show Gemini at the top of the browser** and **Show Gemini in system tray and turn on keyboard shortcut**. That removes the side panel, the keyboard shortcut and the "Ask Gemini" prompts.
   4. To remove the sparkle icon from the toolbar, right-click it and choose **Unpin**.
+
+  The setup checklist has a button that opens this settings page for you.
 - **AI assistants in your code editor**, like GitHub Copilot, Cursor or other extensions in VS Code and JetBrains. Focus Guard only works inside Chrome. Most editors let you pause their AI features while you practise.
 - **Google AI Overviews**, the AI summaries at the top of normal Google search results. They're part of the search page itself, so blocking them would mean blocking Google Search.
 - **AI features inside normal sites**, like `github.com/copilot`, `x.com/i/grok` or Google's AI Mode. Blocking the whole site would be wrong here, so they aren't blocked yet. Blocking just those pages is planned. See [ROADMAP.md](ROADMAP.md).
@@ -114,7 +118,20 @@ Everything stays on your computer.
 - Focus Guard has no servers, no analytics and no tracking, and it never sends your data anywhere.
 - It asks for access to all sites so it can spot when you open a blocked site and redirect that tab to the block page. It doesn't read or collect the content of the pages you visit.
 
-Uninstalling the extension deletes all of its data.
+Uninstalling the extension deletes all of its data. Chrome then opens the [Removed Focus Guard?](#removed-focus-guard) section below. That's a normal page visit; nothing about you is sent with it.
+
+## Removed Focus Guard?
+
+Thanks for trying it! If you turned off Gemini in Chrome during setup, here's how to turn it back on:
+
+1. Open Chrome's menu (the three dots, top right) and go to **Settings**.
+2. Click **AI innovations**, then **Gemini in Chrome**. On some Chrome versions this section is called **Google AI** or **AI Premium**.
+3. Turn the switches you want back on, like **Show Gemini at the top of the browser** and **Show Gemini in system tray and turn on keyboard shortcut**.
+4. To bring back the sparkle icon, right-click the top of the browser and choose **Pin Gemini**.
+
+Anything else you changed during setup, like allowing Focus Guard in Incognito, went away with the extension. Chrome notifications in Windows can stay on; other apps and sites use them too.
+
+Have a minute? [Open an issue](https://github.com/rishi555123/focus-guard/issues) and tell us why you removed it.
 
 ## Contributing
 
@@ -137,6 +154,8 @@ Here's a quick map of the files:
 | `src/blocked/links.js` | Reads the block page's address and works out where "Back to my code" goes |
 | `src/shared/style.css` | Shared graph-paper styling |
 | `src/shared/sites.js` | Cleans and checks what you type into the blocklist |
+| `src/shared/setup.js` | Setup buttons shared by the popup and the welcome page |
+| `src/welcome/welcome.html` / `welcome.js` | The setup checklist that opens on first install |
 | `icons/` | Extension and toolbar icons |
 | `docs/screenshots/` | Screenshots for the docs |
 | `tests/` | Tests for the background logic, blocklist input, block page links and manifest paths (run with `node --test`) |

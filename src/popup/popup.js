@@ -19,11 +19,12 @@ chrome.storage.local.get("lastMinutes").then(({ lastMinutes }) => {
   if ([25, 50, 90].includes(lastMinutes)) pickMinutes(lastMinutes);
 });
 
-// Incognito windows are only covered if the user allows it on chrome://extensions
-chrome.extension.isAllowedIncognitoAccess().then((allowed) =>
-  $("incognito").classList.toggle("hidden", allowed));
-$("openSettings").onclick = () =>
-  chrome.tabs.create({ url: "chrome://extensions/?id=" + chrome.runtime.id });
+// Setup reminders and links (helpers from shared/setup.js)
+incognitoAllowed().then((allowed) => { $("incognito").hidden = allowed; });
+$("openSettings").onclick = () => openExtensionSettings();
+$("openGemini").onclick = () => openGeminiSettings();
+$("openChecklist").onclick = () => openSetupChecklist();
+$("geminiOff").onchange = () => chrome.storage.local.set({ geminiOff: $("geminiOff").checked });
 
 $("sites").addEventListener("input", () => (sitesEdited = true));
 
@@ -55,9 +56,13 @@ $("saveSites").onclick = async () => {
 };
 
 async function render() {
-  const { session, sites = [], stats = {}, pass } =
-    await chrome.storage.local.get(["session", "sites", "stats", "pass"]);
+  const { session, sites = [], stats = {}, pass, geminiOff = false } =
+    await chrome.storage.local.get(["session", "sites", "stats", "pass", "geminiOff"]);
   const active = !!session && session.endsAt > Date.now();
+
+  // Gemini reminder until the user says they've turned it off
+  $("geminiNote").hidden = geminiOff;
+  $("geminiOff").checked = geminiOff;
 
   $("idle").classList.toggle("hidden", active);
   $("active").classList.toggle("hidden", !active);

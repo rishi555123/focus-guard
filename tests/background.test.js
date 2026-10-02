@@ -21,17 +21,19 @@ const REASON = "I tried reading the error, logging the values and the docs, stil
 
 // Load a fresh copy of background.js with its own fake chrome.
 // `saved` is what chrome.storage.local already holds before install/update runs.
-async function load(saved = {}) {
+// With nothing saved it's a first install; with saved data it's an update.
+async function load(saved = {}, reason = Object.keys(saved).length ? "update" : "install") {
   const listeners = {};
   const ev = (name) => ({ addListener: (fn) => (listeners[name] = fn) });
   const env = {
     store: structuredClone(saved), rules: [], alarms: {}, tabs: [], updates: [], errors: [],
-    notifications: [], cleared: []
+    notifications: [], cleared: [], created: [], uninstallUrls: [], failNotifications: false
   };
 
   const chrome = {
     runtime: {
       getURL: (p) => "chrome-extension://ID/" + p,
+      setUninstallURL: (url) => { env.uninstallUrls.push(url); return Promise.resolve(); },
       onInstalled: ev("installed"), onStartup: ev("startup"), onMessage: ev("message")
     },
     storage: { local: {
@@ -62,11 +64,16 @@ async function load(saved = {}) {
     tabs: {
       query: async () => env.tabs,
       update: (id, o) => { env.updates.push({ id, url: o.url }); return Promise.resolve(); },
+      create: (o) => { env.created.push(o.url); return Promise.resolve({ id: 100 + env.created.length }); },
       onUpdated: ev("tabUpdated")
     },
     action: { setBadgeText() {}, setBadgeBackgroundColor() {} },
     notifications: {
-      create: (id, options) => { env.notifications.push({ id, ...options }); return Promise.resolve(id); },
+      create: (id, options) => {
+        if (env.failNotifications) return Promise.reject(new Error("Notifications are blocked"));
+        env.notifications.push({ id, ...options });
+        return Promise.resolve(id);
+      },
       clear: (id) => { env.cleared.push(id); return Promise.resolve(true); }
     }
   };
@@ -80,7 +87,7 @@ async function load(saved = {}) {
   env.redirects = () => env.rules.filter((r) => r.action.type === "redirect");
   env.allows = () => env.rules.filter((r) => r.action.type === "allow");
   env.updatedTabs = () => env.updates.map((u) => u.id);
-  await listeners.installed();
+  if (reason) await listeners.installed({ reason });
   return env;
 }
 
@@ -535,6 +542,77 @@ test("reconcile doesn't make a late warning in the pass's last minute", async ()
   await env.fire.startup();
   assert.equal(env.alarms.passWarn, undefined);
   assert.ok(env.alarms.passEnd, "the pass still ends on time");
+});
+
+// Setup flow: install vs update
+
+const WELCOME = "chrome-extension://ID/src/welcome/welcome.html";
+const UNINSTALL = "https://github.com/rishi555123/focus-guard#removed-focus-guard";
+
+test("a first install opens the welcome page once", async () => {
+  const env = await load({}, "install");
+  assert.deepEqual(env.created, [WELCOME]);
+});
+
+test("an update doesn't open the welcome page", async () => {
+  const env = await load({ sites: ["chatgpt.com"] }, "update");
+  assert.deepEqual(env.created, []);
+});
+
+test("clicking reload on an unpacked extension doesn't open the welcome page", async () => {
+  // Chrome reports a reload as an update; storage is kept
+  const first = await load({}, "install");
+  const env = await load(first.store, "update");
+  assert.deepEqual(env.created, []);
+});
+
+test("a Chrome update doesn't open the welcome page", async () => {
+  const env = await load({ sites: ["chatgpt.com"] }, "chrome_update");
+  assert.deepEqual(env.created, []);
+});
+
+test("the welcome page opens after the defaults are saved", async () => {
+  const env = await load({}, "install");
+  assert.ok(env.store.sites.length > 0 && env.store.stats, "storage was set up first");
+  assert.deepEqual(env.created, [WELCOME]);
+});
+
+test("install, update and browser start all set the uninstall page", async () => {
+  const installed = await load({}, "install");
+  assert.deepEqual(installed.uninstallUrls, [UNINSTALL]);
+  const updated = await load({ sites: ["chatgpt.com"] }, "update");
+  assert.deepEqual(updated.uninstallUrls, [UNINSTALL]);
+  await updated.fire.startup();
+  assert.deepEqual(updated.uninstallUrls, [UNINSTALL, UNINSTALL]);
+  assert.deepEqual(updated.created, [], "browser start doesn't open the welcome page");
+});
+
+test("the test notification looks like a pass notification", async () => {
+  const env = await load();
+  const res = await env.send({ type: "testNotification" });
+  assert.equal(res.ok, true);
+  const [n] = env.notifications;
+  assert.equal(n.id, "focus-guard-pass");
+  assert.equal(n.iconUrl, "chrome-extension://ID/icons/icon128.png");
+  assert.equal(n.title, "Focus Guard");
+  assert.match(n.message, /test/i);
+});
+
+test("a failed test notification is reported, not hidden", async () => {
+  const env = await load();
+  env.failNotifications = true;
+  const res = await env.send({ type: "testNotification" });
+  assert.equal(res.ok, false);
+  assert.match(res.error, /blocked/);
+});
+
+test("a failed pass notification doesn't break the pass", async () => {
+  const env = await inSession();
+  env.failNotifications = true;
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  const res = await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  assert.equal(res.ok, true);
+  assert.equal(env.store.pass.domain, "chatgpt.com");
 });
 
 test("missing stats don't break an unlock", async () => {
