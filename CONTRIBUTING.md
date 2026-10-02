@@ -34,6 +34,10 @@ Every test should show a ✔. The tests are in the `tests/` folder:
 
 If you change one of those files, add a test for your change too.
 
+## Test in Chrome
+
+Some things only show up in a real browser, like redirects, notifications and settings pages. [TESTING.md](TESTING.md) has a manual checklist for every feature, plus console shortcuts for testing timers without waiting. Before opening a pull request, go through the sections your change touches.
+
 ## Report a bug
 
 Open an issue on the repository's **Issues** tab and include:
@@ -54,7 +58,7 @@ Have an idea for a new feature? Open an issue for that too. Check [ROADMAP.md](R
    ```
 
 2. Make your change. Keep it small and focused on one thing.
-3. Run `node --test`, then reload the extension and check that everything still works.
+3. Run `node --test`, then reload the extension and go through the matching sections of [TESTING.md](TESTING.md).
 4. Commit and push your branch:
 
    ```bash
