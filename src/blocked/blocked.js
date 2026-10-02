@@ -4,6 +4,25 @@ const target = link.url;
 
 document.getElementById("site").textContent = target || "AI chat site";
 
+// Random questions, picked once per visit. Ticking a box only changes that box,
+// so the list never reshuffles while you're using it.
+function showQuestions(containerId, questions) {
+  const container = document.getElementById(containerId);
+  for (const question of questions) {
+    const label = document.createElement("label");
+    label.className = "check";
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    const text = document.createElement("span");
+    text.textContent = question; // text, never HTML
+    label.append(box, text);
+    container.append(label);
+  }
+}
+const picked = pickQuestions(); // from questions.js
+showQuestions("debuggingQuestions", picked.debugging);
+showQuestions("problemSolvingQuestions", picked.problemSolving);
+
 // Explain re-blocks caused by a pass moving to another site or running out
 const whyNote = document.getElementById("why");
 whyNote.textContent = sweepNote(link); // from links.js
@@ -81,5 +100,5 @@ document.getElementById("back").onclick = async () => {
   const tab = await chrome.tabs.getCurrent();
   const inWindow = await chrome.tabs.query({ windowId: tab.windowId });
   if (inWindow.length > 1) chrome.tabs.remove(tab.id);
-  else chrome.tabs.update(tab.id, { url: "chrome://newtab/" });
+  else chrome.tabs.update(tab.id, { url: BROWSER.newTab }); // from shared/browser.js
 };

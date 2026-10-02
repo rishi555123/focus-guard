@@ -20,9 +20,10 @@
 </style></head>
 <body><main>
   <h1>Welcome to <span class="mark">Focus Guard.</span></h1>
-  <p class="lead">Three quick steps close the gaps an extension can't close on its own. You can come back to this page any time from the popup's <b>Setup checklist</b> link.</p>
+  <p class="lead">A few quick steps close the gaps an extension can't close on its own. You can come back to this page any time from the popup's <b>Setup checklist</b> link.</p>
 
-  <section class="sheet" aria-labelledby="geminiTitle">
+  <!-- Step 1 has a version per browser. Both start hidden; browser.js shows the right one. -->
+  <section class="sheet" aria-labelledby="geminiTitle" data-browser="chrome" hidden>
     <h2 id="geminiTitle"><span class="num">1</span> Turn off Gemini in Chrome
       <span class="done" id="geminiDone" hidden>Done</span></h2>
     <p>Chrome's "Ask Gemini" button and side panel are part of Chrome itself, so no extension can block them. Turn them off in Chrome's settings:</p>
@@ -38,12 +39,28 @@
     </div>
   </section>
 
+  <section class="sheet" aria-labelledby="copilotTitle" data-browser="edge" hidden>
+    <h2 id="copilotTitle"><span class="num">1</span> Optional: turn off Copilot in Edge
+      <span class="done" id="copilotDone" hidden>Done</span></h2>
+    <p>Edge's Copilot button and sidebar are part of Edge itself, so no extension can block them. This step is optional. If you use Copilot to get answers while you code, turning it off keeps that shortcut closed too:</p>
+    <ol>
+      <li>Open Edge's menu (the three dots, top right) and go to <b>Settings</b>.</li>
+      <li>Click <b>Appearance</b>, then <b>Copilot and sidebar</b>, then <b>Copilot</b>. On older Edge versions this is under <b>Sidebar</b>, then <b>Copilot</b>.</li>
+      <li>Turn off <b>Show Copilot button on the toolbar</b> and <b>Allow Microsoft to access page content</b>.</li>
+      <li>To hide the whole sidebar too, go back to <b>Copilot and sidebar</b> and turn the sidebar off.</li>
+    </ol>
+    <div class="row">
+      <button id="openCopilot">Open Copilot settings</button>
+      <label class="tick"><input type="checkbox" id="copilotOff"> I turned off Copilot in Edge</label>
+    </div>
+  </section>
+
   <section class="sheet" aria-labelledby="incognitoTitle">
-    <h2 id="incognitoTitle"><span class="num">2</span> Allow Focus Guard in Incognito
+    <h2 id="incognitoTitle"><span class="num">2</span> Allow Focus Guard in <span data-text="private">Incognito</span>
       <span class="done" id="incognitoDone" hidden>Done</span></h2>
-    <p id="incognitoTodo">Chrome doesn't run extensions in Incognito windows unless you allow it, so AI sites would be open there. On Focus Guard's settings page, turn on <b>Allow in Incognito</b>.</p>
-    <p id="incognitoOk" hidden>Focus Guard is allowed in Incognito windows, so AI sites are blocked there too.</p>
-    <p class="small muted">In Incognito, Chrome shows its own error page instead of Focus Guard's, so you can't unlock a site there. Unlock it from a normal window instead, then type the site's address again in Incognito. Reloading Chrome's error page won't open it.</p>
+    <p id="incognitoTodo"><span data-text="browser">Chrome</span> doesn't run extensions in <span data-text="private">Incognito</span> windows unless you allow it, so AI sites would be open there. On Focus Guard's settings page, turn on <b>Allow in <span data-text="private">Incognito</span></b>.</p>
+    <p id="incognitoOk" hidden>Focus Guard is allowed in <span data-text="private">Incognito</span> windows, so AI sites are blocked there too.</p>
+    <p class="small muted">In <span data-text="private">Incognito</span>, <span data-text="browser">Chrome</span> shows its own error page instead of Focus Guard's, so you can't unlock a site there. Unlock it from a normal window instead, then type the site's address again in the <span data-text="private">Incognito</span> window. Reloading the error page won't open it.</p>
     <div class="row">
       <button id="openIncognito">Open Focus Guard settings</button>
     </div>
@@ -51,11 +68,11 @@
   </section>
 
   <section class="sheet" aria-labelledby="notifyTitle">
-    <h2 id="notifyTitle"><span class="num">3</span> Allow Chrome notifications in Windows</h2>
-    <p>Focus Guard tells you when a pass is about to end, has ended or has moved to another site. Windows only shows these if Chrome is allowed to notify you:</p>
+    <h2 id="notifyTitle"><span class="num">3</span> Allow <span data-text="browser">Chrome</span> notifications in Windows</h2>
+    <p>Focus Guard tells you when a pass is about to end, has ended or has moved to another site. Windows only shows these if <span data-text="browser">Chrome</span> is allowed to notify you:</p>
     <ol>
       <li>Open Windows <b>Settings</b>, then <b>System</b>, then <b>Notifications</b>.</li>
-      <li>Make sure <b>Google Chrome</b> is turned on in the list of apps.</li>
+      <li>Make sure <b data-text="notifyApp">Google Chrome</b> is turned on in the list of apps.</li>
       <li>Turn off <b>Do not disturb</b>, or Windows will hide notifications while it's on.</li>
     </ol>
     <div class="row">
@@ -66,6 +83,7 @@
 
   <p class="muted">That's it. Click the Focus Guard icon in your toolbar to start your first coding session.</p>
 </main>
+<script src="../shared/browser.js"></script>
 <script src="../shared/setup.js"></script>
 <script src="welcome.js"></script>
 </body></html>

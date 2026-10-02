@@ -1,6 +1,8 @@
-# Manual testing in Chrome
+# Manual testing in Chrome and Edge
 
 The automated tests (`node --test`) check the logic, but some things only show up in a real browser: redirects, notifications, settings pages and how pages look. Use this checklist before a release, or test the sections your change touches.
+
+Sections 1 to 12 are written for Chrome. Section 13 repeats the parts that differ in Microsoft Edge. In Edge, use `edge://extensions` wherever a step says `chrome://extensions`; the console shortcuts work the same way.
 
 Tick each box as you go. If a step fails, note the section and step number in your issue or pull request.
 
@@ -83,7 +85,7 @@ All notifications show the Focus Guard icon and the title "Focus Guard".
 ## 5. Block page
 
 - [ ] 5.1 The block page has its normal styling (graph paper background, highlighted "first.").
-- [ ] 5.2 The checklist items cross out when ticked.
+- [ ] 5.2 The questions cross out when ticked.
 - [ ] 5.3 The unlock button stays disabled until you've typed 60 characters, and the counter counts down as you type.
 - [ ] 5.4 Clicking the button starts a 60-second wait and locks the text box.
 - [ ] 5.5 An ordinary block (typing a blocked site yourself) shows no note.
@@ -93,6 +95,10 @@ All notifications show the Focus Guard icon and the title "Focus Guard".
 - [ ] 5.9 Get blocked, end the session, then reload the block page. It takes you straight to the site.
 - [ ] 5.10 With no session running, open `chrome-extension://<id>/src/blocked/blocked.html?u=https://example.com` (the id is on the Focus Guard card). It stays on the block page and doesn't open example.com.
 - [ ] 5.11 In DevTools on the block page, the **Issues** tab shows no warnings from the page.
+- [ ] 5.12 The block page shows 3 questions under **Debugging** and 3 under **Problem-solving**, with no repeats.
+- [ ] 5.13 Open a blocked site a few times. The questions change between visits.
+- [ ] 5.14 Tick and untick several questions. The list doesn't reshuffle or change order.
+- [ ] 5.15 The question about constraints shows "n ≤ 10^5" correctly, not as garbled characters.
 
 ## 6. Stats
 
@@ -156,9 +162,28 @@ The first-install check (the welcome page opening on its own) is in section 11, 
 
 ## 12. Uninstall page and first install
 
-Removing Focus Guard deletes its stats and settings, so do this section last.
+Removing Focus Guard deletes its stats and settings, so do this section last in each browser.
 
 - [ ] 12.1 Click **Remove** on Focus Guard. A tab opens on the README's **Removed Focus Guard?** section.
-- [ ] 12.2 That section explains how to turn Gemini in Chrome back on.
+- [ ] 12.2 That section explains how to turn Gemini in Chrome and Copilot in Edge back on.
 - [ ] 12.3 Click **Load unpacked** and select the folder again. The welcome page opens on its own.
 - [ ] 12.4 The default site list is back, and the stats start at 0.
+
+## 13. Microsoft Edge
+
+Use a separate install in Edge. Turn on **Developer mode** at `edge://extensions`, click **Load unpacked** and select the folder. Allow Edge notifications in Windows: **Settings → System → Notifications → Microsoft Edge**.
+
+- [ ] 13.1 The welcome page opens on its own. Step 1 is **Optional: turn off Copilot in Edge**, and the page never mentions Gemini or Chrome.
+- [ ] 13.2 **Open Copilot settings** opens Edge's Copilot settings (**Appearance → Copilot and sidebar**), or the main Settings page on Edge versions without it.
+- [ ] 13.3 Tick **I turned off Copilot in Edge**. Step 1 shows **Done**. Untick it, and **Done** goes away.
+- [ ] 13.4 Step 2 says **Allow Focus Guard in InPrivate**, and **Open Focus Guard settings** opens Focus Guard's card on `edge://extensions`.
+- [ ] 13.5 Step 3 says **Allow Edge notifications in Windows** and names **Microsoft Edge**. **Send test notification** shows a Focus Guard notification.
+- [ ] 13.6 The popup shows no Gemini reminder, and its **Setup checklist** link opens the welcome page.
+- [ ] 13.7 With **Allow in InPrivate** off, the popup shows "InPrivate windows aren't blocked yet", and its button opens Focus Guard's card on `edge://extensions`.
+- [ ] 13.8 During a session, `chatgpt.com` and `copilot.microsoft.com` show the block page, with 3 debugging and 3 problem-solving questions.
+- [ ] 13.9 Unlock a site, then unlock another. The "pass moved" notification appears.
+- [ ] 13.10 **Back to my code** in a window's only tab, with nothing to go back to, shows Edge's new tab page.
+- [ ] 13.11 Turn on **Allow in InPrivate**. During a session, `chatgpt.com` in an InPrivate window shows Edge's error page, not the block page. That's expected (see Known limitations in the README).
+- [ ] 13.12 Open Edge's Copilot sidebar during a session and note what it shows. Focus Guard isn't designed to block it (see Known limitations), so it may work normally. Report it if it shows Focus Guard's block page or an error instead.
+- [ ] 13.13 The Focus Guard card on `edge://extensions` shows version **1.0.0-beta.1**.
+- [ ] 13.14 Click **Remove** on Focus Guard. A tab opens on the README's **Removed Focus Guard?** section, which includes the Copilot in Edge steps.

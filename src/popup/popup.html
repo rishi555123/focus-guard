@@ -42,12 +42,13 @@
     <button id="stop" class="ghost">End session early</button>
   </section>
 
-  <!-- Reminders sit below the session controls so they never push them down -->
+  <!-- Reminders sit below the session controls so they never push them down.
+       The Gemini reminder is Chrome only; popup.js decides when to show it. -->
   <div class="note" id="geminiNote" hidden>Chrome's built-in Gemini isn't blocked.
     <button class="link" id="openGemini">Turn it off</button>
     <label><input type="checkbox" id="geminiOff"> I turned off Gemini in Chrome</label></div>
-  <p class="note" id="incognito" hidden>Incognito windows aren't blocked yet.
-    <button class="link" id="openSettings">Allow Focus Guard in Incognito</button></p>
+  <p class="note" id="incognito" hidden><span data-text="private">Incognito</span> windows aren't blocked yet.
+    <button class="link" id="openSettings">Allow Focus Guard in <span data-text="private">Incognito</span></button></p>
 
   <div class="stats">
     <div><b id="sSessions">0</b>sessions finished</div>
@@ -64,6 +65,7 @@
   </details>
   <p class="footer"><button class="link" id="openChecklist">Setup checklist</button></p>
   <script src="../shared/sites.js"></script>
+  <script src="../shared/browser.js"></script>
   <script src="../shared/setup.js"></script>
   <script src="popup.js"></script>
 </body></html>

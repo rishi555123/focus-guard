@@ -8,9 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [1.0.0-beta.1] - 2026-10-02
 
-The first public beta.
+The first public beta, for Microsoft Edge (from the Edge Add-ons store) and Google Chrome (from GitHub releases).
 
 ### Added
+
+**Microsoft Edge and Chrome from one codebase**
+- Focus Guard detects Edge using User-Agent Client Hints, as Microsoft recommends, and adapts its setup to each browser.
+- In Edge, the setup checklist offers an optional "Turn off Copilot in Edge" step instead of the Gemini step, says InPrivate instead of Incognito, and opens `edge://` settings pages. The popup's Gemini reminder only appears in Chrome.
 
 **Coding sessions**
 - Timed coding sessions of 25, 50 or 90 minutes, started from the toolbar popup.
@@ -25,7 +29,7 @@ The first public beta.
 - New default sites are added to existing blocklists on update, without bringing back sites you removed.
 
 **The block page**
-- A "Your brain first." page with a debugging checklist to try before asking an AI.
+- A "Your brain first." page with questions to try before asking an AI: 3 debugging and 3 problem-solving questions, picked at random from a pool of 15 each time it opens. Ticking them off never reshuffles the list. The pool is in `src/blocked/questions.js`, so adding a question is one line.
 - Unlocking by writing at least 60 characters about what you tried, then waiting 60 seconds, for a 5-minute pass.
 - **Back to my code**, which goes back past the blocked site, or closes the tab if there's nothing to go back to.
 - A leftover block page reopens its site once the session is over.
@@ -47,9 +51,9 @@ The first public beta.
 - Visits count only once: reloads, Back and Forward, and re-blocked tabs aren't counted again.
 
 **Setup**
-- A setup checklist that opens on first install: turn off Gemini in Chrome, allow Focus Guard in Incognito, and allow Chrome notifications in Windows, with a test notification.
-- Popup reminders for Gemini in Chrome and Incognito, and a **Setup checklist** link.
-- A "Removed Focus Guard?" page after uninstalling, explaining how to turn Gemini in Chrome back on.
+- A setup checklist that opens on first install: turn off the browser's built-in AI (Gemini in Chrome, or optionally Copilot in Edge), allow Focus Guard in Incognito or InPrivate, and allow browser notifications in Windows, with a test notification.
+- Popup reminders for Gemini in Chrome and for private windows, and a **Setup checklist** link.
+- A "Removed Focus Guard?" page after uninstalling, explaining how to turn Gemini in Chrome or Copilot in Edge back on.
 
 **Reliability**
 - Recovery after a browser restart or extension update: lost timers are rebuilt, and a session that ran out while Chrome was closed is finished and counted.
@@ -61,9 +65,9 @@ The first public beta.
 
 **For contributors**
 - Automated tests that run with plain Node.js (`node --test`), and run on GitHub Actions with Node 22 and 24 for every push and pull request.
-- A manual Chrome checklist in `TESTING.md`, with console shortcuts for testing timers quickly.
+- A manual checklist for Chrome and Edge in `TESTING.md`, with console shortcuts for testing timers quickly.
 
-Known limitations, like Chrome's built-in Gemini panel and the block page in Incognito, are listed in the [README](README.md#known-limitations).
+Known limitations, like Chrome's built-in Gemini panel, Edge's Copilot sidebar and the block page in private windows, are listed in the [README](README.md#known-limitations).
 
 [Unreleased]: https://github.com/rishi555123/focus-guard/compare/v1.0.0-beta.1...HEAD
 [1.0.0-beta.1]: https://github.com/rishi555123/focus-guard/releases/tag/v1.0.0-beta.1

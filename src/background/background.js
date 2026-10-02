@@ -25,7 +25,8 @@ const PASS_WARN_MS = 60000; // "1 minute left" notification
 const SESSION_LENGTHS = [25, 50, 90];
 const NOTIFY_ID = "focus-guard-pass"; // one id, so a newer pass notification replaces an older one
 const WELCOME_PAGE = "src/welcome/welcome.html";
-// Opened by Chrome after Focus Guard is removed: how to turn Gemini in Chrome back on
+// Opened by Chrome or Edge after Focus Guard is removed: how to turn Gemini in Chrome
+// or Copilot in Edge back on
 const UNINSTALL_URL = "https://github.com/rishi555123/focus-guard#removed-focus-guard";
 const BLOCK_PAGE = () => chrome.runtime.getURL("src/blocked/blocked.html");
 const emptyStats = () => ({ blocked: 0, sessions: 0, minutes: 0, unlocks: 0, log: [] });

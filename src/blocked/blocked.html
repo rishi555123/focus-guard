@@ -8,6 +8,7 @@
   .site { font: 14px var(--code); color: var(--redpen); text-decoration: line-through; margin: 0 0 28px; word-break: break-all; }
   .sheet { background: var(--white); border: 2px solid var(--ink); border-radius: 8px; padding: 20px 22px; margin-bottom: 18px; }
   h2 { font-size: 17px; margin: 0 0 10px; }
+  h3 { font: 600 12px var(--code); text-transform: uppercase; letter-spacing: .5px; color: var(--pencil); margin: 12px 0 2px; }
   label.check { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; line-height: 1.45; cursor: pointer; }
   label.check input { margin-top: 4px; accent-color: var(--ink); width: 16px; height: 16px; }
   label.check:has(input:checked) span { color: var(--pencil); text-decoration: line-through; }
@@ -26,13 +27,12 @@
   <p class="notice" id="why" role="status" hidden></p>
 
   <div class="sheet">
-    <h2>Before you ask an AI, have you&hellip;</h2>
-    <label class="check"><input type="checkbox"><span>Read the full error message, including the line number and stack trace?</span></label>
-    <label class="check"><input type="checkbox"><span>Added a print / console.log right before where it breaks?</span></label>
-    <label class="check"><input type="checkbox"><span>Explained the problem out loud, line by line (rubber duck)?</span></label>
-    <label class="check"><input type="checkbox"><span>Checked the official docs for the function you're using?</span></label>
-    <label class="check"><input type="checkbox"><span>Shrunk it down to the smallest piece of code that still fails?</span></label>
-    <label class="check"><input type="checkbox"><span>Taken a 5-minute walk away from the screen?</span></label>
+    <h2>Before you ask an AI</h2>
+    <!-- Filled once on load from questions.js, so ticking boxes never reshuffles them -->
+    <h3 id="debuggingTitle">Debugging</h3>
+    <div id="debuggingQuestions" role="group" aria-labelledby="debuggingTitle"></div>
+    <h3 id="problemSolvingTitle">Problem-solving</h3>
+    <div id="problemSolvingQuestions" role="group" aria-labelledby="problemSolvingTitle"></div>
   </div>
 
   <div class="sheet">
@@ -48,6 +48,8 @@
 
   <button class="ghost" id="back">Back to my code</button>
 </main>
+<script src="../shared/browser.js"></script>
+<script src="questions.js"></script>
 <script src="links.js"></script>
 <script src="blocked.js"></script>
 </body></html>

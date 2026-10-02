@@ -1,17 +1,16 @@
 // Setup helpers shared by the popup and the welcome page.
+// Needs shared/browser.js loaded first, for BROWSER.
 
-// Chrome's "Gemini in Chrome" settings. If a Chrome version doesn't have this
-// sub-page, Chrome shows its main Settings page instead.
-const GEMINI_SETTINGS_URL = "chrome://settings/ai/gemini";
+// The browser's built-in AI settings: Gemini in Chrome, or Copilot in Edge
+const openAssistantSettings = () => chrome.tabs.create({ url: BROWSER.assistant.settingsUrl });
 
-const openGeminiSettings = () => chrome.tabs.create({ url: GEMINI_SETTINGS_URL });
-
-// Focus Guard's own card on chrome://extensions, where "Allow in Incognito" is
+// Focus Guard's own card on chrome://extensions or edge://extensions, where
+// "Allow in Incognito" (Chrome) or "Allow in InPrivate" (Edge) is
 const openExtensionSettings = () =>
-  chrome.tabs.create({ url: "chrome://extensions/?id=" + chrome.runtime.id });
+  chrome.tabs.create({ url: BROWSER.extensionsPage + "/?id=" + chrome.runtime.id });
 
 const openSetupChecklist = () =>
   chrome.tabs.create({ url: chrome.runtime.getURL("src/welcome/welcome.html") });
 
-// Incognito windows are only covered if the user allows it on chrome://extensions
+// Private windows are only covered if the user allows it on the extensions page
 const incognitoAllowed = () => chrome.extension.isAllowedIncognitoAccess();

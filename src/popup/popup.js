@@ -19,10 +19,12 @@ chrome.storage.local.get("lastMinutes").then(({ lastMinutes }) => {
   if ([25, 50, 90].includes(lastMinutes)) pickMinutes(lastMinutes);
 });
 
-// Setup reminders and links (helpers from shared/setup.js)
+// Setup reminders and links (helpers from shared/browser.js and shared/setup.js)
+applyBrowserText(document);
+const showGeminiReminder = BROWSER.id === "chrome"; // never in Edge; Edge's Copilot step is optional
 incognitoAllowed().then((allowed) => { $("incognito").hidden = allowed; });
 $("openSettings").onclick = () => openExtensionSettings();
-$("openGemini").onclick = () => openGeminiSettings();
+$("openGemini").onclick = () => openAssistantSettings();
 $("openChecklist").onclick = () => openSetupChecklist();
 $("geminiOff").onchange = () => chrome.storage.local.set({ geminiOff: $("geminiOff").checked });
 
@@ -60,8 +62,8 @@ async function render() {
     await chrome.storage.local.get(["session", "sites", "stats", "pass", "geminiOff"]);
   const active = !!session && session.endsAt > Date.now();
 
-  // Gemini reminder until the user says they've turned it off
-  $("geminiNote").hidden = geminiOff;
+  // Gemini reminder in Chrome, until the user says they've turned it off
+  $("geminiNote").hidden = !showGeminiReminder || geminiOff;
   $("geminiOff").checked = geminiOff;
 
   $("idle").classList.toggle("hidden", active);

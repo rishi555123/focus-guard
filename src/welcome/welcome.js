@@ -1,15 +1,24 @@
 const $ = (id) => document.getElementById(id);
 
-// 1. Gemini in Chrome. The checkbox is shared with the popup's reminder.
-$("openGemini").onclick = () => openGeminiSettings(); // from shared/setup.js
-async function showGemini() {
-  const { geminiOff = false } = await chrome.storage.local.get("geminiOff");
-  $("geminiOff").checked = geminiOff;
-  $("geminiDone").hidden = !geminiOff;
-}
-$("geminiOff").onchange = () => chrome.storage.local.set({ geminiOff: $("geminiOff").checked });
+// Show this browser's version of each step and its wording (from shared/browser.js)
+applyBrowserText(document);
 
-// 2. Incognito. Checked again when you come back from the settings tab.
+// 1. The browser's built-in AI: Gemini in Chrome, or Copilot in Edge (optional).
+// Each has its own checkbox; Chrome's is shared with the popup's reminder.
+const assistant = BROWSER.id === "edge"
+  ? { open: "openCopilot", box: "copilotOff", done: "copilotDone" }
+  : { open: "openGemini", box: "geminiOff", done: "geminiDone" };
+const key = BROWSER.assistant.storageKey;
+
+$(assistant.open).onclick = () => openAssistantSettings(); // from shared/setup.js
+async function showAssistant() {
+  const { [key]: off = false } = await chrome.storage.local.get(key);
+  $(assistant.box).checked = off;
+  $(assistant.done).hidden = !off;
+}
+$(assistant.box).onchange = () => chrome.storage.local.set({ [key]: $(assistant.box).checked });
+
+// 2. Incognito (InPrivate in Edge). Checked again when you come back from the settings tab.
 $("openIncognito").onclick = () => openExtensionSettings(); // from shared/setup.js
 async function showIncognito() {
   const allowed = await incognitoAllowed(); // from shared/setup.js
@@ -26,9 +35,9 @@ $("testNotification").onclick = async () => {
     : "Couldn't send it: " + (res?.error || "no reply from Focus Guard");
 };
 
-showGemini();
+showAssistant();
 showIncognito();
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && "geminiOff" in changes) showGemini();
+  if (area === "local" && key in changes) showAssistant();
 });
 document.addEventListener("visibilitychange", () => { if (!document.hidden) showIncognito(); });

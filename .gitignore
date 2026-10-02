@@ -1,6 +1,8 @@
 .DS_Store
 Thumbs.db
 *.zip
+# Release builds and unzipped test copies
+dist/
 node_modules/
 
 # Personal progress through TESTING.md; TESTING.md itself stays a blank checklist
