@@ -16,7 +16,7 @@ To test, start a session from the popup and open a blocked site such as `chatgpt
 
 ## Run the tests
 
-The tests check the background logic (sessions, blocking rules, passes) and the blocklist input cleaning without opening Chrome. You only need [Node.js](https://nodejs.org) 18 or newer. There's nothing to install.
+The tests check the background logic (sessions, blocking rules, passes) and the blocklist input cleaning without opening Chrome. You only need [Node.js](https://nodejs.org) 22 or newer. There's nothing to install.
 
 From the `focus-guard` folder, run:
 
@@ -33,6 +33,8 @@ Every test should show a ✔. The tests are in the `tests/` folder:
 - `html.test.js` checks the popup and block page HTML (ARIA references, ids the scripts use)
 
 If you change one of those files, add a test for your change too.
+
+GitHub runs these same tests on Node 22 and Node 24 for every push and pull request to `main`. You can see the results on the repository's **Actions** tab, and on your pull request.
 
 ## Test in Chrome
 

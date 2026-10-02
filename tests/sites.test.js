@@ -1,5 +1,5 @@
 // Tests for src/shared/sites.js, the blocklist input cleaning used by the popup.
-// Plain Node 18+, no installs:  node --test
+// Plain Node 22+, no installs:  node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");

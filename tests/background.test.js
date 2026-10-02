@@ -1,5 +1,5 @@
 // Tests for src/background/background.js. Runs the real file against a fake
-// chrome API (in-memory storage, rules, alarms and tabs). Plain Node 18+, no installs:
+// chrome API (in-memory storage, rules, alarms and tabs). Plain Node 22+, no installs:
 //   node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");

@@ -1,5 +1,5 @@
 // Checks that every file the extension points to exists, and that the block
-// page and everything it loads are exposed to websites. Plain Node 18+, no installs:  node --test
+// page and everything it loads are exposed to websites. Plain Node 22+, no installs:  node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");

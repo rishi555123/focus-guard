@@ -1,5 +1,7 @@
 # Focus Guard: Code Without the Crutch
 
+[![Tests](https://github.com/rishi555123/focus-guard/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/rishi555123/focus-guard/actions/workflows/test.yml)
+
 A Chrome extension that blocks AI chat sites while you code, so you try solving the problem yourself first.
 
 ## Why I built this

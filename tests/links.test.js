@@ -1,5 +1,5 @@
 // Tests for src/blocked/links.js, which reads the block page's address.
-// Plain Node 18+, no installs:  node --test
+// Plain Node 22+, no installs:  node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");

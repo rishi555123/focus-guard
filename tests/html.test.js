@@ -1,6 +1,6 @@
 // Checks the popup and block page HTML: ARIA references point at real
 // elements, and every element the page's script looks up by id exists.
-// Plain Node 18+, no installs:  node --test
+// Plain Node 22+, no installs:  node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
