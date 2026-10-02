@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Focus Guard privacy policy</title>
+  <meta name="description" content="Focus Guard collects no data and sends nothing anywhere. Everything stays in your browser.">
+  <link rel="icon" href="images/favicon-32.png" type="image/png">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html"><img class="icon-ink" src="images/icon-128.png" alt="" width="32" height="32"> Focus Guard</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="releases.html">Releases</a></li>
+          <li><a href="privacy.html" aria-current="page">Privacy</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap narrow">
+    <h1>Privacy <span class="mark">policy.</span></h1>
+<p><b>Effective date:</b> 2 October 2026</p>
+<p>Focus Guard is a browser extension for Google Chrome and Microsoft Edge that blocks AI chat sites during coding sessions. This policy explains what it does with your information. The short version: <b>Focus Guard collects no data and sends nothing anywhere.</b> Everything it needs stays in your own browser.</p>
+<h2>What Focus Guard collects</h2>
+<p>Nothing. Focus Guard has no servers, no accounts, no analytics, no advertising and no tracking. It never sends your information to the developer or to anyone else, and it doesn't sell or share it.</p>
+<h2>What Focus Guard stores on your device</h2>
+<p>To work, Focus Guard saves a small amount of data with <code>chrome.storage.local</code>, the browser's built-in storage for extensions. (Chrome and Edge both use this name.) This data stays on your computer, in your browser profile:</p>
+<div class="table-scroll"><table>
+<thead><tr><th scope="col">Data</th><th scope="col">Why</th></tr></thead><tbody>
+<tr><td>Your blocklist of AI sites</td><td>To know which sites to block</td></tr>
+<tr><td>The current session's start and end time and length</td><td>To run the timer and end the session</td></tr>
+<tr><td>The current pass: which site and when it ends</td><td>To unlock just that site for 5 minutes</td></tr>
+<tr><td>Stats: sessions finished, focused minutes, AI visits blocked, passes used</td><td>To show your progress in the popup</td></tr>
+<tr><td>Your last 20 unlock notes, each with the site and time</td><td>The notes you write before a pass. They're kept only on your device.</td></tr>
+<tr><td>A few settings: your last session length, which default sites you've already been offered, and whether you've ticked the setup checklist steps</td><td>To remember your choices</td></tr></tbody></table></div>
+<h2>Browsing activity</h2>
+<p>To block a site, Focus Guard compares the address of the page you're opening with your blocklist. This happens entirely inside your browser:</p>
+<ul>
+<li>Focus Guard doesn't record, store or send the pages you visit.</li>
+<li>It doesn't read the content of any web page. It has no content scripts.</li>
+<li>When it blocks a site, the blocked address appears in the block page's own address so it can send you back after a pass. That's part of your normal browser history, which you control in your browser's settings.</li>
+</ul>
+<h2>Notifications</h2>
+<p>Focus Guard shows notifications about your passes, like "1 minute left on your pass". They're created on your device, contain only the site's name, and follow your Windows and browser notification settings.</p>
+<h2>When you remove Focus Guard</h2>
+<p>Removing Focus Guard deletes everything it stored. Your browser then opens a page in this project's README on GitHub that explains how to turn Gemini in Chrome or Copilot in Edge back on. That's a normal page visit, like clicking a link. Focus Guard doesn't add anything about you to it. GitHub's own <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">privacy statement</a> applies to that visit.</p>
+<h2>Your controls</h2>
+<ul>
+<li><b>See or change your blocklist</b> in the Focus Guard popup, whenever no session is running.</li>
+<li><b>Delete everything</b> by removing Focus Guard at <code>chrome://extensions</code> or <code>edge://extensions</code>.</li>
+<li><b>Turn off notifications</b> in Windows settings or your browser's notification settings. Focus Guard keeps working without them.</li>
+</ul>
+<h2>Children</h2>
+<p>Focus Guard isn't directed at children under 13, and it collects no information from anyone.</p>
+<h2>Changes to this policy</h2>
+<p>If Focus Guard ever changes how it handles information, this file will be updated before that version is released, with a new effective date. You can see every past version in the repository's history.</p>
+<h2>Contact</h2>
+<p>Questions about privacy? <a href="https://github.com/rishi555123/focus-guard/issues">Open an issue</a> on GitHub.</p>
+<p>This policy is also on the Focus Guard website. The copy in this repository is the original.</p>
+    <p class="small muted">This page is a copy of <a href="https://github.com/rishi555123/focus-guard/blob/main/PRIVACY.md">PRIVACY.md</a> on GitHub, where every past version is kept.</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <ul>
+        <li><a href="https://github.com/rishi555123/focus-guard">Focus Guard on GitHub</a></li>
+        <li><a href="https://github.com/rishi555123/focus-guard/blob/main/LICENSE">MIT License</a></li>
+        <li><a href="privacy.html">Privacy policy</a></li>
+      </ul>
+      <p><a href="https://www.flaticon.com/free-icon/security-agent_11618268">Security agent icon</a> by Any Icon from Flaticon, recolored and resized.</p>
+    </div>
+  </footer>
+</body>
+</html>

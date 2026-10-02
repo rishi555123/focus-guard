@@ -1,5 +1,7 @@
 # Microsoft Edge Add-ons store listing
 
+> **On hold:** Focus Guard isn't being submitted to the Edge Add-ons store for now. Chrome and Edge users both install it from GitHub releases with Load unpacked. These drafts are kept in case that changes.
+
 Drafts for submitting Focus Guard through [Microsoft Partner Center](https://partner.microsoft.com/dashboard/microsoftedge/public/login?ref=dd). Each section matches a Partner Center page and is ready to paste. Requirements are from Microsoft's [Publish a Microsoft Edge extension](https://learn.microsoft.com/en-us/microsoft-edge/extensions/publish/publish-extension) (updated 2 September 2026) and [Developer policies for the Microsoft Edge Add-ons website](https://learn.microsoft.com/en-us/legal/microsoft-edge/extensions/developer-policies) (updated 24 July 2026). Checked on 2 October 2026.
 
 The listing deliberately doesn't mention other browsers: policy 1.1.2 says an extension "must not reference other browsers".

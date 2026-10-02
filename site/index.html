@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Focus Guard: code without the crutch</title>
+  <meta name="description" content="Focus Guard is a free browser extension for Chrome and Edge that blocks AI chat sites while you code, so you try solving the problem yourself first.">
+  <link rel="icon" href="images/favicon-32.png" type="image/png">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html"><img class="icon-ink" src="images/icon-128.png" alt="" width="32" height="32"> Focus Guard</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html" aria-current="page">Home</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="releases.html">Releases</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="wrap" aria-labelledby="hero-title">
+      <h1 id="hero-title">Your brain <span class="mark">first.</span></h1>
+      <p class="lead">Focus Guard is a free browser extension for Chrome and Edge that blocks AI chat sites while you code, so you try solving the problem yourself first.</p>
+      <div class="actions">
+        <a class="button big" href="https://github.com/rishi555123/focus-guard/releases/latest/download/focus-guard.zip">Download Focus Guard</a>
+        <a class="button ghost" href="install.html">How to install</a>
+      </div>
+      <p class="small muted">Free and open source. Works in Google Chrome and Microsoft Edge. The download is always the newest version.</p>
+    </section>
+
+    <section class="wrap narrow" aria-labelledby="why-title">
+      <h2 id="why-title">Why I built this</h2>
+      <p>Recently, whenever I sat down to solve problems on LeetCode, CodeChef, or HackerRank, my hand would automatically move toward ChatGPT or Gemini. Instead of thinking through the problem, I'd paste it in, copy the answer, and submit. That's plagiarism, and worse, I wasn't actually learning anything.</p>
+      <p>I built Focus Guard to break that habit. It doesn't ban AI completely. It just adds enough friction that I have to try solving the problem myself first. If I'm genuinely stuck after really trying, I can still get help, but only after writing down what I've attempted.</p>
+    </section>
+
+    <section class="wrap" aria-labelledby="how-title">
+      <h2 id="how-title">How it works</h2>
+      <div class="grid grid-3">
+        <div class="card">
+          <h3>1. Start a session</h3>
+          <p>Pick 25, 50 or 90 minutes from the toolbar. While the timer runs, AI chat sites like ChatGPT, Gemini, Claude and Copilot are blocked. The toolbar shows the minutes left.</p>
+        </div>
+        <div class="card">
+          <h3>2. Try it yourself</h3>
+          <p>Open an AI site and you get 6 questions to try first: 3 for debugging and 3 for problem-solving, like "What changed since it last worked?" They're different each time.</p>
+        </div>
+        <div class="card">
+          <h3>3. Still stuck? Earn a pass</h3>
+          <p>Write what you tried, wait 60 seconds, and get 5 minutes on that one site. Every other AI site stays blocked. Outside a session, everything works normally.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap" aria-labelledby="shots-title">
+      <h2 id="shots-title">See it in action</h2>
+      <div class="shots">
+        <figure>
+          <img src="images/blocked.png" width="1920" height="1080" loading="lazy"
+               alt="The Your brain first block page, showing three debugging questions, three problem-solving questions with checkboxes, and a box to write what you tried before a 60-second wait.">
+          <figcaption>The block page: questions to try first, then a 5-minute pass if you're still stuck.</figcaption>
+        </figure>
+        <figure>
+          <img src="images/popup.png" width="722" height="872" loading="lazy"
+               alt="The Focus Guard popup with 25, 50 and 90 minute buttons, a Start coding session button, and stats for sessions finished, focused minutes, AI visits blocked and passes used.">
+          <figcaption>The popup: pick a session length and see your stats.</figcaption>
+        </figure>
+        <figure>
+          <img src="images/welcome.png" width="1920" height="1080" loading="lazy"
+               alt="The Welcome to Focus Guard setup checklist in Chrome, with steps to turn off Gemini in Chrome, allow Focus Guard in Incognito, and allow notifications.">
+          <figcaption>The setup checklist that opens after you install it, shown here in Chrome. In Edge it covers Copilot and InPrivate instead.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="wrap" aria-labelledby="features-title">
+      <h2 id="features-title">What's included</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Blocks 25 AI chat sites</h3>
+          <p>ChatGPT, Gemini, Claude, Microsoft Copilot, Perplexity, DeepSeek and more, including their subdomains. Add or remove sites yourself; the list is locked during a session.</p>
+        </div>
+        <div class="card">
+          <h3>One site at a time</h3>
+          <p>A pass unlocks only the site you were stuck on. Notifications tell you one minute before it ends, when it ends, and if it moves to another site.</p>
+        </div>
+        <div class="card">
+          <h3>Simple stats</h3>
+          <p>Sessions finished, focused minutes, AI visits blocked and passes used, right in the popup.</p>
+        </div>
+        <div class="card">
+          <h3>Private by design</h3>
+          <p>No accounts, servers, ads or tracking. Everything stays in your browser. <a href="privacy.html">Read the privacy policy</a>.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="button big" href="https://github.com/rishi555123/focus-guard/releases/latest/download/focus-guard.zip">Download Focus Guard</a>
+      </div>
+      <p class="small muted">Some AI tools are out of any extension's reach, like the AI built into Chrome and Edge. The <a href="https://github.com/rishi555123/focus-guard#known-limitations">known limitations</a> explain what isn't blocked and how to turn those off yourself.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <ul>
+        <li><a href="https://github.com/rishi555123/focus-guard">Focus Guard on GitHub</a></li>
+        <li><a href="https://github.com/rishi555123/focus-guard/blob/main/LICENSE">MIT License</a></li>
+        <li><a href="privacy.html">Privacy policy</a></li>
+      </ul>
+      <p><a href="https://www.flaticon.com/free-icon/security-agent_11618268">Security agent icon</a> by Any Icon from Flaticon, recolored and resized.</p>
+    </div>
+  </footer>
+</body>
+</html>

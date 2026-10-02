@@ -2,7 +2,7 @@
 
 **Effective date:** 2 October 2026
 
-Focus Guard is a Microsoft Edge extension that blocks AI chat sites during coding sessions. This policy explains what it does with your information. The short version: **Focus Guard collects no data and sends nothing anywhere.** Everything it needs stays in your own browser.
+Focus Guard is a browser extension for Google Chrome and Microsoft Edge that blocks AI chat sites during coding sessions. This policy explains what it does with your information. The short version: **Focus Guard collects no data and sends nothing anywhere.** Everything it needs stays in your own browser.
 
 ## What Focus Guard collects
 
@@ -10,7 +10,7 @@ Nothing. Focus Guard has no servers, no accounts, no analytics, no advertising a
 
 ## What Focus Guard stores on your device
 
-To work, Focus Guard saves a small amount of data with `chrome.storage.local`, the browser's built-in storage for extensions. (Microsoft Edge uses the same `chrome.storage` name.) This data stays on your computer, in your browser profile:
+To work, Focus Guard saves a small amount of data with `chrome.storage.local`, the browser's built-in storage for extensions. (Chrome and Edge both use this name.) This data stays on your computer, in your browser profile:
 
 | Data | Why |
 | --- | --- |
@@ -27,21 +27,21 @@ To block a site, Focus Guard compares the address of the page you're opening wit
 
 - Focus Guard doesn't record, store or send the pages you visit.
 - It doesn't read the content of any web page. It has no content scripts.
-- When it blocks a site, the blocked address appears in the block page's own address so it can send you back after a pass. That's part of your normal browser history, which you control in Edge's settings.
+- When it blocks a site, the blocked address appears in the block page's own address so it can send you back after a pass. That's part of your normal browser history, which you control in your browser's settings.
 
 ## Notifications
 
-Focus Guard shows notifications about your passes, like "1 minute left on your pass". They're created on your device, contain only the site's name, and follow your Windows and Edge notification settings.
+Focus Guard shows notifications about your passes, like "1 minute left on your pass". They're created on your device, contain only the site's name, and follow your Windows and browser notification settings.
 
 ## When you remove Focus Guard
 
-Removing Focus Guard deletes everything it stored. Edge then opens a page in this project's README on GitHub that explains how to turn Copilot back on. That's a normal page visit, like clicking a link. Focus Guard doesn't add anything about you to it. GitHub's own [privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement) applies to that visit.
+Removing Focus Guard deletes everything it stored. Your browser then opens a page in this project's README on GitHub that explains how to turn Gemini in Chrome or Copilot in Edge back on. That's a normal page visit, like clicking a link. Focus Guard doesn't add anything about you to it. GitHub's own [privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement) applies to that visit.
 
 ## Your controls
 
 - **See or change your blocklist** in the Focus Guard popup, whenever no session is running.
-- **Delete everything** by removing Focus Guard at `edge://extensions`.
-- **Turn off notifications** in Windows settings or Edge's site and notification settings. Focus Guard keeps working without them.
+- **Delete everything** by removing Focus Guard at `chrome://extensions` or `edge://extensions`.
+- **Turn off notifications** in Windows settings or your browser's notification settings. Focus Guard keeps working without them.
 
 ## Children
 
@@ -55,4 +55,4 @@ If Focus Guard ever changes how it handles information, this file will be update
 
 Questions about privacy? [Open an issue](https://github.com/rishi555123/focus-guard/issues) on GitHub.
 
-If you installed Focus Guard from GitHub in another browser, everything in this policy applies there too.
+This policy is also on the Focus Guard website. The copy in this repository is the original.

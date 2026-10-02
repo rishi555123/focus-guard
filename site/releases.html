@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Focus Guard releases</title>
+  <meta name="description" content="Every version of Focus Guard, with its release date and what changed.">
+  <link rel="icon" href="images/favicon-32.png" type="image/png">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html"><img class="icon-ink" src="images/icon-128.png" alt="" width="32" height="32"> Focus Guard</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="releases.html" aria-current="page">Releases</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap narrow">
+    <h1>Releases<span class="mark">.</span></h1>
+    <p class="lead">Every version of Focus Guard and what changed in it. The newest is first.</p>
+    <div class="actions">
+      <a class="button" href="https://github.com/rishi555123/focus-guard/releases/latest/download/focus-guard.zip">Download the newest version</a>
+      <a class="button ghost" href="https://github.com/rishi555123/focus-guard/releases">All releases on GitHub</a>
+    </div>
+    <p class="small muted">Already installed? See <a href="install.html#updating">how to update</a>.</p>
+    <article class="release card" id="v1.0.0" aria-labelledby="h-v1.0.0">
+      <header>
+        <h2 id="h-v1.0.0">Version 1.0.0</h2>
+        <time datetime="2026-10-02">2 October 2026</time>
+        <a class="small" href="https://github.com/rishi555123/focus-guard/releases/tag/v1.0.0">Release on GitHub</a>
+      </header>
+<p>The first public release, for Google Chrome and Microsoft Edge, installed from GitHub releases with Load unpacked.</p>
+<h3>Added</h3>
+<h4 class="group">Microsoft Edge and Chrome from one codebase</h4>
+<ul>
+<li>Focus Guard detects Edge using User-Agent Client Hints, as Microsoft recommends, and adapts its setup to each browser.</li>
+<li>In Edge, the setup checklist offers an optional "Turn off Copilot in Edge" step instead of the Gemini step, says InPrivate instead of Incognito, and opens <code>edge://</code> settings pages. The popup's Gemini reminder only appears in Chrome.</li>
+</ul>
+<h4 class="group">Coding sessions</h4>
+<ul>
+<li>Timed coding sessions of 25, 50 or 90 minutes, started from the toolbar popup.</li>
+<li>A countdown in the popup and the minutes left on the toolbar badge.</li>
+<li><b>End session early</b>, which doesn't count the session as finished.</li>
+</ul>
+<h4 class="group">Blocking</h4>
+<ul>
+<li>Blocking of 25 AI chat sites and all their subdomains during a session: ChatGPT, Gemini and AI Studio, Claude, Microsoft Copilot, Perplexity, DeepSeek, Mistral Le Chat, Meta AI, Qwen, Kimi, Z.ai, Grok, Poe, You.com, Phind, Blackbox AI, LMArena, Duck.ai, Pi, T3 Chat and TypingMind.</li>
+<li>Re-blocking of AI tabs that are already open when a session starts, including tabs still loading.</li>
+<li>A backup that catches pages the blocking rules can't see: Back and Forward, pages Chrome loads in advance, and moving between pages inside a single-page app.</li>
+<li>An editable blocklist in the popup. Pasted links are cleaned down to their domain, lines that aren't domains are rejected with a message, and the list is locked during a session.</li>
+<li>New default sites are added to existing blocklists on update, without bringing back sites you removed.</li>
+</ul>
+<h4 class="group">The block page</h4>
+<ul>
+<li>A "Your brain first." page with questions to try before asking an AI: 3 debugging and 3 problem-solving questions, picked at random from a pool of 15 each time it opens. Ticking them off never reshuffles the list. The pool is in <code>src/blocked/questions.js</code>, so adding a question is one line.</li>
+<li>Unlocking by writing at least 60 characters about what you tried, then waiting 60 seconds, for a 5-minute pass.</li>
+<li><b>Back to my code</b>, which goes back past the blocked site, or closes the tab if there's nothing to go back to.</li>
+<li>A leftover block page reopens its site once the session is over.</li>
+</ul>
+<h4 class="group">Passes</h4>
+<ul>
+<li>Passes cover one site at a time, so every other AI site stays blocked.</li>
+<li>Sites that redirect elsewhere count as the same site: <code>chat.openai.com</code> and <code>chatgpt.com</code>, <code>bard.google.com</code> and <code>gemini.google.com</code>, <code>kimi.moonshot.cn</code> and <code>kimi.com</code>.</li>
+<li>A warning before the wait when unlocking would end your pass for another site.</li>
+<li>A note on tabs that were re-blocked because the pass moved or ran out.</li>
+</ul>
+<h4 class="group">Notifications</h4>
+<ul>
+<li>"1 minute left on your [site] pass."</li>
+<li>"Your 5-minute pass for [site] is over. It's blocked again."</li>
+<li>"Your pass moved to [new site], so [old site] is blocked again."</li>
+<li>No pass notifications when the session itself ends first.</li>
+</ul>
+<h4 class="group">Stats</h4>
+<ul>
+<li>Sessions finished, focused minutes, AI visits blocked and passes used.</li>
+<li>Visits count only once: reloads, Back and Forward, and re-blocked tabs aren't counted again.</li>
+</ul>
+<h4 class="group">Setup</h4>
+<ul>
+<li>A setup checklist that opens on first install: turn off the browser's built-in AI (Gemini in Chrome, or optionally Copilot in Edge), allow Focus Guard in Incognito or InPrivate, and allow browser notifications in Windows, with a test notification.</li>
+<li>Popup reminders for Gemini in Chrome and for private windows, and a <b>Setup checklist</b> link.</li>
+<li>A "Removed Focus Guard?" page after uninstalling, explaining how to turn Gemini in Chrome or Copilot in Edge back on.</li>
+</ul>
+<h4 class="group">Reliability</h4>
+<ul>
+<li>Recovery after a browser restart or extension update: lost timers are rebuilt, and a session that ran out while Chrome was closed is finished and counted.</li>
+<li>Events are handled one at a time, so a session ending and a pass changing at the same moment can't clash.</li>
+<li>Ending a session always clears its timers first, so no pass notification can arrive afterwards.</li>
+</ul>
+<h4 class="group">Privacy</h4>
+<ul>
+<li>Everything is saved only in <code>chrome.storage.local</code> on your computer. No servers, analytics or tracking.</li>
+</ul>
+<h4 class="group">For contributors</h4>
+<ul>
+<li>Automated tests that run with plain Node.js (<code>node --test</code>), and run on GitHub Actions with Node 22 and 24 for every push and pull request.</li>
+<li>A manual checklist for Chrome and Edge in <code>TESTING.md</code>, with console shortcuts for testing timers quickly.</li>
+</ul>
+<p>Known limitations, like Chrome's built-in Gemini panel, Edge's Copilot sidebar and the block page in private windows, are listed in the <a href="https://github.com/rishi555123/focus-guard#known-limitations">README</a>.</p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <ul>
+        <li><a href="https://github.com/rishi555123/focus-guard">Focus Guard on GitHub</a></li>
+        <li><a href="https://github.com/rishi555123/focus-guard/blob/main/LICENSE">MIT License</a></li>
+        <li><a href="privacy.html">Privacy policy</a></li>
+      </ul>
+      <p><a href="https://www.flaticon.com/free-icon/security-agent_11618268">Security agent icon</a> by Any Icon from Flaticon, recolored and resized.</p>
+    </div>
+  </footer>
+</body>
+</html>

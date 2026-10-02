@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Install Focus Guard in Chrome or Edge</title>
+  <meta name="description" content="Step-by-step instructions to install and update Focus Guard in Google Chrome or Microsoft Edge with Load unpacked.">
+  <link rel="icon" href="images/favicon-32.png" type="image/png">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html"><img class="icon-ink" src="images/icon-128.png" alt="" width="32" height="32"> Focus Guard</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="install.html" aria-current="page">Install</a></li>
+          <li><a href="releases.html">Releases</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap narrow">
+    <h1>Install <span class="mark">Focus Guard.</span></h1>
+    <p class="lead">Focus Guard isn't in a browser store, so you install it from a zip file with <b>Load unpacked</b>. It takes about two minutes.</p>
+
+    <div class="actions">
+      <a class="button big" href="https://github.com/rishi555123/focus-guard/releases/latest/download/focus-guard.zip">Download Focus Guard</a>
+    </div>
+    <p class="small muted">This link always downloads the newest version. Websites can't open browser pages like <code>chrome://extensions</code>, so you'll type those addresses yourself.</p>
+
+    <h2 id="install">Install guide</h2>
+    <p class="no-js-label muted">Pick the guide for your browser below.</p>
+
+    <div class="tablist" role="tablist" aria-label="Choose your browser">
+      <button type="button" role="tab" id="tab-chrome" aria-controls="panel-chrome" aria-selected="true" data-browser="chrome">Google Chrome</button>
+      <button type="button" role="tab" id="tab-edge" aria-controls="panel-edge" aria-selected="false" tabindex="-1" data-browser="edge">Microsoft Edge</button>
+    </div>
+
+    <section id="panel-chrome" class="card" role="tabpanel" aria-labelledby="tab-chrome" tabindex="0">
+      <h3>Install in Google Chrome</h3>
+      <ol class="steps">
+        <li><b>Download</b> <a href="https://github.com/rishi555123/focus-guard/releases/latest/download/focus-guard.zip">focus-guard.zip</a>.</li>
+        <li><b>Extract it into a folder you'll keep</b>, like <code>Documents\focus-guard</code>. In Windows, right-click the zip, choose <b>Extract All</b>, and pick the folder. Chrome loads Focus Guard from this folder every time it starts, so <b>deleting or moving the folder removes the extension</b>.</li>
+        <li><b>Open the extensions page:</b> type <code>chrome://extensions</code> in the address bar and press Enter.</li>
+        <li><b>Turn on Developer mode</b> with the switch in the top-right corner.</li>
+        <li><b>Click Load unpacked.</b> The button appears once Developer mode is on.</li>
+        <li><b>Select the folder</b> you extracted, the one with <code>manifest.json</code> directly inside it, and click <b>Select Folder</b>.</li>
+        <li><b>Pin it to the toolbar:</b> click the puzzle-piece <b>Extensions</b> button next to the address bar, then the pin next to Focus Guard.</li>
+      </ol>
+    </section>
+
+    <section id="panel-edge" class="card" role="tabpanel" aria-labelledby="tab-edge" tabindex="0">
+      <h3>Install in Microsoft Edge</h3>
+      <ol class="steps">
+        <li><b>Download</b> <a href="https://github.com/rishi555123/focus-guard/releases/latest/download/focus-guard.zip">focus-guard.zip</a>.</li>
+        <li><b>Extract it into a folder you'll keep</b>, like <code>Documents\focus-guard</code>. In Windows, right-click the zip, choose <b>Extract All</b>, and pick the folder. Edge loads Focus Guard from this folder every time it starts, so <b>deleting or moving the folder removes the extension</b>.</li>
+        <li><b>Open the extensions page:</b> type <code>edge://extensions</code> in the address bar and press Enter.</li>
+        <li><b>Turn on Developer mode</b> with the switch in the left-hand panel.</li>
+        <li><b>Click Load unpacked.</b> The button appears once Developer mode is on.</li>
+        <li><b>Select the folder</b> you extracted, the one with <code>manifest.json</code> directly inside it, and click <b>Select Folder</b>.</li>
+        <li><b>Show it in the toolbar:</b> click the puzzle-piece <b>Extensions</b> button next to the address bar, then the eye icon (<b>Show in toolbar</b>) next to Focus Guard.</li>
+      </ol>
+    </section>
+
+    <div class="note warn" role="note">
+      <p><b>Seeing a warning about developer mode extensions? That's expected.</b> Chrome and Edge may show a message, for example when the browser starts, about extensions running in developer mode, and offer to turn them off. It appears for every extension installed with Load unpacked, because it didn't come from a store.</p>
+      <p>Close the message and keep Focus Guard on. If you turn developer mode extensions off, Focus Guard stops working until you switch it back on at the extensions page.</p>
+    </div>
+
+    <h3>After installing</h3>
+    <p>Focus Guard opens a short setup checklist for your browser: turning off the browser's built-in AI, allowing Focus Guard in private windows, and allowing notifications. Then click the Focus Guard icon in the toolbar to start your first coding session.</p>
+
+    <h2 id="updating">Updating to a new version</h2>
+    <p>Extensions installed with Load unpacked don't update by themselves. When there's a new version on the <a href="releases.html">Releases</a> page:</p>
+    <ol class="steps">
+      <li><b>Download</b> the new <a href="https://github.com/rishi555123/focus-guard/releases/latest/download/focus-guard.zip">focus-guard.zip</a>.</li>
+      <li><b>Replace the folder's contents:</b> open the folder you installed Focus Guard from, delete everything <i>inside</i> it, and extract the new zip into that same folder. Deleting the old files first means nothing from the old version is left behind.</li>
+      <li><b>Click reload:</b> go to <code>chrome://extensions</code> or <code>edge://extensions</code> and click the circular reload arrow on the Focus Guard card.</li>
+      <li><b>Check the version:</b> the card should show the version number from the Releases page.</li>
+    </ol>
+    <div class="note" role="note">
+      <p><b>Keep the same folder.</b> Your browser recognises Focus Guard by the folder it was loaded from. Updating in the same place keeps your blocklist, stats and settings. Loading the new version from a different folder installs it as a separate copy, starting from scratch.</p>
+    </div>
+    <p class="small muted">Want to hear about new versions? On <a href="https://github.com/rishi555123/focus-guard">GitHub</a>, click <b>Watch</b>, then <b>Custom</b>, and tick <b>Releases</b>.</p>
+
+    <h2 id="removing">Removing Focus Guard</h2>
+    <p>On the extensions page, click <b>Remove</b> on the Focus Guard card, then delete the folder you installed it from. Removing it deletes everything Focus Guard saved.</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <ul>
+        <li><a href="https://github.com/rishi555123/focus-guard">Focus Guard on GitHub</a></li>
+        <li><a href="https://github.com/rishi555123/focus-guard/blob/main/LICENSE">MIT License</a></li>
+        <li><a href="privacy.html">Privacy policy</a></li>
+      </ul>
+      <p><a href="https://www.flaticon.com/free-icon/security-agent_11618268">Security agent icon</a> by Any Icon from Flaticon, recolored and resized.</p>
+    </div>
+  </footer>
+  <script src="assets/tabs.js"></script>
+</body>
+</html>

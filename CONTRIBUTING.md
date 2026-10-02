@@ -46,10 +46,17 @@ Every test should show a ✔. The tests are in the `tests/` folder:
 - `manifest.test.js` checks that every file the extension points to exists
 - `html.test.js` checks the popup and block page HTML (ARIA references, ids the scripts use)
 - `docs.test.js` checks that every checklist line in `TESTING.md` is a real `- [ ] ` checkbox with a unique number
+- `site.test.js` checks the website in `site/`: every link and image resolves inside `site/`, nothing points outside it, and the releases and privacy pages match `CHANGELOG.md` and `PRIVACY.md`
 
 If you change one of those files, add a test for your change too.
 
 GitHub runs these same tests on Node 22 and Node 24 for every push and pull request to `main`. You can see the results on the repository's **Actions** tab, and on your pull request.
+
+## Work on the website
+
+The website in `site/` is plain HTML, CSS and a little JavaScript, with no build step. Open `site/index.html` in your browser to look at it. To deploy it, drag the `site/` folder onto Netlify Drop, or connect the repository to Netlify, which reads `netlify.toml`.
+
+Keep `site/` self-contained: copy any image or file it needs into `site/` itself, and never link to `../docs` or `../src`. When you change `CHANGELOG.md` or `PRIVACY.md`, update `site/releases.html` or `site/privacy.html` to match. `node --test` checks all of this.
 
 ## Test in Chrome and Edge
 

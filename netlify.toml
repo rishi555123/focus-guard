@@ -1,0 +1,5 @@
+# Netlify settings for Git-based deploys of the Focus Guard website.
+# The site is plain HTML, CSS and JavaScript in site/, so there's no build step.
+# For a one-off deploy you can also drag the site/ folder onto Netlify Drop.
+[build]
+  publish = "site"

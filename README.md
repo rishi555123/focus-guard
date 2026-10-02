@@ -2,7 +2,10 @@
 
 [![Tests](https://github.com/rishi555123/focus-guard/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/rishi555123/focus-guard/actions/workflows/test.yml)
 
-A browser extension for Microsoft Edge and Google Chrome that blocks AI chat sites while you code, so you try solving the problem yourself first.
+A browser extension for Google Chrome and Microsoft Edge that blocks AI chat sites while you code, so you try solving the problem yourself first.
+
+<!-- Replace the line below with the website's address after deploying site/ to Netlify. -->
+**Website:** coming soon
 
 ## Why I built this
 
@@ -20,7 +23,7 @@ It feels productive, but it skips the part where you actually learn: reading the
 
 Focus Guard doesn't ban AI. It adds **friction**.
 
-While a coding session is running, AI chat sites are swapped out for a "Your brain first." page. It gives you a quick checklist of things to try. If you're still stuck, you can unlock the sites:
+While a coding session is running, AI chat sites are swapped out for a "Your brain first." page. It gives you a few questions to try first. If you're still stuck, you can unlock the site:
 
 1. Write down what you've tried (at least 60 characters).
 2. Wait 60 seconds. Use the time to try one more idea.
@@ -45,9 +48,9 @@ Most of the time, writing the problem down or waiting that minute is enough to g
 
 *The popup: pick a session length, start a session and see your stats.*
 
-![The "Your brain first." block page with the debugging checklist and the unlock box](docs/screenshots/blocked.png)
+![The "Your brain first." block page with debugging and problem-solving questions and the unlock box](docs/screenshots/blocked.png)
 
-*The block page: a debugging checklist first, then a 5-minute pass if you're still stuck.*
+*The block page: questions to try first, then a 5-minute pass if you're still stuck.*
 
 ![The welcome page's setup checklist](docs/screenshots/welcome.png)
 
@@ -55,23 +58,18 @@ Most of the time, writing the problem down or waiting that minute is enough to g
 
 ## Installation
 
-### Microsoft Edge
+Focus Guard isn't in a browser store. In both Chrome and Edge, you install it from GitHub with **Load unpacked**:
 
-<!-- Replace with the Microsoft Edge Add-ons link once the listing is live. -->
-Focus Guard is coming to the **Microsoft Edge Add-ons** store. The link will be here once the listing is live. Installing from the store keeps it up to date automatically.
+1. Download [focus-guard.zip](https://github.com/rishi555123/focus-guard/releases/latest/download/focus-guard.zip). This link always gets the newest version. Every version is on the [Releases page](https://github.com/rishi555123/focus-guard/releases).
+2. Extract it into a folder you'll keep, like `Documents\focus-guard`. Your browser loads Focus Guard from that folder, so deleting or moving the folder removes the extension.
+3. Open the extensions page: `chrome://extensions` in Chrome, or `edge://extensions` in Edge.
+4. Turn on **Developer mode**. In Chrome the switch is in the top-right corner; in Edge it's in the left-hand panel.
+5. Click **Load unpacked** and select the extracted folder (the one with `manifest.json` in it).
+6. Optional: click the puzzle-piece **Extensions** button in the toolbar, then the pin (Chrome) or the eye icon (Edge) next to Focus Guard, so it's easy to reach.
 
-### Google Chrome
+Your browser may show a message about extensions in developer mode, for example when it starts. That's expected for anything installed with Load unpacked. Close it and keep Focus Guard on.
 
-Chrome users install Focus Guard from GitHub:
-
-1. Go to the [Releases page](https://github.com/rishi555123/focus-guard/releases) and download the latest `focus-guard-<version>.zip`.
-2. Unzip it into a folder you'll keep, like `Documents\focus-guard`. Chrome loads Focus Guard from that folder, so don't delete it.
-3. Open Chrome and go to `chrome://extensions`.
-4. Turn on **Developer mode** (the switch in the top-right corner).
-5. Click **Load unpacked** and select the unzipped folder (the one with `manifest.json` in it).
-6. Optional: click the puzzle-piece icon in the toolbar and pin Focus Guard so it's easy to reach.
-
-To update, download the new zip, unzip it over the same folder, and click the reload icon on the Focus Guard card at `chrome://extensions`.
+**Updating:** download the new zip, delete everything inside your Focus Guard folder, extract the new zip into that same folder, and click the reload icon on the Focus Guard card on the extensions page. Keep using the same folder: your browser recognises Focus Guard by its folder, so that keeps your blocklist, stats and settings.
 
 ### After installing
 
@@ -208,6 +206,8 @@ Here's a quick map of the files:
 | `src/welcome/welcome.html` / `welcome.js` | The setup checklist that opens on first install |
 | `icons/` | Extension and toolbar icons |
 | `docs/screenshots/` | Screenshots for the docs |
+| `site/` | The project website: plain HTML and CSS, ready for Netlify with no build step |
+| `netlify.toml` | Tells Netlify to publish `site/` |
 | `tests/` | Tests for the background logic, blocklist input, block page links and manifest paths (run with `node --test`) |
 
 ## Credits
