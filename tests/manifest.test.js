@@ -104,6 +104,26 @@ test("the README explains why the block page doesn't show in Incognito", () => {
   assert.match(limits, /unlock the site from a normal window/i);
 });
 
+// Chrome only accepts 1 to 4 dot-separated numbers in "version"; pre-release
+// names like 1.0.0-beta.1 go in "version_name", which Chrome shows to users
+test("version is numbers only, and version_name builds on it", () => {
+  assert.match(manifest.version, /^\d+(\.\d+){0,3}$/, "Chrome rejects anything but numbers in version");
+  if (manifest.version_name !== undefined) {
+    assert.ok(manifest.version_name.startsWith(manifest.version),
+      `version_name "${manifest.version_name}" should start with version "${manifest.version}"`);
+  }
+});
+
+test("CHANGELOG.md has a dated entry and a link for this release", () => {
+  const changelog = fs.readFileSync(path.join(ROOT, "CHANGELOG.md"), "utf8");
+  const release = manifest.version_name || manifest.version;
+  const escaped = release.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  assert.match(changelog, /^## \[Unreleased\]$/m, "Keep a Changelog: an Unreleased section");
+  assert.match(changelog, new RegExp(`^## \\[${escaped}\\] - \\d{4}-\\d{2}-\\d{2}$`, "m"), `no dated "## [${release}]" entry`);
+  assert.match(changelog, new RegExp(`^\\[${escaped}\\]: https://github\\.com/rishi555123/focus-guard/releases/tag/v${escaped}$`, "m"),
+    `no link for [${release}]`);
+});
+
 test("nothing else is exposed to websites", () => {
   const exposed = manifest.web_accessible_resources.flatMap((w) => w.resources);
   assert.deepEqual(exposed.sort(), [

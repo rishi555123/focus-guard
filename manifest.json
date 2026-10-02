@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Focus Guard: Code Without the Crutch",
   "version": "1.0.0",
+  "version_name": "1.0.0-beta.1",
   "description": "Blocks AI chat sites during coding sessions so you solve problems yourself first.",
   "permissions": ["declarativeNetRequest", "storage", "alarms", "tabs", "notifications"],
   "host_permissions": ["<all_urls>"],
