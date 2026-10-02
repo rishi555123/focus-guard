@@ -87,6 +87,23 @@ test("the uninstall page points at a README heading that exists", () => {
   assert.ok(anchors.includes(url.split("#")[1]), "README has no heading for #" + url.split("#")[1]);
 });
 
+// In split mode Chrome runs a second, separate copy of the background script for
+// Incognito. The two copies can't talk to each other, so the serial() queue no longer
+// protects rule updates, re-blocking tabs only reaches one side, and how alarms and
+// rules behave isn't documented. Until that's handled, Focus Guard stays in spanning
+// mode and the README explains the Incognito block page limitation.
+test("Focus Guard stays in spanning Incognito mode", () => {
+  assert.ok(manifest.incognito === undefined || manifest.incognito === "spanning",
+    `"incognito": "${manifest.incognito}" needs the background script to coordinate between two copies first`);
+});
+
+test("the README explains why the block page doesn't show in Incognito", () => {
+  const readme = fs.readFileSync(path.join(ROOT, "README.md"), "utf8");
+  const limits = readme.split("## Known limitations")[1].split(/\n## /)[0];
+  assert.match(limits, /block page in Incognito/i);
+  assert.match(limits, /unlock the site from a normal window/i);
+});
+
 test("nothing else is exposed to websites", () => {
   const exposed = manifest.web_accessible_resources.flatMap((w) => w.resources);
   assert.deepEqual(exposed.sort(), [
