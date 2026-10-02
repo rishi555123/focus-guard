@@ -152,7 +152,7 @@ Focus Guard blocks websites by their address, so some AI tools are out of its re
 
 ## Privacy
 
-Everything stays on your computer.
+Everything stays on your computer. The full privacy policy is in [PRIVACY.md](PRIVACY.md).
 
 - Your sessions, stats, blocklist and the unlock notes you write are saved only in `chrome.storage.local` in your own browser.
 - Focus Guard has no servers, no analytics and no tracking, and it never sends your data anywhere.
