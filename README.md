@@ -4,8 +4,7 @@
 
 A browser extension for Google Chrome and Microsoft Edge that blocks AI chat sites while you code, so you try solving the problem yourself first.
 
-<!-- Replace the line below with the website's address after deploying site/ to Netlify. -->
-**Website:** coming soon
+**Website:** [focus-gaurd.netlify.app](https://focus-gaurd.netlify.app/)
 
 ## Why I built this
 
