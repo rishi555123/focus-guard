@@ -208,13 +208,17 @@ async function addStats(fn) {
   await chrome.storage.local.set({ stats });
 }
 
+// Always clears the timers, pass and rules, even with no saved session, so
+// leftover alarms from a session that didn't finish cleaning up can't outlive it
 async function finishSession(completed) {
-  const { session } = await chrome.storage.local.get("session");
-  if (!session) return;
-  const mins = Math.round((Math.min(Date.now(), session.endsAt) - session.startedAt) / 60000);
-  await addStats((s) => { s.minutes += mins; if (completed) s.sessions += 1; });
-  await chrome.storage.local.remove(["session", "pass", "passUntil"]);
+  // Timers first: if a later step fails or the worker stops, none are left running
   await chrome.alarms.clearAll(); // includes passWarn and passEnd, so no pass notifications follow
+  const { session } = await chrome.storage.local.get("session");
+  if (session) {
+    const mins = Math.round((Math.min(Date.now(), session.endsAt) - session.startedAt) / 60000);
+    await addStats((s) => { s.minutes += mins; if (completed) s.sessions += 1; });
+  }
+  await chrome.storage.local.remove(["session", "pass", "passUntil"]);
   chrome.notifications.clear(NOTIFY_ID).catch(() => {}); // a leftover "1 minute left" no longer applies
   await syncRules();
 }
@@ -235,6 +239,8 @@ async function reconcile() {
     if (pass && pass.until - PASS_WARN_MS > now && !(await chrome.alarms.get("passWarn"))) {
       chrome.alarms.create("passWarn", { when: pass.until - PASS_WARN_MS });
     }
+  } else {
+    await chrome.alarms.clearAll(); // leftovers from a session that didn't finish cleaning up
   }
   if (await syncRules()) await blockOpenTabs();
 }

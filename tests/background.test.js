@@ -27,7 +27,8 @@ async function load(saved = {}, reason = Object.keys(saved).length ? "update" : 
   const ev = (name) => ({ addListener: (fn) => (listeners[name] = fn) });
   const env = {
     store: structuredClone(saved), rules: [], alarms: {}, tabs: [], updates: [], errors: [],
-    notifications: [], cleared: [], created: [], uninstallUrls: [], failNotifications: false
+    notifications: [], cleared: [], created: [], uninstallUrls: [], failNotifications: false,
+    failRemove: false
   };
 
   const chrome = {
@@ -43,7 +44,10 @@ async function load(saved = {}, reason = Object.keys(saved).length ? "update" : 
         return out;
       },
       set: async (o) => { Object.assign(env.store, structuredClone(o)); },
-      remove: async (keys) => { for (const k of [].concat(keys)) delete env.store[k]; }
+      remove: async (keys) => {
+        if (env.failRemove) throw new Error("Storage is unavailable");
+        for (const k of [].concat(keys)) delete env.store[k];
+      }
     } },
     declarativeNetRequest: {
       getDynamicRules: async () => env.rules,
@@ -509,6 +513,35 @@ test("ending the session early during a pass clears its alarms and notifications
   assert.equal(env.alarms.passEnd, undefined);
   assert.deepEqual(env.cleared, ["focus-guard-pass"]);
   assert.deepEqual(env.notifications, []);
+});
+
+test("ending the session early clears every alarm, even if a later step fails", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  delete env.alarms.passWarn; // as after the "1 minute left" shortcut fires
+  env.failRemove = true; // like the worker stopping partway through
+  const reply = await env.send({ type: "stop" });
+  assert.equal(reply.ok, false);
+  assert.deepEqual(Object.keys(env.alarms), [], "sessionEnd, tick and passEnd are gone");
+});
+
+test("ending the session early clears leftover alarms when no session is saved", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  delete env.store.session; // a session that didn't finish cleaning up
+  await env.send({ type: "stop" });
+  assert.deepEqual(Object.keys(env.alarms), []);
+  assert.equal(env.store.pass, undefined);
+  assert.equal(env.rules.length, 0);
+  assert.equal(env.store.stats.minutes, 0, "nothing to count without a session");
+});
+
+test("reconcile clears leftover alarms when no session is saved", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  delete env.store.session;
+  await env.fire.startup();
+  assert.deepEqual(Object.keys(env.alarms), []);
 });
 
 test("no pass notifications when the session itself ends during the pass", async () => {
