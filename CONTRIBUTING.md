@@ -24,7 +24,14 @@ From the `focus-guard` folder, run:
 node --test
 ```
 
-Every test should show a ✔. The tests are in the `tests/` folder: `background.test.js` covers `src/background/background.js`, and `sites.test.js` covers `src/shared/sites.js`. If you change one of those files, add a test for your change too.
+Every test should show a ✔. The tests are in the `tests/` folder:
+
+- `background.test.js` covers `src/background/background.js`
+- `sites.test.js` covers `src/shared/sites.js`
+- `links.test.js` covers `src/blocked/links.js`
+- `manifest.test.js` checks that every file the extension points to exists
+
+If you change one of those files, add a test for your change too.
 
 ## Report a bug
 

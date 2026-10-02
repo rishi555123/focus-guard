@@ -21,17 +21,28 @@ const SITE_ALIASES = {
   "kimi.moonshot.cn": "kimi.com"
 };
 const PASS_MINUTES = 5;
+const SESSION_LENGTHS = [25, 50, 90];
 const BLOCK_PAGE = () => chrome.runtime.getURL("src/blocked/blocked.html");
 const emptyStats = () => ({ blocked: 0, sessions: 0, minutes: 0, unlocks: 0, log: [] });
 
-chrome.runtime.onInstalled.addListener(async () => {
+// Run state changes one at a time, so two events can't interleave their
+// storage and rule updates. Only event listeners use this, never helpers,
+// so nothing waits on itself.
+let queue = Promise.resolve();
+function serial(fn) {
+  const run = queue.then(fn);
+  queue = run.catch(() => {});
+  return run;
+}
+
+chrome.runtime.onInstalled.addListener(() => serial(async () => {
   const s = await chrome.storage.local.get(["sites", "stats", "knownDefaults"]);
   const sites = s.sites ? mergeDefaults(s.sites, s.knownDefaults || V1_DEFAULTS) : DEFAULT_SITES;
   const knownDefaults = [...new Set([...(s.knownDefaults || V1_DEFAULTS), ...DEFAULT_SITES])];
   await chrome.storage.local.set({ sites, knownDefaults });
   if (!s.stats) await chrome.storage.local.set({ stats: emptyStats() });
   await reconcile();
-});
+}));
 
 // Add defaults that are new since the user last got the list, without
 // bringing back any default they deleted themselves
@@ -42,7 +53,7 @@ function mergeDefaults(sites, known) {
   for (const d of DEFAULT_SITES) if (!skip.has(d)) merged.push(d);
   return [...new Set(merged)];
 }
-chrome.runtime.onStartup.addListener(reconcile);
+chrome.runtime.onStartup.addListener(() => serial(reconcile));
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const siteRegex = (domain) => "^https?://([^/]*\\.)?" + escapeRe(domain) + "(/.*)?$";
@@ -110,15 +121,20 @@ async function syncRules() {
   return !!state;
 }
 
-const blockUrl = (url) => BLOCK_PAGE() + "?u=" + encodeURIComponent(url);
+// Block page link for moving a tab (see src/blocked/links.js). `sweep` marks
+// re-blocking a tab that was already open, which isn't counted as a visit.
+const blockUrl = (url, sweep = false) =>
+  BLOCK_PAGE() + "?" + (sweep ? "sweep=1&" : "") + "t=" + encodeURIComponent(url);
 
-// Catch AI tabs that were already open before the session started (or before a pass ended)
+// Catch AI tabs that were already open before the session started (or before a pass ended),
+// including tabs that are still loading one
 async function blockOpenTabs() {
   const state = await getBlockState();
   if (!state) return;
   const tabs = await chrome.tabs.query({});
   for (const tab of tabs) {
-    if (isBlockedUrl(tab.url, state)) chrome.tabs.update(tab.id, { url: blockUrl(tab.url) }).catch(() => {});
+    const url = tab.pendingUrl || tab.url;
+    if (isBlockedUrl(url, state)) chrome.tabs.update(tab.id, { url: blockUrl(url, true) }).catch(() => {});
   }
 }
 
@@ -175,17 +191,20 @@ async function reconcile() {
   if (await syncRules()) await blockOpenTabs();
 }
 
-chrome.alarms.onAlarm.addListener(async (alarm) => {
+chrome.alarms.onAlarm.addListener((alarm) => serial(async () => {
   if (alarm.name === "sessionEnd") await finishSession(true);
   if (alarm.name === "tick") await updateBadge();
   if (alarm.name === "passEnd") {
     await chrome.storage.local.remove("pass");
     if (await syncRules()) await blockOpenTabs();
   }
-});
+}));
 
 async function handleMessage(msg) {
   if (msg.type === "start") {
+    if (!SESSION_LENGTHS.includes(msg.minutes)) {
+      throw new Error("Session length must be " + SESSION_LENGTHS.join(", ") + " minutes");
+    }
     const now = Date.now();
     await chrome.storage.local.set({
       session: { startedAt: now, endsAt: now + msg.minutes * 60000, minutes: msg.minutes }
@@ -197,12 +216,13 @@ async function handleMessage(msg) {
   }
   if (msg.type === "stop") await finishSession(false);
   if (msg.type === "blocked") {
-    // Only count real blocks. A leftover block page for a listed site that isn't
-    // blocked right now (session over, or a pass covers it) is told to reopen it.
+    // Only count real blocks, and only fresh visits (the page sends count: false for
+    // reloads, Back/Forward and sweeps). A leftover block page for a listed site that
+    // isn't blocked right now (session over, or a pass covers it) is told to reopen it.
     const { sites = [] } = await chrome.storage.local.get("sites");
     const state = await getBlockState();
     const blocked = msg.url ? isBlockedUrl(msg.url, state) : !!state;
-    if (blocked) await addStats((s) => { s.blocked += 1; });
+    if (blocked && msg.count !== false) await addStats((s) => { s.blocked += 1; });
     return { blocked, reopen: !blocked && isListed(msg.url, sites) };
   }
   if (msg.type === "unlock") {
@@ -234,7 +254,7 @@ async function handleMessage(msg) {
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
-  handleMessage(msg).then(
+  serial(() => handleMessage(msg)).then(
     (result) => reply({ ok: true, ...result }),
     (err) => { console.error("Focus Guard:", msg.type, err); reply({ ok: false, error: String(err) }); }
   );

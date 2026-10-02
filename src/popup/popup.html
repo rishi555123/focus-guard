@@ -16,10 +16,15 @@
   details textarea { height: 140px; margin: 8px 0; }
   .hidden { display: none; }
   #saved.error { display: block; margin-top: 6px; color: var(--redpen); }
+  .note { font-size: 12px; line-height: 1.45; margin: 0 0 12px; padding: 8px 10px;
+          background: var(--white); border: 2px solid var(--marker); border-radius: 6px; }
+  button.link { padding: 0; border: 0; background: none; color: var(--ink); text-decoration: underline; }
 </style></head>
 <body>
   <h1>Focus Guard</h1>
   <p class="sub muted">AI chat sites are blocked while a session runs.</p>
+  <p class="note hidden" id="incognito">Incognito windows aren't blocked yet.
+    <button class="link" id="openSettings">Allow Focus Guard in Incognito</button></p>
 
   <section id="idle">
     <div class="durations" role="group" aria-label="Session length">

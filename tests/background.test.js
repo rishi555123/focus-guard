@@ -34,6 +34,7 @@ async function load(saved = {}) {
     declarativeNetRequest: {
       getDynamicRules: async () => env.rules,
       updateDynamicRules: async ({ removeRuleIds, addRules }) => {
+        await new Promise((r) => setTimeout(r, 0)); // like Chrome, applied a moment later
         const rules = env.rules.filter((r) => !removeRuleIds.includes(r.id)).concat(addRules);
         const ids = rules.map((r) => r.id);
         if (new Set(ids).size !== ids.length) throw new Error("duplicate rule id");
@@ -287,6 +288,105 @@ test("every default site and alias passes the blocklist input check", async () =
   const aliases = env.get("SITE_ALIASES");
   const all = [...env.get("DEFAULT_SITES"), ...Object.keys(aliases), ...Object.values(aliases)];
   for (const d of all) assert.equal(cleanSite(d), d, d);
+});
+
+// #9 and #10: block page links and visit counting
+
+test("redirect rules paste the address in as-is with ?u=", async () => {
+  const env = await inSession();
+  assert.equal(env.redirects()[0].action.redirect.regexSubstitution, "chrome-extension://ID/src/blocked/blocked.html?u=\\0");
+});
+
+test("re-blocking open tabs uses an encoded sweep link", async () => {
+  const env = await load();
+  const url = "https://chatgpt.com/c/1?q=a%26b";
+  env.tabs = [{ id: 1, url }];
+  await env.send({ type: "start", minutes: 25 });
+  assert.equal(env.updates[0].url, "chrome-extension://ID/src/blocked/blocked.html?sweep=1&t=" + encodeURIComponent(url));
+});
+
+test("the backup tab listener uses a tab link that isn't a sweep", async () => {
+  const env = await inSession();
+  await env.fire.tabUpdated(4, { url: "https://claude.ai/" });
+  assert.equal(env.updates[0].url, "chrome-extension://ID/src/blocked/blocked.html?t=" + encodeURIComponent("https://claude.ai/"));
+});
+
+test("visits the block page marks count: false aren't counted", async () => {
+  const env = await inSession();
+  const res = await env.send({ type: "blocked", url: "https://chatgpt.com/", count: false });
+  assert.equal(res.blocked, true);
+  assert.equal(env.store.stats.blocked, 0);
+});
+
+// #14: tabs still loading
+
+test("a tab that's still loading a blocked site is caught", async () => {
+  const env = await load();
+  env.tabs = [{ id: 1, url: "https://example.com/", pendingUrl: "https://chatgpt.com/" }];
+  await env.send({ type: "start", minutes: 25 });
+  assert.deepEqual(env.updatedTabs(), [1]);
+});
+
+// #17: session length
+
+test("a session can only be 25, 50 or 90 minutes", async () => {
+  for (const minutes of [50, 90]) {
+    const env = await load();
+    assert.equal((await env.send({ type: "start", minutes })).ok, true, String(minutes));
+  }
+  for (const minutes of [0, -5, 1000, "25", undefined, NaN]) {
+    const env = await load();
+    const res = await env.send({ type: "start", minutes });
+    assert.equal(res.ok, false, String(minutes));
+    assert.equal(env.store.session, undefined);
+    assert.equal(env.rules.length, 0);
+  }
+});
+
+// #12: events happening at the same moment
+
+test("ending a session and the timer firing together count it once", async () => {
+  const env = await inSession();
+  env.store.session.startedAt = Date.now() - 10 * 60000;
+  await Promise.all([env.send({ type: "stop" }), env.fire.alarm({ name: "sessionEnd" })]);
+  assert.equal(env.store.stats.minutes, 10);
+  assert.equal(env.store.stats.sessions, 0, "the stop came first, so it isn't a finished session");
+});
+
+test("two unlocks together don't collide, and the second one wins", async () => {
+  const env = await inSession();
+  const [first, second] = await Promise.all([
+    env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" }),
+    env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" })
+  ]);
+  assert.equal(first.ok, true, first.error);
+  assert.equal(second.ok, true, second.error);
+  assert.equal(env.store.pass.domain, "claude.ai");
+  assert.deepEqual(env.allows().map((r) => r.condition.regexFilter), ["^https?://([^/]*\\.)?claude\\.ai(/.*)?$"]);
+  assert.deepEqual(env.errors, []);
+});
+
+test("an unlock and a blocklist save together keep the pass's allow rules", async () => {
+  const env = await inSession();
+  const [unlock, saved] = await Promise.all([
+    env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" }),
+    env.send({ type: "sitesChanged" })
+  ]);
+  assert.equal(unlock.ok, true);
+  assert.equal(saved.ok, true);
+  assert.equal(env.allows().length, 2, "chatgpt.com and chat.openai.com");
+  assert.deepEqual(env.errors, []);
+});
+
+test("one failed message doesn't block the ones after it", async () => {
+  const env = await inSession();
+  const [bad, good] = await Promise.all([
+    env.send({ type: "unlock", reason: REASON, url: "https://example.com/" }),
+    env.send({ type: "blocked", url: "https://claude.ai/" })
+  ]);
+  assert.equal(bad.ok, false);
+  assert.equal(good.ok, true);
+  assert.equal(env.store.stats.blocked, 1);
 });
 
 test("missing stats don't break an unlock", async () => {

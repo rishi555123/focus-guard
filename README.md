@@ -98,7 +98,7 @@ Focus Guard blocks websites by their address, so some AI tools are out of its re
 - **AI assistants in your code editor**, like GitHub Copilot, Cursor or other extensions in VS Code and JetBrains. Focus Guard only works inside Chrome. Most editors let you pause their AI features while you practise.
 - **Google AI Overviews**, the AI summaries at the top of normal Google search results. They're part of the search page itself, so blocking them would mean blocking Google Search.
 - **AI features inside normal sites**, like `github.com/copilot`, `x.com/i/grok` or Google's AI Mode. Blocking the whole site would be wrong here, so they aren't blocked yet. Blocking just those pages is planned. See [ROADMAP.md](ROADMAP.md).
-- **Incognito windows**, unless you allow Focus Guard there. Go to `chrome://extensions`, click **Details** on Focus Guard and turn on **Allow in Incognito**.
+- **Incognito windows**, unless you allow Focus Guard there. The popup reminds you and has a button that opens the right settings page. Turn on **Allow in Incognito** there.
 - **Desktop and phone apps**, like the ChatGPT or Claude apps. These run outside Chrome.
 
 ## Privacy
@@ -129,8 +129,9 @@ Here's a quick map of the files:
 | `src/background/background.js` | Runs sessions, timers, blocking rules and stats |
 | `src/popup/popup.html` / `popup.js` | The toolbar popup |
 | `src/blocked/blocked.html` / `blocked.js` | The "Your brain first." page |
+| `src/blocked/links.js` | Reads the block page's address and works out where "Back to my code" goes |
 | `src/shared/style.css` | Shared graph-paper styling |
 | `src/shared/sites.js` | Cleans and checks what you type into the blocklist |
 | `icons/` | Extension and toolbar icons |
 | `docs/screenshots/` | Screenshots for the docs |
-| `tests/` | Tests for the background logic and blocklist input (run with `node --test`) |
+| `tests/` | Tests for the background logic, blocklist input, block page links and manifest paths (run with `node --test`) |

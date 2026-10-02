@@ -1,13 +1,31 @@
 const $ = (id) => document.getElementById(id);
-let minutes = 25, timer;
+let minutes = 25, timer, sitesEdited = false;
+
+function pickMinutes(m) {
+  minutes = m;
+  document.querySelectorAll(".durations button").forEach((x) =>
+    x.setAttribute("aria-pressed", +x.dataset.min === m));
+}
 
 document.querySelectorAll(".durations button").forEach((b) =>
   b.addEventListener("click", () => {
-    minutes = +b.dataset.min;
-    document.querySelectorAll(".durations button").forEach((x) =>
-      x.setAttribute("aria-pressed", x === b));
+    pickMinutes(+b.dataset.min);
+    chrome.storage.local.set({ lastMinutes: minutes });
   })
 );
+
+// Start with the length picked last time
+chrome.storage.local.get("lastMinutes").then(({ lastMinutes }) => {
+  if ([25, 50, 90].includes(lastMinutes)) pickMinutes(lastMinutes);
+});
+
+// Incognito windows are only covered if the user allows it on chrome://extensions
+chrome.extension.isAllowedIncognitoAccess().then((allowed) =>
+  $("incognito").classList.toggle("hidden", allowed));
+$("openSettings").onclick = () =>
+  chrome.tabs.create({ url: "chrome://extensions/?id=" + chrome.runtime.id });
+
+$("sites").addEventListener("input", () => (sitesEdited = true));
 
 $("start").onclick = async () => {
   await chrome.runtime.sendMessage({ type: "start", minutes });
@@ -27,9 +45,10 @@ $("saveSites").onclick = async () => {
     $("saved").textContent = "Not saved. These don't look like domains: " + invalid.join(", ");
     return;
   }
+  sitesEdited = false;
+  $("sites").value = sites.join("\n");
   await chrome.storage.local.set({ sites });
   await chrome.runtime.sendMessage({ type: "sitesChanged" });
-  $("sites").value = sites.join("\n");
   $("saved").className = "muted";
   $("saved").textContent = "Saved";
   setTimeout(() => ($("saved").textContent = ""), 1500);
@@ -47,8 +66,9 @@ async function render() {
   $("sBlocked").textContent = stats.blocked || 0;
   $("sUnlocks").textContent = stats.unlocks || 0;
 
-  // No editing the blocklist mid-session, so you can't cheat yourself
-  $("sites").value = sites.join("\n");
+  // No editing the blocklist mid-session, so you can't cheat yourself.
+  // Unsaved edits in the box are kept when the popup refreshes.
+  if (!sitesEdited) $("sites").value = sites.join("\n");
   $("sites").disabled = $("saveSites").disabled = active;
 
   clearInterval(timer);
@@ -66,4 +86,7 @@ async function render() {
     timer = setInterval(tick, 1000);
   }
 }
+
+// Refresh when anything changes while the popup is open, like a pass granted in another tab
+chrome.storage.onChanged.addListener((_changes, area) => { if (area === "local") render(); });
 render();
