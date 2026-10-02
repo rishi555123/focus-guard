@@ -2,3 +2,6 @@
 Thumbs.db
 *.zip
 node_modules/
+
+# Personal progress through TESTING.md; TESTING.md itself stays a blank checklist
+TESTING-progress.md
