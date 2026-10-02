@@ -204,14 +204,154 @@ test("the privacy page matches PRIVACY.md", () => {
   assert.match(html, /<table>/, "has the storage table");
 });
 
-test("dark mode is supported", () => {
+// Light/dark theme toggle
+
+const vm = require("node:vm");
+const { palette, ratio, PAIRS } = require("./contrast.js");
+const HEAD_SCRIPT = /<script>try\{if\(localStorage\.getItem\("fg-theme"\)==="dark"\)document\.documentElement\.setAttribute\("data-theme","dark"\)\}catch\(e\)\{\}<\/script>/;
+
+test("light is the default; dark only applies with data-theme, never from the system setting", () => {
   const css = read(path.join(SITE, "assets/style.css"));
-  assert.match(css, /@media \(prefers-color-scheme: dark\)/);
-  assert.match(css, /color-scheme: light dark/);
+  assert.doesNotMatch(css, /prefers-color-scheme/, "the system setting mustn't switch the theme");
+  assert.match(css, /:root \{[^}]*color-scheme: light;/);
+  assert.match(css, /:root\[data-theme="dark"\] \{[^}]*color-scheme: dark;/);
   assert.match(css, /--paper: #EEF2F7/, "uses the extension's paper colour");
   assert.match(css, /--ink: #1D3B6E/, "uses the extension's ink colour");
   assert.match(css, /--marker: #FFE45C/, "uses the extension's marker colour");
 });
+
+test("every page applies the saved theme in <head>, before the stylesheet and anything else loads", () => {
+  for (const page of PAGES) {
+    const html = read(page);
+    const head = html.split("</head>")[0];
+    const script = head.search(HEAD_SCRIPT);
+    assert.ok(script > 0, `${rel(page)} has the theme script in <head>`);
+    assert.ok(script < head.search(/<link rel="stylesheet"/), `${rel(page)}: theme script comes before the stylesheet`);
+    assert.ok(script < head.search(/<link rel="icon"/), `${rel(page)}: theme script comes first`);
+    assert.doesNotMatch(html, /<html[^>]*data-theme/, `${rel(page)}: no theme is hard-coded, so light is the fallback`);
+  }
+});
+
+// Run the head script the way a browser would, with a given localStorage
+function runHeadScript(storage) {
+  const code = read(path.join(SITE, "index.html")).match(HEAD_SCRIPT)[0].replace(/^<script>|<\/script>$/g, "");
+  const attrs = {};
+  const document = { documentElement: { setAttribute: (k, v) => (attrs[k] = v) } };
+  vm.runInNewContext(code, { document, localStorage: storage });
+  return attrs["data-theme"];
+}
+
+test("the head script applies a saved dark theme, and falls back to light otherwise", () => {
+  assert.equal(runHeadScript({ getItem: () => "dark" }), "dark");
+  assert.equal(runHeadScript({ getItem: () => "light" }), undefined);
+  assert.equal(runHeadScript({ getItem: () => null }), undefined, "first-time visitors get light");
+  assert.equal(runHeadScript({ getItem: () => "something else" }), undefined);
+  assert.equal(runHeadScript({ getItem: () => { throw new Error("SecurityError"); } }), undefined, "blocked storage doesn't break the page");
+  assert.equal(runHeadScript(undefined), undefined, "no localStorage at all");
+});
+
+test("every page has the same theme toggle in its header, hidden until JavaScript runs", () => {
+  for (const page of PAGES) {
+    const html = read(page);
+    const header = html.match(/<header[\s\S]*?<\/header>/)[0];
+    const button = header.match(/<button[^>]*id="theme-toggle"[^>]*>/);
+    assert.ok(button, `${rel(page)} has the toggle in its header`);
+    assert.match(button[0], /type="button"/);
+    assert.match(button[0], /aria-label="Switch to dark mode"/, "labelled for the default light theme");
+    assert.match(button[0], /\shidden[\s>]/, "hidden without JavaScript, since it couldn't work");
+    assert.match(header, /<svg class="icon-moon"[^>]*aria-hidden="true"/);
+    assert.match(header, /<svg class="icon-sun"[^>]*aria-hidden="true"/);
+    assert.match(html, /<script src="\/?assets\/theme\.js"><\/script>\s*(<script[^>]*><\/script>\s*)*<\/body>/, `${rel(page)} loads theme.js`);
+  }
+});
+
+test("the toggle is at least 44 x 44 px and fits the phone header on its own row with the logo", () => {
+  const css = read(path.join(SITE, "assets/style.css"));
+  const rule = css.match(/\.theme-toggle \{([^}]*)\}/)[1];
+  assert.match(rule, /width: 44px/);
+  assert.match(rule, /height: 44px/);
+  const phone = css.match(/@media \(max-width: 640px\) \{([\s\S]*?)\n\}/)[1];
+  assert.match(phone, /grid-template-areas: "brand toggle" "nav nav"/, "phones: logo and toggle, then navigation");
+});
+
+// Run theme.js against a tiny fake page
+function loadToggle({ saved = null, storageThrows = false, dark = false } = {}) {
+  const attrs = dark ? { "data-theme": "dark" } : {};
+  const listeners = {};
+  const button = {
+    hidden: true, title: "", attrs: {},
+    setAttribute(k, v) { this.attrs[k] = v; },
+    addEventListener: (type, fn) => (listeners["button:" + type] = fn)
+  };
+  const store = { "fg-theme": saved };
+  const localStorage = {
+    getItem: (k) => { if (storageThrows) throw new Error("blocked"); return store[k]; },
+    setItem: (k, v) => { if (storageThrows) throw new Error("blocked"); store[k] = v; }
+  };
+  const document = {
+    documentElement: {
+      getAttribute: (k) => attrs[k] ?? null,
+      setAttribute: (k, v) => (attrs[k] = v),
+      removeAttribute: (k) => delete attrs[k]
+    },
+    getElementById: (id) => (id === "theme-toggle" ? button : null)
+  };
+  const window = { addEventListener: (type, fn) => (listeners["window:" + type] = fn) };
+  vm.runInNewContext(read(path.join(SITE, "assets/theme.js")), { document, window, localStorage });
+  return {
+    theme: () => attrs["data-theme"] || "light",
+    label: () => button.attrs["aria-label"],
+    click: () => listeners["button:click"](),
+    storage: (newValue) => listeners["window:storage"]({ key: "fg-theme", newValue }),
+    store, button
+  };
+}
+
+test("theme.js shows the toggle and labels it for what a press will do", () => {
+  const light = loadToggle();
+  assert.equal(light.button.hidden, false);
+  assert.equal(light.label(), "Switch to dark mode");
+  assert.equal(light.button.title, "Switch to dark mode");
+  const dark = loadToggle({ dark: true });
+  assert.equal(dark.label(), "Switch to light mode");
+});
+
+test("pressing the toggle switches the theme, saves it, and updates the label", () => {
+  const t = loadToggle();
+  t.click();
+  assert.equal(t.theme(), "dark");
+  assert.equal(t.store["fg-theme"], "dark");
+  assert.equal(t.label(), "Switch to light mode");
+  t.click();
+  assert.equal(t.theme(), "light");
+  assert.equal(t.store["fg-theme"], "light");
+  assert.equal(t.label(), "Switch to dark mode");
+});
+
+test("the toggle still works when localStorage is blocked", () => {
+  const t = loadToggle({ storageThrows: true });
+  assert.doesNotThrow(() => t.click());
+  assert.equal(t.theme(), "dark", "switches for this page even if it can't be saved");
+});
+
+test("changing the theme in another tab updates this one", () => {
+  const t = loadToggle();
+  t.storage("dark");
+  assert.equal(t.theme(), "dark");
+  assert.equal(t.label(), "Switch to light mode");
+  t.storage("light");
+  assert.equal(t.theme(), "light");
+});
+
+for (const theme of ["light", "dark"]) {
+  test(`${theme} theme meets WCAG AA contrast for text and interface parts`, () => {
+    const p = palette(theme);
+    const failures = PAIRS.map(([what, fg, bg, min]) => [what, p[fg], p[bg], min, ratio(p[fg], p[bg])])
+      .filter(([, , , min, r]) => r < min)
+      .map(([what, fg, bg, min, r]) => `${what}: ${fg} on ${bg} is ${r.toFixed(2)}:1, needs ${min}:1`);
+    assert.deepEqual(failures, []);
+  });
+}
 
 test("every image and asset in site/ is used by a page, so nothing unused gets deployed", () => {
   const used = new Set();

@@ -9,23 +9,27 @@
   --card: #FFFFFF;
   --on-ink: #FFFFFF;
   --mark-text: var(--ink);
+  --focus: #1D3B6E;       /* navy focus ring: yellow on light paper is too faint (needs 3:1) */
   --font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
   --code: "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #0F1A2C;
-    --grid: #1B2A42;
-    --ink: #DCE6F5;
-    --pencil: #A9B6CC;
-    --marker: #FFE45C;
-    --redpen: #FF8A80;
-    --card: #15233A;
-    --on-ink: #0F1A2C;
-    --mark-text: #1D3B6E;   /* navy text on the yellow highlight in both modes */
-  }
+/* Dark theme: only when the visitor picks it with the toggle. The choice is saved in
+   localStorage and applied by a small script in each page's <head> before it draws.
+   Light is the default, including without JavaScript. */
+:root[data-theme="dark"] {
+  --paper: #0F1A2C;
+  --grid: #1B2A42;
+  --ink: #DCE6F5;
+  --pencil: #A9B6CC;
+  --marker: #FFE45C;
+  --redpen: #FF8A80;
+  --card: #15233A;
+  --on-ink: #0F1A2C;
+  --mark-text: #1D3B6E;   /* navy text on the yellow highlight in both themes */
+  --focus: #FFE45C;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -43,7 +47,7 @@ body {
 img { max-width: 100%; height: auto; display: block; }
 a { color: var(--ink); text-underline-offset: 3px; }
 a:hover { text-decoration-thickness: 2px; }
-:focus-visible { outline: 3px solid var(--marker); outline-offset: 3px; border-radius: 4px; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
 code, kbd { font: .9em var(--code); background: var(--card); border: 1px solid var(--grid); border-radius: 4px; padding: 1px 5px; }
 
 .skip { position: absolute; left: 12px; top: -60px; z-index: 10; background: var(--marker); color: #1D3B6E;
@@ -54,12 +58,32 @@ code, kbd { font: .9em var(--code); background: var(--card); border: 1px solid v
 .narrow { max-width: 760px; }
 
 /* Header and navigation */
-.site-header { padding: 18px 0; }
-.site-header .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; text-decoration: none; }
+.site-header { padding: 14px 0; }
+/* Desktop: logo | navigation | theme toggle on one row.
+   Phones: logo and toggle on the first row, navigation underneath (see the media query below). */
+.site-header .wrap { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "brand nav toggle";
+                     align-items: center; gap: 10px 20px; }
+.brand { grid-area: brand; display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; text-decoration: none; }
 .brand img { width: 32px; height: 32px; }
-@media (prefers-color-scheme: dark) { .brand img, .icon-ink { filter: invert(1) hue-rotate(180deg) brightness(1.15); } }
+[data-theme="dark"] .brand img, [data-theme="dark"] .icon-ink { filter: invert(1) hue-rotate(180deg) brightness(1.15); }
+.site-nav { grid-area: nav; justify-self: end; }
 .site-nav ul { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0; padding: 0; list-style: none; }
+
+/* Theme toggle: 44 x 44 px, the usual minimum touch target */
+.theme-toggle { grid-area: toggle; display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0;
+                cursor: pointer; color: var(--ink); background: var(--card); border: 2px solid var(--ink); border-radius: 50%; }
+.theme-toggle:hover { box-shadow: inset 0 0 0 2px var(--marker); }
+.theme-toggle[hidden] { display: none; }
+.theme-toggle svg { width: 22px; height: 22px; }
+.theme-toggle .icon-sun { display: none; }
+[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+@media (max-width: 640px) {
+  .site-header .wrap { grid-template-columns: 1fr auto; grid-template-areas: "brand toggle" "nav nav"; }
+  .site-nav { justify-self: start; }
+  .site-nav ul { gap: 4px 20px; }
+  .site-nav a { display: inline-block; padding: 8px 0; } /* taller tap targets */
+}
 .site-nav a { font-weight: 600; text-decoration: none; padding: 4px 0; border-bottom: 3px solid transparent; }
 .site-nav a:hover { border-bottom-color: var(--grid); }
 .site-nav a[aria-current="page"] { border-bottom-color: var(--marker); }
@@ -70,7 +94,7 @@ h1 { font-size: clamp(36px, 7vw, 64px); margin: 24px 0 16px; letter-spacing: -1.
 h2 { font-size: clamp(26px, 4vw, 36px); margin: 56px 0 12px; }
 h3 { font-size: 21px; margin: 28px 0 8px; }
 .mark { color: var(--mark-text); background: linear-gradient(transparent 55%, var(--marker) 55%); padding: 0 2px; }
-@media (prefers-color-scheme: dark) { .mark { background: var(--marker); border-radius: 3px; padding: 0 6px; } }
+[data-theme="dark"] .mark { background: var(--marker); border-radius: 3px; padding: 0 6px; }
 .lead { font-size: clamp(18px, 2.4vw, 21px); color: var(--pencil); max-width: 680px; }
 .muted { color: var(--pencil); }
 
