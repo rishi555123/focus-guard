@@ -142,7 +142,7 @@ The first-install check (the welcome page opening on its own) is in section 11, 
 - [ ] 10.2 **Allow Focus Guard in Incognito** in the popup opens Focus Guard's card on `chrome://extensions`.
 - [ ] 10.3 Turn on **Allow in Incognito**. If Chrome closes the welcome page, reopen it from the popup. Step 2 shows **Done**, and the popup note is gone.
 - [ ] 10.4 During a session, `chatgpt.com` is blocked in an Incognito window. You see Chrome's error page, not the block page. That's expected (see Known limitations in the README).
-- [ ] 10.5 Unlock `chatgpt.com` in a normal window, then open it in Incognito. It opens there too while the pass lasts.
+- [ ] 10.5 Unlock `chatgpt.com` in a normal window, then type `chatgpt.com` again in the Incognito address bar. It opens there too while the pass lasts. Clicking **Reload** on Chrome's error page doesn't open it; that's expected (see Known limitations in the README).
 
 ## 11. Restarts and reloads
 
