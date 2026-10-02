@@ -21,6 +21,6 @@
     }
   },
   "web_accessible_resources": [
-    { "resources": ["src/blocked/blocked.html"], "matches": ["<all_urls>"] }
+    { "resources": ["src/blocked/blocked.html", "src/blocked/links.js", "src/blocked/blocked.js", "src/shared/style.css"], "matches": ["<all_urls>"] }
   ]
 }

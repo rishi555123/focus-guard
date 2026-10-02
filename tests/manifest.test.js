@@ -1,5 +1,5 @@
-// Checks that every file the extension points to exists, and that only the
-// block page is exposed to websites. Plain Node 18+, no installs:  node --test
+// Checks that every file the extension points to exists, and that the block
+// page and everything it loads are exposed to websites. Plain Node 18+, no installs:  node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -46,7 +46,22 @@ test("every chrome.runtime.getURL path exists", () => {
   }
 });
 
-test("only the block page is exposed to websites", () => {
+// Websites get redirected to the block page, and in Chrome its own scripts and
+// stylesheet must be exposed too, or the page loads unstyled and broken
+test("the block page and every file it loads are exposed to websites", () => {
   const exposed = manifest.web_accessible_resources.flatMap((w) => w.resources);
-  assert.deepEqual(exposed, ["src/blocked/blocked.html"]);
+  const page = "src/blocked/blocked.html";
+  const html = fs.readFileSync(path.join(ROOT, page), "utf8");
+  const loads = [...html.matchAll(/(?:href|src)="([^"#:]+)"/g)]
+    .map(([, ref]) => path.posix.join(path.posix.dirname(page), ref));
+
+  assert.ok(loads.length > 0, "found the page's scripts and stylesheet");
+  for (const file of [page, ...loads]) assert.ok(exposed.includes(file), file + " must be exposed");
+});
+
+test("nothing else is exposed to websites", () => {
+  const exposed = manifest.web_accessible_resources.flatMap((w) => w.resources);
+  assert.deepEqual(exposed.sort(), [
+    "src/blocked/blocked.html", "src/blocked/blocked.js", "src/blocked/links.js", "src/shared/style.css"
+  ]);
 });
