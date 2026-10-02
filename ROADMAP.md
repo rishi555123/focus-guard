@@ -20,6 +20,7 @@ Here's what's done and what's coming next for Focus Guard.
 - [ ] Smarter unlock reason: replace the single text box with guided questions (what did you try, what did you expect, what happened instead) and reject keyboard-mashing like random letters
 - [ ] Real Incognito support with split mode: coordinate the two copies of the background script through shared storage, then test timers, rules and notifications in real Chrome
 - [ ] Friendlier Incognito block: send blocked Incognito tabs to a hosted GitHub Pages explanation instead of Chrome's error page
+- [ ] Design an original icon so Focus Guard has a logo it fully owns
 
 ## v2.0
 
