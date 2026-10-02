@@ -31,6 +31,7 @@ Every test should show a ✔. The tests are in the `tests/` folder:
 - `links.test.js` covers `src/blocked/links.js`
 - `manifest.test.js` checks that every file the extension points to exists
 - `html.test.js` checks the popup and block page HTML (ARIA references, ids the scripts use)
+- `docs.test.js` checks that every checklist line in `TESTING.md` is a real `- [ ] ` checkbox with a unique number
 
 If you change one of those files, add a test for your change too.
 
