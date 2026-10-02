@@ -4,6 +4,27 @@ const target = link.url;
 
 document.getElementById("site").textContent = target || "AI chat site";
 
+// Explain re-blocks caused by a pass moving to another site or running out
+const whyNote = document.getElementById("why");
+whyNote.textContent = sweepNote(link); // from links.js
+whyNote.hidden = !whyNote.textContent;
+
+// Warn before the wait if unlocking here would end a pass for another site.
+// Kept up to date if a pass starts or ends while this page is open.
+const passWarning = document.getElementById("passWarning");
+async function showPassWarning() {
+  const { pass } = await chrome.storage.local.get("pass");
+  const other = otherPass(pass, target, Date.now()); // from links.js
+  passWarning.textContent = other
+    ? `This will end your pass for ${other}. You can only have one pass at a time, so ${other} will be blocked again.`
+    : "";
+  passWarning.hidden = !other;
+}
+showPassWarning();
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && "pass" in changes) showPassWarning();
+});
+
 // Only fresh visits count: not reloads, Back/Forward, or Focus Guard
 // re-blocking tabs that were already open
 const nav = performance.getEntriesByType("navigation")[0];

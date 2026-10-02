@@ -8,6 +8,15 @@ const path = require("node:path");
 const vm = require("node:vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "../src/background/background.js"), "utf8");
+
+// Read block page links the same way the block page does (src/blocked/links.js)
+const linksContext = vm.createContext({ URL, URLSearchParams });
+vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/blocked/links.js"), "utf8"), linksContext);
+const BLOCK_PAGE = "chrome-extension://ID/src/blocked/blocked.html";
+function linkOf(url) {
+  assert.ok(url.startsWith(BLOCK_PAGE + "?"), url);
+  return structuredClone(vm.runInContext("readBlockLink", linksContext)(url.slice(BLOCK_PAGE.length)));
+}
 const REASON = "I tried reading the error, logging the values and the docs, still stuck.";
 
 // Load a fresh copy of background.js with its own fake chrome.
@@ -55,7 +64,7 @@ async function load(saved = {}) {
     action: { setBadgeText() {}, setBadgeBackgroundColor() {} }
   };
   const quietConsole = { ...console, error: (...a) => env.errors.push(a.join(" ")) };
-  const context = vm.createContext({ chrome, console: quietConsole, structuredClone, URL });
+  const context = vm.createContext({ chrome, console: quietConsole, structuredClone, URL, URLSearchParams });
   vm.runInContext(SOURCE, context);
   env.get = (name) => structuredClone(vm.runInContext(name, context)); // read a top-level const
 
@@ -302,13 +311,43 @@ test("re-blocking open tabs uses an encoded sweep link", async () => {
   const url = "https://chatgpt.com/c/1?q=a%26b";
   env.tabs = [{ id: 1, url }];
   await env.send({ type: "start", minutes: 25 });
-  assert.equal(env.updates[0].url, "chrome-extension://ID/src/blocked/blocked.html?sweep=1&t=" + encodeURIComponent(url));
+  assert.deepEqual(linkOf(env.updates[0].url), { url, fromTab: true, sweep: true, why: "", to: "" });
 });
 
 test("the backup tab listener uses a tab link that isn't a sweep", async () => {
   const env = await inSession();
   await env.fire.tabUpdated(4, { url: "https://claude.ai/" });
-  assert.equal(env.updates[0].url, "chrome-extension://ID/src/blocked/blocked.html?t=" + encodeURIComponent("https://claude.ai/"));
+  assert.deepEqual(linkOf(env.updates[0].url),
+    { url: "https://claude.ai/", fromTab: true, sweep: false, why: "", to: "" });
+});
+
+// Explaining re-blocks caused by passes
+
+test("a tab re-blocked because the pass moved says where it moved to", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  env.tabs = [{ id: 1, url: "https://claude.ai/new" }];
+  env.updates = [];
+  await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  const link = linkOf(env.updates[0].url);
+  assert.deepEqual([link.url, link.sweep, link.why, link.to], ["https://claude.ai/new", true, "moved", "chatgpt.com"]);
+});
+
+test("a tab re-blocked because the pass ended says so", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  env.tabs = [{ id: 1, url: "https://claude.ai/new" }];
+  env.updates = [];
+  await env.fire.alarm({ name: "passEnd" });
+  const link = linkOf(env.updates[0].url);
+  assert.deepEqual([link.sweep, link.why, link.to], [true, "ended", ""]);
+});
+
+test("tabs blocked when a session starts have no pass note", async () => {
+  const env = await load();
+  env.tabs = [{ id: 1, url: "https://claude.ai/" }];
+  await env.send({ type: "start", minutes: 25 });
+  assert.equal(linkOf(env.updates[0].url).why, "");
 });
 
 test("visits the block page marks count: false aren't counted", async () => {

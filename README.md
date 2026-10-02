@@ -94,7 +94,11 @@ If you already have Focus Guard, new sites on this list are added to your blockl
 
 Focus Guard blocks websites by their address, so some AI tools are out of its reach:
 
-- **AI built into the browser**, like the Gemini button in Chrome or the Copilot sidebar in Edge. These aren't web pages, so an extension can't block them. You can turn them off in your browser's settings.
+- **AI built into the browser**, like Chrome's "Ask Gemini" button and side panel, or the Copilot sidebar in Edge. Chrome's Gemini panel is part of Chrome itself, not a tab, and Chrome deliberately keeps extensions out of it for security, so no extension can block it. You can turn it off yourself:
+  1. Open Chrome's menu (the three dots, top right) and go to **Settings**.
+  2. Click **AI innovations**, then **Gemini in Chrome**. On some Chrome versions this section is called **Google AI** or **AI Premium**.
+  3. Turn off every switch there. That removes the side panel, the keyboard shortcut and the "Ask Gemini" prompts.
+  4. To remove the sparkle icon from the toolbar, right-click it and choose **Unpin**.
 - **AI assistants in your code editor**, like GitHub Copilot, Cursor or other extensions in VS Code and JetBrains. Focus Guard only works inside Chrome. Most editors let you pause their AI features while you practise.
 - **Google AI Overviews**, the AI summaries at the top of normal Google search results. They're part of the search page itself, so blocking them would mean blocking Google Search.
 - **AI features inside normal sites**, like `github.com/copilot`, `x.com/i/grok` or Google's AI Mode. Blocking the whole site would be wrong here, so they aren't blocked yet. Blocking just those pages is planned. See [ROADMAP.md](ROADMAP.md).

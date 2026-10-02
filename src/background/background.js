@@ -122,19 +122,28 @@ async function syncRules() {
 }
 
 // Block page link for moving a tab (see src/blocked/links.js). `sweep` marks
-// re-blocking a tab that was already open, which isn't counted as a visit.
-const blockUrl = (url, sweep = false) =>
-  BLOCK_PAGE() + "?" + (sweep ? "sweep=1&" : "") + "t=" + encodeURIComponent(url);
+// re-blocking a tab that was already open, which isn't counted as a visit;
+// `why`/`to` tell the block page when a pass moving or ending is the reason.
+function blockUrl(url, { sweep = false, why = "", to = "" } = {}) {
+  const params = new URLSearchParams();
+  if (sweep) params.set("sweep", "1");
+  if (why) params.set("why", why);
+  if (to) params.set("to", to);
+  params.set("t", url);
+  return BLOCK_PAGE() + "?" + params;
+}
 
-// Catch AI tabs that were already open before the session started (or before a pass ended),
-// including tabs that are still loading one
-async function blockOpenTabs() {
+// Catch AI tabs that were already open before the session started (or before a pass
+// moved or ended), including tabs that are still loading one
+async function blockOpenTabs(reason = {}) {
   const state = await getBlockState();
   if (!state) return;
   const tabs = await chrome.tabs.query({});
   for (const tab of tabs) {
     const url = tab.pendingUrl || tab.url;
-    if (isBlockedUrl(url, state)) chrome.tabs.update(tab.id, { url: blockUrl(url, true) }).catch(() => {});
+    if (isBlockedUrl(url, state)) {
+      chrome.tabs.update(tab.id, { url: blockUrl(url, { sweep: true, ...reason }) }).catch(() => {});
+    }
   }
 }
 
@@ -196,7 +205,7 @@ chrome.alarms.onAlarm.addListener((alarm) => serial(async () => {
   if (alarm.name === "tick") await updateBadge();
   if (alarm.name === "passEnd") {
     await chrome.storage.local.remove("pass");
-    if (await syncRules()) await blockOpenTabs();
+    if (await syncRules()) await blockOpenTabs({ why: "ended" });
   }
 }));
 
@@ -242,7 +251,7 @@ async function handleMessage(msg) {
     await chrome.storage.local.set({ pass: { domain, domains, until } });
     chrome.alarms.create("passEnd", { when: until });
     await syncRules();
-    await blockOpenTabs(); // re-block the previous pass's site, if there was one
+    await blockOpenTabs({ why: "moved", to: domain }); // re-block the previous pass's site, if there was one
     await addStats((s) => {
       s.unlocks += 1;
       s.log.unshift({ at: Date.now(), domain, reason: msg.reason });
