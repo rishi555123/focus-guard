@@ -39,6 +39,20 @@ Most of the time, writing the problem down or waiting that minute is enough to g
 - **Your own blocklist.** Add or remove sites from the popup. The list is locked during a session so you can't quietly remove a site to get around the block.
 - **Simple stats**: sessions finished, focused minutes, AI visits blocked and passes used.
 
+## Screenshots
+
+![The Focus Guard popup with the 25, 50 and 90 minute buttons and stats](docs/screenshots/popup.png)
+
+*The popup: pick a session length, start a session and see your stats.*
+
+![The "Your brain first." block page with the debugging checklist and the unlock box](docs/screenshots/blocked.png)
+
+*The block page: a debugging checklist first, then a 5-minute pass if you're still stuck.*
+
+![The welcome page's setup checklist](docs/screenshots/welcome.png)
+
+*The setup checklist that opens on first install.*
+
 ## Installation
 
 Focus Guard isn't on the Chrome Web Store yet. You load it straight from this folder:
@@ -162,3 +176,7 @@ Here's a quick map of the files:
 | `icons/` | Extension and toolbar icons |
 | `docs/screenshots/` | Screenshots for the docs |
 | `tests/` | Tests for the background logic, blocklist input, block page links and manifest paths (run with `node --test`) |
+
+## Credits
+
+[Security agent icon](https://www.flaticon.com/free-icon/security-agent_11618268) by Any Icon from Flaticon, recolored and resized.
