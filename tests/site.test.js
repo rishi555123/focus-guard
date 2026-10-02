@@ -213,6 +213,16 @@ test("dark mode is supported", () => {
   assert.match(css, /--marker: #FFE45C/, "uses the extension's marker colour");
 });
 
+test("every image and asset in site/ is used by a page, so nothing unused gets deployed", () => {
+  const used = new Set();
+  for (const file of FILES.filter((f) => /\.(html|css)$/.test(f))) {
+    for (const ref of referencesIn(file)) if (!isExternal(ref)) used.add(resolveLocal(file, ref));
+  }
+  const unused = FILES.filter((f) => !f.endsWith(".html") && !used.has(f) && path.basename(f) !== "favicon.ico")
+    .map(rel); // favicon.ico is requested by browsers automatically
+  assert.deepEqual(unused, []);
+});
+
 test("netlify.toml publishes site/ with no build step", () => {
   const toml = read(path.join(ROOT, "netlify.toml"));
   assert.match(toml, /^\[build\]\s*\n\s*publish = "site"\s*$/m);
