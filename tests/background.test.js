@@ -24,7 +24,10 @@ const REASON = "I tried reading the error, logging the values and the docs, stil
 async function load(saved = {}) {
   const listeners = {};
   const ev = (name) => ({ addListener: (fn) => (listeners[name] = fn) });
-  const env = { store: structuredClone(saved), rules: [], alarms: {}, tabs: [], updates: [], errors: [] };
+  const env = {
+    store: structuredClone(saved), rules: [], alarms: {}, tabs: [], updates: [], errors: [],
+    notifications: [], cleared: []
+  };
 
   const chrome = {
     runtime: {
@@ -61,7 +64,11 @@ async function load(saved = {}) {
       update: (id, o) => { env.updates.push({ id, url: o.url }); return Promise.resolve(); },
       onUpdated: ev("tabUpdated")
     },
-    action: { setBadgeText() {}, setBadgeBackgroundColor() {} }
+    action: { setBadgeText() {}, setBadgeBackgroundColor() {} },
+    notifications: {
+      create: (id, options) => { env.notifications.push({ id, ...options }); return Promise.resolve(id); },
+      clear: (id) => { env.cleared.push(id); return Promise.resolve(true); }
+    }
   };
   const quietConsole = { ...console, error: (...a) => env.errors.push(a.join(" ")) };
   const context = vm.createContext({ chrome, console: quietConsole, structuredClone, URL, URLSearchParams });
@@ -426,6 +433,108 @@ test("one failed message doesn't block the ones after it", async () => {
   assert.equal(bad.ok, false);
   assert.equal(good.ok, true);
   assert.equal(env.store.stats.blocked, 1);
+});
+
+// Pass notifications
+
+const messages = (env) => env.notifications.map((n) => n.message);
+
+test("an unlock sets a warning alarm one minute before the pass ends", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  assert.equal(env.alarms.passWarn.when, env.store.pass.until - 60000);
+  assert.equal(env.alarms.passEnd.when, env.store.pass.until);
+  assert.deepEqual(env.notifications, [], "a first pass doesn't notify");
+});
+
+test("one minute before the pass ends: 1 minute left notification", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.fire.alarm({ name: "passWarn" });
+  assert.deepEqual(messages(env), ["1 minute left on your claude.ai pass."]);
+  const [n] = env.notifications;
+  assert.equal(n.id, "focus-guard-pass");
+  assert.equal(n.type, "basic");
+  assert.equal(n.title, "Focus Guard");
+  assert.equal(n.iconUrl, "chrome-extension://ID/icons/icon128.png");
+});
+
+test("when the pass ends: pass is over notification", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.fire.alarm({ name: "passEnd" });
+  assert.deepEqual(messages(env), ["Your 5-minute pass for claude.ai is over. It's blocked again."]);
+});
+
+test("when the pass moves: moved notification, and both alarms follow the new pass", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  assert.deepEqual(messages(env), [
+    "Your pass moved to chatgpt.com, so claude.ai is blocked again. Only one site can be unlocked at a time."
+  ]);
+  assert.equal(env.alarms.passWarn.when, env.store.pass.until - 60000);
+  assert.equal(env.alarms.passEnd.when, env.store.pass.until);
+
+  await env.fire.alarm({ name: "passWarn" });
+  assert.equal(messages(env)[1], "1 minute left on your chatgpt.com pass.", "the warning is for the new site");
+});
+
+test("unlocking the same site again doesn't say the pass moved", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/new" });
+  assert.deepEqual(env.notifications, []);
+});
+
+test("an expired pass doesn't count as moving", async () => {
+  const env = await inSession();
+  env.store.pass = { domain: "claude.ai", domains: ["claude.ai"], until: Date.now() - 1000 };
+  await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  assert.deepEqual(env.notifications, []);
+});
+
+test("ending the session early during a pass clears its alarms and notifications", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "stop" });
+  assert.equal(env.alarms.passWarn, undefined);
+  assert.equal(env.alarms.passEnd, undefined);
+  assert.deepEqual(env.cleared, ["focus-guard-pass"]);
+  assert.deepEqual(env.notifications, []);
+});
+
+test("no pass notifications when the session itself ends during the pass", async () => {
+  const env = await inSession();
+  env.store.session.endsAt = Date.now() + 2 * 60000; // session ends before the 5-minute pass
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+
+  await env.fire.alarm({ name: "passWarn" }); // fires before the session ends
+  assert.deepEqual(env.notifications, [], "no 1 minute warning for a pass the session will end first");
+
+  await env.fire.alarm({ name: "sessionEnd" });
+  assert.equal(env.alarms.passEnd, undefined, "session end cleared the pass alarm");
+  await env.fire.alarm({ name: "passEnd" }); // even if it fired anyway
+  assert.deepEqual(env.notifications, []);
+});
+
+test("reconcile recreates a lost warning alarm", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  env.alarms = {};
+  await env.fire.startup();
+  assert.equal(env.alarms.passWarn.when, env.store.pass.until - 60000);
+  assert.equal(env.alarms.passEnd.when, env.store.pass.until);
+});
+
+test("reconcile doesn't make a late warning in the pass's last minute", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  env.store.pass.until = Date.now() + 30000;
+  env.alarms = {};
+  await env.fire.startup();
+  assert.equal(env.alarms.passWarn, undefined);
+  assert.ok(env.alarms.passEnd, "the pass still ends on time");
 });
 
 test("missing stats don't break an unlock", async () => {

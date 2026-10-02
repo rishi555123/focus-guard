@@ -59,6 +59,14 @@ test("the block page and every file it loads are exposed to websites", () => {
   for (const file of [page, ...loads]) assert.ok(exposed.includes(file), file + " must be exposed");
 });
 
+test("the permissions the background script uses are declared", () => {
+  const source = fs.readFileSync(path.join(ROOT, "src/background/background.js"), "utf8");
+  for (const api of ["declarativeNetRequest", "storage", "alarms", "tabs", "notifications"]) {
+    if (source.includes("chrome." + api)) assert.ok(manifest.permissions.includes(api), api + " permission is missing");
+  }
+  assert.ok(manifest.permissions.includes("notifications"));
+});
+
 test("nothing else is exposed to websites", () => {
   const exposed = manifest.web_accessible_resources.flatMap((w) => w.resources);
   assert.deepEqual(exposed.sort(), [

@@ -3,7 +3,7 @@
   "name": "Focus Guard: Code Without the Crutch",
   "version": "1.0.0",
   "description": "Blocks AI chat sites during coding sessions so you solve problems yourself first.",
-  "permissions": ["declarativeNetRequest", "storage", "alarms", "tabs"],
+  "permissions": ["declarativeNetRequest", "storage", "alarms", "tabs", "notifications"],
   "host_permissions": ["<all_urls>"],
   "background": { "service_worker": "src/background/background.js" },
   "icons": {

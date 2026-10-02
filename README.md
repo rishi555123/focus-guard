@@ -33,6 +33,7 @@ Most of the time, writing the problem down or waiting that minute is enough to g
 - **Catches tabs that are already open.** Any AI tabs open when you start a session get redirected too.
 - **Debugging checklist** on the block page: read the error, add a print, rubber-duck it, check the docs, shrink the failing code, take a walk.
 - **Earned 5-minute passes** after you write a note and wait 60 seconds. A pass only unlocks the site you were stuck on.
+- **Pass notifications** one minute before a pass ends, when it ends, and when it moves to another site.
 - **Your own blocklist.** Add or remove sites from the popup. The list is locked during a session so you can't quietly remove a site to get around the block.
 - **Simple stats**: sessions finished, focused minutes, AI visits blocked and passes used.
 

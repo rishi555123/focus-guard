@@ -21,7 +21,9 @@ const SITE_ALIASES = {
   "kimi.moonshot.cn": "kimi.com"
 };
 const PASS_MINUTES = 5;
+const PASS_WARN_MS = 60000; // "1 minute left" notification
 const SESSION_LENGTHS = [25, 50, 90];
+const NOTIFY_ID = "focus-guard-pass"; // one id, so a newer pass notification replaces an older one
 const BLOCK_PAGE = () => chrome.runtime.getURL("src/blocked/blocked.html");
 const emptyStats = () => ({ blocked: 0, sessions: 0, minutes: 0, unlocks: 0, log: [] });
 
@@ -167,6 +169,19 @@ async function updateBadge() {
   }
 }
 
+function notify(message) {
+  return chrome.notifications.create(NOTIFY_ID, {
+    type: "basic",
+    iconUrl: chrome.runtime.getURL("icons/icon128.png"),
+    title: "Focus Guard",
+    message
+  }).catch(() => {}); // notifications are a nice-to-have; never let them break a pass
+}
+
+// A pass only ends with its site blocked again if the session outlasts it.
+// Otherwise the session ending unblocks everything, so there's nothing to warn about.
+const passEndsInSession = (pass, session) => !!pass && !!session && pass.until < session.endsAt;
+
 async function addStats(fn) {
   const { stats: saved } = await chrome.storage.local.get("stats");
   const stats = { ...emptyStats(), ...saved };
@@ -180,7 +195,8 @@ async function finishSession(completed) {
   const mins = Math.round((Math.min(Date.now(), session.endsAt) - session.startedAt) / 60000);
   await addStats((s) => { s.minutes += mins; if (completed) s.sessions += 1; });
   await chrome.storage.local.remove(["session", "pass", "passUntil"]);
-  chrome.alarms.clearAll();
+  await chrome.alarms.clearAll(); // includes passWarn and passEnd, so no pass notifications follow
+  chrome.notifications.clear(NOTIFY_ID).catch(() => {}); // a leftover "1 minute left" no longer applies
   await syncRules();
 }
 
@@ -196,6 +212,10 @@ async function reconcile() {
     if (!(await chrome.alarms.get("sessionEnd"))) chrome.alarms.create("sessionEnd", { when: session.endsAt });
     if (!(await chrome.alarms.get("tick"))) chrome.alarms.create("tick", { periodInMinutes: 1 });
     if (pass && pass.until > now && !(await chrome.alarms.get("passEnd"))) chrome.alarms.create("passEnd", { when: pass.until });
+    // No late warning if the last minute already started while Chrome was closed
+    if (pass && pass.until - PASS_WARN_MS > now && !(await chrome.alarms.get("passWarn"))) {
+      chrome.alarms.create("passWarn", { when: pass.until - PASS_WARN_MS });
+    }
   }
   if (await syncRules()) await blockOpenTabs();
 }
@@ -203,9 +223,19 @@ async function reconcile() {
 chrome.alarms.onAlarm.addListener((alarm) => serial(async () => {
   if (alarm.name === "sessionEnd") await finishSession(true);
   if (alarm.name === "tick") await updateBadge();
+  if (alarm.name === "passWarn") {
+    const { session, pass } = await chrome.storage.local.get(["session", "pass"]);
+    if (passEndsInSession(pass, session) && pass.until > Date.now()) {
+      await notify(`1 minute left on your ${pass.domain} pass.`);
+    }
+  }
   if (alarm.name === "passEnd") {
+    const { session, pass } = await chrome.storage.local.get(["session", "pass"]);
     await chrome.storage.local.remove("pass");
-    if (await syncRules()) await blockOpenTabs({ why: "ended" });
+    if (await syncRules()) {
+      await blockOpenTabs({ why: "ended" });
+      if (passEndsInSession(pass, session)) await notify(`Your 5-minute pass for ${pass.domain} is over. It's blocked again.`);
+    }
   }
 }));
 
@@ -249,9 +279,15 @@ async function handleMessage(msg) {
     // Pass, alarm and rules first, so a stats failure can't leave a pass that never ends
     const until = Date.now() + PASS_MINUTES * 60000;
     await chrome.storage.local.set({ pass: { domain, domains, until } });
+    // Same alarm names, so these replace the previous pass's alarms
     chrome.alarms.create("passEnd", { when: until });
+    chrome.alarms.create("passWarn", { when: until - PASS_WARN_MS });
     await syncRules();
     await blockOpenTabs({ why: "moved", to: domain }); // re-block the previous pass's site, if there was one
+    const previous = state.pass; // the pass that was active before this unlock
+    if (previous && previous.domain !== domain) {
+      await notify(`Your pass moved to ${domain}, so ${previous.domain} is blocked again. Only one site can be unlocked at a time.`);
+    }
     await addStats((s) => {
       s.unlocks += 1;
       s.log.unshift({ at: Date.now(), domain, reason: msg.reason });
