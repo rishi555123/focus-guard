@@ -15,18 +15,22 @@ Tick each box as you go. If a step fails, note the section and step number in yo
 
 Run these in the service worker console. They save you from waiting for real timers.
 
-| What | Command |
-| --- | --- |
-| See everything Focus Guard has saved | `await chrome.storage.local.get(null)` |
-| See the timers | `await chrome.alarms.getAll()` |
-| See the blocking rules | `await chrome.declarativeNetRequest.getDynamicRules()` |
-| Show the "1 minute left" warning in 2 seconds | `chrome.alarms.create("passWarn", { when: Date.now() + 2000 })` |
-| End the current pass in 2 seconds | `chrome.alarms.create("passEnd", { when: Date.now() + 2000 })` |
-| Finish the session in 2 seconds | `chrome.alarms.create("sessionEnd", { when: Date.now() + 2000 })` |
-| Make the session end in 90 seconds | `const { session } = await chrome.storage.local.get("session"); session.endsAt = Date.now() + 90000; await chrome.storage.local.set({ session }); chrome.alarms.create("sessionEnd", { when: session.endsAt })` |
-| Pretend the session ran out while Chrome was closed (then reload the extension) | `await chrome.storage.local.set({ session: { startedAt: Date.now() - 26 * 60000, endsAt: Date.now() - 60000, minutes: 25 } })` |
-| Remove the stats | `await chrome.storage.local.remove("stats")` |
-| Bring back the Gemini reminder | `await chrome.storage.local.remove("geminiOff")` |
+The **Needs first** column says what has to be running before you use a command. Without it, the command does nothing: no notification appears and nothing changes.
+
+| What | Needs first | Command |
+| --- | --- | --- |
+| See everything Focus Guard has saved | Nothing | `await chrome.storage.local.get(null)` |
+| See the timers | Nothing | `await chrome.alarms.getAll()` |
+| See the blocking rules | Nothing | `await chrome.declarativeNetRequest.getDynamicRules()` |
+| Show the "1 minute left" warning in 2 seconds | **Active pass** | `chrome.alarms.create("passWarn", { when: Date.now() + 2000 })` |
+| End the current pass in 2 seconds | **Active pass** | `chrome.alarms.create("passEnd", { when: Date.now() + 2000 })` |
+| Finish the session in 2 seconds | **Running session** | `chrome.alarms.create("sessionEnd", { when: Date.now() + 2000 })` |
+| Make the session end in 90 seconds. Prints "Start a session first" if none is running | **Running session** | `(async () => { const { session } = await chrome.storage.local.get("session"); if (!(session?.endsAt > Date.now())) return console.warn("Start a session first, then run this again."); session.endsAt = Date.now() + 90000; await chrome.storage.local.set({ session }); chrome.alarms.create("sessionEnd", { when: session.endsAt }); console.log("The session now ends in 90 seconds."); })()` |
+| Pretend the session ran out while Chrome was closed (then reload the extension) | Nothing. Replaces any running session | `await chrome.storage.local.set({ session: { startedAt: Date.now() - 26 * 60000, endsAt: Date.now() - 60000, minutes: 25 } })` |
+| Remove the stats | Nothing | `await chrome.storage.local.remove("stats")` |
+| Bring back the Gemini reminder | Nothing | `await chrome.storage.local.remove("geminiOff")` |
+
+An active pass also means a running session, since passes only exist during one.
 
 ## 1. Sessions
 
