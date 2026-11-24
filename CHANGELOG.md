@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - If a pass can't be granted after the 60-second wait, the block page now shows the error in red and lets you try again, keeping what you wrote. Before, the button stayed disabled until you reloaded the page.
+- If a session can't be started, the popup now says why instead of doing nothing.
 
 ### Removed
 

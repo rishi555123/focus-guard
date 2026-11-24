@@ -31,7 +31,17 @@ $("geminiOff").onchange = () => chrome.storage.local.set({ geminiOff: $("geminiO
 $("sites").addEventListener("input", () => (sitesEdited = true));
 
 $("start").onclick = async () => {
-  await chrome.runtime.sendMessage({ type: "start", minutes });
+  $("startError").hidden = true;
+  let res;
+  try {
+    res = await chrome.runtime.sendMessage({ type: "start", minutes });
+  } catch (err) { // e.g. Focus Guard was reloaded while the popup was open
+    res = { ok: false, error: err?.message || String(err) };
+  }
+  if (!res?.ok) {
+    $("startError").textContent = "Couldn't start the session: " + (res?.error || "no reply from Focus Guard") + ". Try again.";
+    $("startError").hidden = false;
+  }
   render();
 };
 

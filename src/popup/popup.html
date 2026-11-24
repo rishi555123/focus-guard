@@ -16,6 +16,7 @@
   details textarea { height: 140px; margin: 8px 0; }
   .hidden { display: none; }
   #saved.error { display: block; margin-top: 6px; color: var(--redpen); }
+  .start-error { margin: 6px 0 0; font-size: 12px; line-height: 1.4; color: var(--redpen); }
   .note { font-size: 12px; line-height: 1.45; margin: 10px 0 0; padding: 6px 9px;
           background: var(--white); border: 2px solid var(--marker); border-radius: 6px; }
   .note label { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-weight: 600; cursor: pointer; }
@@ -34,6 +35,7 @@
       <button data-min="90" aria-pressed="false">90 min</button>
     </div>
     <button id="start">Start coding session</button>
+    <p class="start-error" id="startError" role="alert" hidden></p>
   </section>
 
   <section id="active" class="hidden">
