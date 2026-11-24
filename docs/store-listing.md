@@ -10,7 +10,7 @@ The listing deliberately doesn't mention other browsers: policy 1.1.2 says an ex
 
 - **Version:** a plain `1.0.0`, with no `version_name`. Microsoft's policies don't allow "non-production builds", like an extension "still in an experimental stage", so the listing never calls it a beta.
 - **Permissions:** the `tabs` permission was removed. Chrome's tabs documentation says a tab's `url` and `pendingUrl` are present if the extension "has the "tabs" permission or has host permissions for the page", and Focus Guard has `<all_urls>`. Creating, navigating, removing and finding tabs need no permission. Policy 1.6 says to "only request those permissions that are necessary".
-- **Short description:** kept as the manifest's `description`. The full description carries the Flaticon credit.
+- **Short description:** kept as the manifest's `description`.
 - **Not included for now:** an Edge screenshot of the setup checklist (`docs/screenshots/welcome.png` shows the Chrome steps, so it isn't used), and the optional promotional tiles.
 
 ## Package
@@ -80,12 +80,6 @@ Partner Center takes this from the manifest's `description` field and doesn't le
 
 > Blocks AI chat sites during coding sessions so you solve problems yourself first.
 
-To end the short description with the icon credit too, change the manifest's `description` to this (105 characters, within the 132-character manifest limit) and rebuild the package:
-
-> Blocks AI chat sites while you code. Security agent icon by Any Icon from Flaticon, recolored and resized
-
-The full description below already ends with the credit, which covers Flaticon's attribution requirement on the listing page.
-
 ### Description
 
 Required: 250 to 10,000 characters. This draft is about 2,100.
@@ -115,8 +109,6 @@ LIMITATIONS
 - AI features inside other sites, like coding assistants in your editor or AI answers in search results, aren't blocked.
 
 Focus Guard is open source under the MIT license.
-
-Security agent icon by Any Icon from Flaticon, recolored and resized
 ```
 
 ### Images
@@ -126,14 +118,14 @@ All in `docs/store/`, made from real screenshots of the extension:
 | Field | File | Size | Microsoft's requirement |
 | --- | --- | --- | --- |
 | Extension logo (required) | `logo-300.png` | 300 × 300 | 1:1, recommended 300 × 300, minimum 128 × 128 |
-| (fallback logo) | `logo-128.png` | 128 × 128 | The original icon, pixel for pixel |
+| (fallback logo) | `logo-128.png` | 128 × 128 | The logo with a tighter crop than the toolbar icon |
 | Screenshot 1 | `screenshot-1-questions.png` | 1280 × 800 | Up to 6, each 640 × 480 or 1280 × 800 |
 | Screenshot 2 | `screenshot-2-unlock.png` | 1280 × 800 | |
 | Screenshot 3 | `screenshot-3-popup.png` | 1280 × 800 | |
 | Small promotional tile (optional) | Not made | | 440 × 280 |
 | Large promotional tile (optional) | Not made | | 1400 × 560 |
 
-The largest icon in the extension is 128 × 128. `logo-300.png` was rebuilt from its outline in the same navy (`#1D3B6E`) so the edges stay sharp, rather than stretching the pixels. Policy 1.1.2 says screenshots "must not be stretched or blurry", so the screenshots use the original captures at their own resolution or smaller, never enlarged.
+Both logos are scaled down from the original 2000 × 2000 logo artwork, so the edges stay sharp rather than stretched. Policy 1.1.2 says screenshots "must not be stretched or blurry", so the screenshots use the original captures at their own resolution or smaller, never enlarged.
 
 ### Search terms
 

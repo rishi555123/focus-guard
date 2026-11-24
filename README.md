@@ -208,7 +208,3 @@ Here's a quick map of the files:
 | `site/` | The project website: plain HTML and CSS, ready for Netlify with no build step |
 | `netlify.toml` | Tells Netlify to publish `site/` |
 | `tests/` | Tests for the background logic, blocklist input, block page links and manifest paths (run with `node --test`) |
-
-## Credits
-
-[Security agent icon](https://www.flaticon.com/free-icon/security-agent_11618268) by Any Icon from Flaticon, recolored and resized.

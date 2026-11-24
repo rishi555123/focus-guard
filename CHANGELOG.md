@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- A new, original Focus Guard logo replaces the Flaticon icon: a brain over an "FG" shield between code brackets, in navy and yellow. It's used for the toolbar, extension and notification icons. The 16-pixel toolbar icon shows just the FG shield, so it stays readable at that size.
+- The website uses the new logo and favicon. In dark mode it shows a version of the logo with light lines instead of inverting the colours, so the yellow stays yellow.
+
+### Removed
+
+- The Flaticon icon credit, from the README and the website footer, now that the icon is Focus Guard's own.
+
 ## [1.0.0] - 2026-10-02
 
 The first public release, for Google Chrome and Microsoft Edge, installed from GitHub releases with Load unpacked.

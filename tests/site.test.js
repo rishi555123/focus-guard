@@ -13,8 +13,7 @@ const DOWNLOAD = "https://github.com/rishi555123/focus-guard/releases/latest/dow
 // The only addresses outside the site that pages may link to
 const ALLOWED_EXTERNAL = [
   /^https:\/\/github\.com\/rishi555123\/focus-guard(\/|#|$)/, // the repo, its releases, files and README sections
-  /^https:\/\/docs\.github\.com\/en\/site-policy\//,         // GitHub's privacy statement, linked from the privacy policy
-  /^https:\/\/www\.flaticon\.com\/free-icon\/security-agent_11618268$/ // the icon credit Flaticon's licence asks for
+  /^https:\/\/docs\.github\.com\/en\/site-policy\//          // GitHub's privacy statement, linked from the privacy policy
 ];
 
 function filesIn(dir) {
@@ -128,7 +127,7 @@ test("every image has alt text, and content images describe themselves", () => {
     for (const [tag] of read(page).matchAll(/<img\b[^>]*>/g)) {
       assert.match(tag, /\salt="[^"]*"/, `${rel(page)}: ${tag}`);
       const alt = tag.match(/\salt="([^"]*)"/)[1];
-      if (!/class="icon-ink"/.test(tag)) assert.ok(alt.length >= 20, `${rel(page)}: screenshot alt text is too short: ${tag}`);
+      if (!/class="logo\b/.test(tag)) assert.ok(alt.length >= 20, `${rel(page)}: screenshot alt text is too short: ${tag}`);
     }
   }
 });
@@ -152,12 +151,11 @@ test("the navigation marks the current page", () => {
   }
 });
 
-test("the footer has the GitHub repo, the MIT license and the Flaticon credit on every page", () => {
+test("the footer has the GitHub repo and the MIT license on every page", () => {
   for (const page of PAGES) {
     const footer = read(page).split("<footer")[1] || "";
     assert.match(footer, /href="https:\/\/github\.com\/rishi555123\/focus-guard">/, rel(page));
     assert.match(footer, /MIT License/, rel(page));
-    assert.match(footer, /Security agent icon<\/a> by Any Icon from Flaticon, recolored and resized\./, rel(page));
   }
 });
 
@@ -188,11 +186,13 @@ test("the releases page lists every version and date in CHANGELOG.md", () => {
     assert.ok(html.includes(`<time datetime="${day}">`), `missing date ${day} for ${version}`);
   }
   assert.ok(html.includes('href="https://github.com/rishi555123/focus-guard/releases"'), "links to all GitHub releases");
-  // Every bullet in the changelog appears on the page (ignoring Markdown formatting)
+  // Every bullet in a released version appears on the page (ignoring Markdown formatting).
+  // [Unreleased] isn't on the page until it ships.
   const plain = (s) => s.replace(/<[^>]+>/g, "").replace(/\*\*|`/g, "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
   const page = plain(html);
-  for (const [, bullet] of changelog.matchAll(/^- (.+)$/gm)) assert.ok(page.includes(plain(bullet)), "missing: " + bullet.slice(0, 60));
+  const released = changelog.slice(versions[0].index);
+  for (const [, bullet] of released.matchAll(/^- (.+)$/gm)) assert.ok(page.includes(plain(bullet)), "missing: " + bullet.slice(0, 60));
 });
 
 test("the privacy page matches PRIVACY.md", () => {

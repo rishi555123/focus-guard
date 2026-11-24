@@ -65,7 +65,11 @@ code, kbd { font: .9em var(--code); background: var(--card); border: 1px solid v
                      align-items: center; gap: 10px 20px; }
 .brand { grid-area: brand; display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; text-decoration: none; }
 .brand img { width: 32px; height: 32px; }
-[data-theme="dark"] .brand img, [data-theme="dark"] .icon-ink { filter: invert(1) hue-rotate(180deg) brightness(1.15); }
+/* The logo is navy and yellow, so dark mode swaps in a copy with the navy drawn in the
+   dark theme's light ink (an invert filter would turn the yellow blue) */
+.brand .logo-dark { display: none; }
+[data-theme="dark"] .brand .logo-light { display: none; }
+[data-theme="dark"] .brand .logo-dark { display: block; }
 .site-nav { grid-area: nav; justify-self: end; }
 .site-nav ul { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0; padding: 0; list-style: none; }
 
