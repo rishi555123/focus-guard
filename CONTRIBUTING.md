@@ -50,7 +50,7 @@ Every test should show a ✔. The tests are in the `tests/` folder:
 
 If you change one of those files, add a test for your change too.
 
-GitHub runs these same tests on Node 22 and Node 24 for every push and pull request to `main`. You can see the results on the repository's **Actions** tab, and on your pull request.
+GitHub runs these same tests on Node 22, 24 and 26 for every push and pull request to `main`. You can see the results on the repository's **Actions** tab, and on your pull request.
 
 ## Work on the website
 

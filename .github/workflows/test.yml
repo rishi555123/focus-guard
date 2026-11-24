@@ -1,6 +1,6 @@
 # Runs the automated tests on the Node.js LTS versions.
-# Node 22 is the oldest supported LTS (Maintenance until 2027-04-30); Node 24 is Active LTS.
-# Node 26 becomes LTS on 2026-10-28; add it here then.
+# Node 22 is the oldest supported LTS (Maintenance until 2027-04-30; drop it then), Node 24 is
+# Maintenance LTS, and Node 26 has been Active LTS since 2026-10-28.
 name: Tests
 
 on:
@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [22, 24]
+        node: [22, 24, 26]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
