@@ -4,6 +4,7 @@
 <link rel="stylesheet" href="../shared/style.css">
 <style>
   main { max-width: 620px; margin: 0 auto; padding: 56px 24px; }
+  .logo { display: block; margin: 0 0 20px; }
   h1 { font-size: clamp(36px, 7vw, 60px); line-height: 1.05; margin: 0 0 12px; letter-spacing: -1.5px; }
   .site { font: 14px var(--code); color: var(--redpen); text-decoration: line-through; margin: 0 0 28px; word-break: break-all; }
   .sheet { background: var(--white); border: 2px solid var(--ink); border-radius: 8px; padding: 20px 22px; margin-bottom: 18px; }
@@ -22,6 +23,7 @@
   @keyframes in { from { opacity: 0; transform: translateY(8px); } }
 </style></head>
 <body><main>
+  <img class="logo" src="../../icons/logo-256.png" alt="" width="32" height="32">
   <h1>Your brain <span class="mark">first.</span></h1>
   <p class="site" id="site"></p>
   <p class="notice" id="why" role="status" hidden></p>

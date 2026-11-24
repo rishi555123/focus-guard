@@ -21,6 +21,6 @@
     }
   },
   "web_accessible_resources": [
-    { "resources": ["src/blocked/blocked.html", "src/shared/browser.js", "src/blocked/questions.js", "src/blocked/links.js", "src/blocked/blocked.js", "src/shared/style.css"], "matches": ["<all_urls>"] }
+    { "resources": ["src/blocked/blocked.html", "src/shared/browser.js", "src/blocked/questions.js", "src/blocked/links.js", "src/blocked/blocked.js", "src/shared/style.css", "icons/logo-256.png"], "matches": ["<all_urls>"] }
   ]
 }
