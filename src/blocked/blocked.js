@@ -62,12 +62,14 @@ const count = document.getElementById("count");
 reason.addEventListener("input", () => {
   const left = MIN_CHARS - reason.value.trim().length;
   btn.disabled = left > 0;
+  count.classList.remove("failed");
   count.textContent = left > 0 ? `${left} more characters` : "Ready";
 });
 
 btn.addEventListener("click", () => {
   btn.disabled = true;
   reason.readOnly = true;
+  count.classList.remove("failed");
   let s = WAIT_SECONDS;
   count.textContent = `Wait ${s}s. Try one more idea while you wait.`;
   const t = setInterval(async () => {
@@ -75,9 +77,18 @@ btn.addEventListener("click", () => {
     count.textContent = `Wait ${s}s. Try one more idea while you wait.`;
     if (s <= 0) {
       clearInterval(t);
-      const res = await chrome.runtime.sendMessage({ type: "unlock", reason: reason.value.trim(), url: target });
+      let res;
+      try {
+        res = await chrome.runtime.sendMessage({ type: "unlock", reason: reason.value.trim(), url: target });
+      } catch (err) { // e.g. Focus Guard was reloaded while this page was open
+        res = { ok: false, error: err?.message || String(err) };
+      }
       if (!res?.ok) {
-        count.textContent = "Couldn't grant a pass: " + (res?.error || "no reply from Focus Guard");
+        // Keep the reason and let the user try again without reloading (with a fresh wait)
+        btn.disabled = false;
+        reason.readOnly = false;
+        count.classList.add("failed");
+        count.textContent = "Couldn't grant a pass: " + (res?.error || "no reply from Focus Guard") + ". You can try again.";
         return;
       }
       if (res.granted) {

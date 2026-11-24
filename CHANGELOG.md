@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The logo now appears inside Focus Guard too: next to the name in the popup, above the welcome on the setup checklist, and small at the top of the block page.
 - The website uses the new logo and favicon. In dark mode it shows a version of the logo with light lines instead of inverting the colours, so the yellow stays yellow.
 
+### Fixed
+
+- If a pass can't be granted after the 60-second wait, the block page now shows the error in red and lets you try again, keeping what you wrote. Before, the button stayed disabled until you reloaded the page.
+
 ### Removed
 
 - The Flaticon icon credit, from the README and the website footer, now that the icon is Focus Guard's own.
