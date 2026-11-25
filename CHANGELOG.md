@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- The website's releases page has a download for every version, with the newest marked **Latest** and a note that older versions don't get fixes. The website now deploys from GitHub by itself whenever `site/` changes on `main`.
+
 ## [1.1.0] - 2026-11-25
 
 Focus Guard's own logo, dark mode, three questions before unlocking with a copy-as-prompt button, blocking AI features inside normal sites like GitHub Copilot and Google AI Mode, daily streaks and a weekly chart, and the block page in Incognito and InPrivate windows.

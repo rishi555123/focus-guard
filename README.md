@@ -205,7 +205,7 @@ Have a minute? [Open an issue](https://github.com/rishi555123/focus-guard/issues
 Ideas, bug reports and pull requests are all welcome!
 
 - **Found a bug or have an idea?** Open an issue and tell us what happened or what you'd like to see.
-- **Want to add a site to the default list?** Add it to `DEFAULT_SITES` at the top of `src/background/background.js`.
+- **Want to add a site to the default list?** Add it to `DEFAULT_SITES` at the top of `src/background/background.js`. An entry can be a whole site, like `chatgpt.com`, or part of one, like `github.com/copilot`.
 - **Making a change?** Keep it small and focused. Reload the extension in `chrome://extensions` (or `edge://extensions`) and test it by starting a session, visiting a blocked site and going through the unlock flow.
 
 There's no build step. It's plain HTML, CSS and JavaScript, so you can start editing right away.
@@ -232,6 +232,7 @@ Here's a quick map of the files:
 | `icons/` | Extension and toolbar icons, and the logo for Focus Guard's own pages |
 | `docs/screenshots/` | Screenshots for the docs |
 | `docs/brand/` | The original logo files, and `make-icons.py`, which makes every icon from them |
-| `site/` | The project website: plain HTML and CSS, ready for Netlify with no build step |
-| `netlify.toml` | Tells Netlify to publish `site/` |
+| `site/` | The project website: plain HTML and CSS with no build step. Netlify deploys it from `main` |
+| `netlify.toml` | Tells Netlify to publish `site/`, and to skip deploys that don't change it |
+| `CLAUDE.md` | Notes for AI coding assistants working on this repository |
 | `tests/` | Tests for the background logic, the popup and block page, blocklist input, unlock answers, streaks, themes, icons, the manifest and the website (run with `node --test`) |

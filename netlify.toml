@@ -1,5 +1,9 @@
-# Netlify settings for Git-based deploys of the Focus Guard website.
-# The site is plain HTML, CSS and JavaScript in site/, so there's no build step.
-# For a one-off deploy you can also drag the site/ folder onto Netlify Drop.
+# Netlify settings for the Focus Guard website (https://focus-gaurd.netlify.app/).
+# Netlify is linked to the GitHub repository and deploys site/ from main by itself:
+# merging to main is all it takes. The site is plain HTML, CSS and JavaScript, so
+# there's no build command.
 [build]
   publish = "site"
+  # Skip the deploy when nothing in site/ or this file changed, like a commit that only
+  # touches the extension or the docs. Netlify skips the build when this exits with 0.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- site/ netlify.toml"
