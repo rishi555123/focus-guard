@@ -70,7 +70,7 @@ GitHub runs these same tests on Node 22, 24 and 26 for every push and pull reque
 
 The website in `site/` is plain HTML, CSS and a little JavaScript, with no build step. Open `site/index.html` in your browser to look at it. To deploy it, drag the `site/` folder onto Netlify Drop, or connect the repository to Netlify, which reads `netlify.toml`.
 
-Keep `site/` self-contained: copy any image or file it needs into `site/` itself, and never link to `../docs` or `../src`. When you change `CHANGELOG.md` or `PRIVACY.md`, update `site/releases.html` or `site/privacy.html` to match. `node --test` checks all of this.
+Keep `site/` self-contained: copy any image or file it needs into `site/` itself, and never link to `../docs` or `../src`. Each version on `site/releases.html` has a download button for its own `focus-guard-<version>.zip` on GitHub. When you add a release, give the new entry the **Latest** badge and the solid button, and move the old one to an outlined button with the note about older versions. `node --test` checks this. When you change `CHANGELOG.md` or `PRIVACY.md`, update `site/releases.html` or `site/privacy.html` to match. `node --test` checks all of this.
 
 ## Test in Chrome and Edge
 
