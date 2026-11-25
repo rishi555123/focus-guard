@@ -59,7 +59,9 @@ const EXTENSION_PAIRS = [
   ["focus ring against paper", "focus", "paper", 3],
   ["focus ring against sheets", "focus", "card", 3],
   ["button and sheet borders against paper", "ink", "paper", 3],
-  ["unpicked duration button border on its fill", "ink", "card", 3]
+  ["unpicked duration button border on its fill", "ink", "card", 3],
+  ["weekly chart bars and today's bar outline on the sheet", "ink", "card", 3],
+  ["weekly chart day labels on the sheet", "pencil", "card", 4.5]
 ];
 
 module.exports = { palette, ratio, PAIRS, CSS, EXTENSION_PAIRS, EXTENSION_CSS };

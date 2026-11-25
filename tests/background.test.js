@@ -10,7 +10,7 @@ const vm = require("node:vm");
 const SOURCE = fs.readFileSync(path.join(__dirname, "../src/background/background.js"), "utf8");
 const CONSTANTS = fs.readFileSync(path.join(__dirname, "../src/shared/constants.js"), "utf8");
 // What background.js may importScripts, by path from src/background/
-const IMPORTABLE = Object.fromEntries(["src/shared/reason.js", "src/shared/sites.js"]
+const IMPORTABLE = Object.fromEntries(["src/shared/reason.js", "src/shared/sites.js", "src/shared/streaks.js"]
   .map((f) => [f, fs.readFileSync(path.join(__dirname, "..", f), "utf8")]));
 
 // Read block page links the same way the block page does (src/blocked/links.js)
@@ -841,4 +841,55 @@ test("upgrading from 1.0.0 leaves the app builders off and the list as it was me
   const env = await load({ sites: ["chatgpt.com", "claude.ai"], stats: { blocked: 3, sessions: 2, minutes: 50, unlocks: 1, log: [] } });
   assert.equal(env.store.blockAppBuilders, undefined);
   assert.ok(!BUILDERS.some((s) => env.store.sites.includes(s)));
+});
+
+// Daily history for the streak and the weekly chart (src/shared/streaks.js)
+
+const localDay = (time) => { const d = new Date(time); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+
+test("a finished session is added to the day it ended", async () => {
+  const env = await load();
+  const endsAt = Date.now() - 60000;
+  env.store.session = { startedAt: endsAt - 25 * 60000, endsAt, minutes: 25 };
+  await env.fire.startup(); // ran out while Chrome was closed
+  assert.deepEqual(env.store.stats.days, { [localDay(endsAt)]: { sessions: 1, minutes: 25 } });
+});
+
+test("a session ended early adds its minutes to the day, but not a finished session", async () => {
+  const env = await inSession();
+  env.store.session.startedAt = Date.now() - 10 * 60000;
+  await env.send({ type: "stop" });
+  assert.deepEqual(env.store.stats.days, { [localDay(Date.now())]: { sessions: 0, minutes: 10 } });
+  assert.equal(env.store.stats.sessions, 0);
+});
+
+test("ending a session straight away adds nothing to the history", async () => {
+  const env = await inSession();
+  await env.send({ type: "stop" });
+  assert.deepEqual(env.store.stats.days, {});
+});
+
+test("upgrading from 1.0.0 keeps the totals, and the history starts with the next session", async () => {
+  const v1 = { blocked: 7, sessions: 4, minutes: 130, unlocks: 2, log: [{ at: 1, domain: "claude.ai", reason: "old note" }] };
+  const env = await load({ sites: ["chatgpt.com"], stats: v1 });
+  assert.deepEqual(env.store.stats, v1, "an update alone changes nothing");
+  await env.send({ type: "start", minutes: 25 });
+  env.store.session.endsAt = Date.now() - 1000;
+  env.store.session.startedAt = env.store.session.endsAt - 25 * 60000;
+  await env.fire.alarm({ name: "sessionEnd" });
+  const { stats } = env.store;
+  assert.deepEqual([stats.blocked, stats.sessions, stats.minutes, stats.unlocks], [7, 5, 155, 2]);
+  assert.deepEqual(stats.log, v1.log);
+  assert.deepEqual(stats.days, { [localDay(Date.now())]: { sessions: 1, minutes: 25 } });
+});
+
+test("the history keeps recent days it already had and drops ones over 60 days old", async () => {
+  const recent = localDay(Date.now() - 3 * 86400000), old = localDay(Date.now() - 70 * 86400000);
+  const days = { [old]: { sessions: 1, minutes: 25 }, [recent]: { sessions: 1, minutes: 50 } };
+  const env = await load({ stats: { blocked: 0, sessions: 2, minutes: 75, unlocks: 0, log: [], days } });
+  await env.send({ type: "start", minutes: 25 });
+  env.store.session.endsAt = Date.now() - 1000;
+  await env.fire.alarm({ name: "sessionEnd" });
+  assert.deepEqual(Object.keys(env.store.stats.days), [recent, localDay(Date.now())]);
+  assert.deepEqual(env.store.stats.days[recent], { sessions: 1, minutes: 50 });
 });

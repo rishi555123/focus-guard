@@ -34,3 +34,40 @@ test("the app builders choice shows as saved, and is locked during a session lik
   assert.equal(popup.els.appBuilders.disabled, true);
   assert.equal(popup.els.sites.disabled, true);
 });
+
+// The streak and the weekly chart
+
+const NOW = new Date(2026, 10, 25, 15).getTime(); // Wednesday 25 November 2026, 3 pm local time
+
+test("the popup shows the streak, this week's minutes and one bar per day", async () => {
+  const days = {
+    "2026-11-19": { sessions: 1, minutes: 25 },
+    "2026-11-23": { sessions: 1, minutes: 50 },
+    "2026-11-24": { sessions: 2, minutes: 100 },
+    "2026-11-25": { sessions: 1, minutes: 25 }
+  };
+  const popup = loadPopup({ store: { stats: { sessions: 5, minutes: 200, blocked: 0, unlocks: 0, log: [], days } }, now: NOW });
+  await popup.settle();
+  assert.equal(popup.els.streak.textContent, "3-day streak");
+  assert.equal(popup.els.weekTotal.textContent, "200 min this week");
+  const bars = popup.els.weekBars.children;
+  assert.deepEqual(bars.map((b) => b.children[1].textContent), ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"]);
+  assert.deepEqual(bars.map((b) => b.children[0].style.height), ["12px", "0px", "0px", "0px", "23px", "46px", "12px"]);
+  assert.deepEqual(bars.map((b) => b.className), ["bar", "bar", "bar", "bar", "bar", "bar", "bar today"]);
+  assert.equal(popup.els.weekBars.attributes["aria-label"],
+    "Focused minutes, last 7 days: Thu 25, Fri 0, Sat 0, Sun 0, Mon 50, Tue 100, Wed (today) 25");
+});
+
+test("with no history yet, the popup invites you to start a streak", async () => {
+  const popup = loadPopup({ store: { stats: { sessions: 4, minutes: 130, blocked: 7, unlocks: 2, log: [] } }, now: NOW }); // saved by 1.0.0
+  await popup.settle();
+  assert.equal(popup.els.streak.textContent, "Finish a session to start a streak");
+  assert.equal(popup.els.weekTotal.textContent, "0 min this week");
+  assert.equal(popup.els.weekBars.children.length, 7);
+  assert.equal(popup.els.sMinutes.textContent, 130, "the totals are still shown");
+});
+
+test("a short bar is still visible, and the chart's markup is in popup.html", () => {
+  assert.match(html, /<div class="bars" id="weekBars" role="img"><\/div>/);
+  assert.match(html, /<script src="\.\.\/shared\/streaks\.js"><\/script>\s*<script src="\.\.\/shared\/browser\.js">/);
+});

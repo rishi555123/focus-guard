@@ -110,6 +110,7 @@ async function render() {
   $("sMinutes").textContent = stats.minutes || 0;
   $("sBlocked").textContent = stats.blocked || 0;
   $("sUnlocks").textContent = stats.unlocks || 0;
+  showWeek(stats.days || {});
 
   // No editing the blocklist mid-session, so you can't cheat yourself.
   // Unsaved edits in the box are kept when the popup refreshes.
@@ -131,6 +132,30 @@ async function render() {
     tick();
     timer = setInterval(tick, 1000);
   }
+}
+
+// The streak and a bar per day for the last 7 days (from shared/streaks.js)
+function showWeek(days) {
+  const now = Date.now();
+  const streak = currentStreak(days, now);
+  $("streak").textContent = streak ? `${streak}-day streak` : "Finish a session to start a streak";
+  const week = lastWeek(days, now);
+  const total = week.reduce((sum, d) => sum + d.minutes, 0);
+  $("weekTotal").textContent = `${total} min this week`;
+  const most = Math.max(...week.map((d) => d.minutes), 1);
+  $("weekBars").replaceChildren(...week.map((d) => {
+    const col = document.createElement("div");
+    col.className = d.today ? "bar today" : "bar";
+    const bar = document.createElement("i");
+    bar.style.height = `${d.minutes ? Math.max(3, Math.round((d.minutes / most) * 46)) : 0}px`; // the busiest day is full height
+    const label = document.createElement("span");
+    label.textContent = d.day;
+    col.append(bar, label);
+    return col;
+  }));
+  // The chart is a picture, so screen readers get the numbers instead
+  $("weekBars").setAttribute("aria-label", "Focused minutes, last 7 days: " +
+    week.map((d) => `${d.day}${d.today ? " (today)" : ""} ${d.minutes}`).join(", "));
 }
 
 // Refresh when anything changes while the popup is open, like a pass granted in another tab

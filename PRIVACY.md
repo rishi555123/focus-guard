@@ -1,6 +1,6 @@
 # Privacy policy for Focus Guard
 
-**Effective date:** 2 October 2026
+**Effective date:** 25 November 2026
 
 Focus Guard is a browser extension for Google Chrome and Microsoft Edge that blocks AI chat sites during coding sessions. This policy explains what it does with your information. The short version: **Focus Guard collects no data and sends nothing anywhere.** Everything it needs stays in your own browser.
 
@@ -18,8 +18,11 @@ To work, Focus Guard saves a small amount of data with `chrome.storage.local`, t
 | The current session's start and end time and length | To run the timer and end the session |
 | The current pass: which site and when it ends | To unlock just that site for 5 minutes |
 | Stats: sessions finished, focused minutes, AI visits blocked, passes used | To show your progress in the popup |
-| Your last 20 unlock notes, each with the site and time | The notes you write before a pass. They're kept only on your device. |
-| A few settings: your last session length, which default sites you've already been offered, and whether you've ticked the setup checklist steps | To remember your choices |
+| Daily totals for the last 60 days: how many sessions you finished and how many minutes you focused each day | For your streak and the weekly chart in the popup |
+| Your last 20 unlock notes (your answers to the three questions), each with the site and time | The notes you write before a pass. They're kept only on your device. |
+| A few settings: your last session length, light or dark theme, whether AI app builders are blocked, which default sites you've already been offered, and whether you've ticked the setup checklist steps | To remember your choices |
+
+Focus Guard's own pages also keep a copy of your light or dark theme choice in the browser's local storage for extension pages, so they open in the right colours straight away. It stays on your device too.
 
 ## Browsing activity
 

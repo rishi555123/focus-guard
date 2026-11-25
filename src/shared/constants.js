@@ -14,5 +14,8 @@ const PASS_MINUTES = 5;
 const UNLOCK_MIN_CHARS = 20;
 const UNLOCK_WAIT_SECONDS = 60;
 
+// How many days of daily totals to keep, for the streak and the weekly chart
+const HISTORY_DAYS = 60;
+
 // "1 minute", "5 minutes"
 const minutesText = (n) => `${n} minute${n === 1 ? "" : "s"}`;

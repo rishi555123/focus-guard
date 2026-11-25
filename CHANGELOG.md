@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Dark mode for the popup, the setup checklist and the block page, in the same colours as the website's dark theme. It follows your system setting, or pick Auto, Light or Dark at the bottom of the popup. Every Focus Guard page switches straight away, with no flash of the wrong theme when one opens. In dark mode the logo is drawn with light lines.
 - After a pass is granted, the block page waits for you to open the site and offers **Copy as AI prompt**. It copies your three answers with a request for a hint or an explanation of the cause rather than the full solution.
 - An optional **Also block AI app builders** choice under **Blocked sites** in the popup, for v0.app, bolt.new and lovable.dev. It's off unless you turn it on, it's locked during a session like the list, and turning it off never removes sites you added yourself.
+- A daily streak and a weekly chart in the popup. A day counts toward your streak when you finish at least one session, and a streak lasts until the end of the next day. The chart shows your focused minutes for each of the last 7 days. Focus Guard keeps daily totals for the last 60 days; history starts with your first session after updating, and your existing totals are kept.
 
 ### Changed
 

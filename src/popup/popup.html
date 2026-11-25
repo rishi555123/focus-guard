@@ -13,6 +13,15 @@
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; font-size: 12px;
            background: var(--card); border: 2px solid var(--ink); border-radius: 6px; padding: 10px; margin: 14px 0; }
   .stats b { display: block; font-size: 18px; }
+  .week { margin: -6px 0 14px; padding: 10px; background: var(--card); border: 2px solid var(--ink); border-radius: 6px; font-size: 12px; }
+  .week-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .week-head b { font-size: 14px; }
+  .bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 64px; }
+  .bar { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; gap: 3px; }
+  .bar i { display: block; width: 100%; max-width: 22px; background: var(--ink); border-radius: 3px 3px 0 0; }
+  .bar.today i { background: var(--marker); outline: 2px solid var(--ink); outline-offset: -2px; }
+  .bar span { font: 600 10px var(--code); color: var(--pencil); }
+  .bar.today span { color: var(--ink); }
   details summary { cursor: pointer; font-size: 13px; font-weight: 600; }
   details textarea { height: 140px; margin: 8px 0; }
   label.group { display: block; margin: 8px 0 0; font-size: 12px; font-weight: 600; cursor: pointer; }
@@ -64,6 +73,12 @@
     <div><b id="sUnlocks">0</b>passes used</div>
   </div>
 
+  <!-- The streak and focused minutes for the last 7 days, filled in by popup.js -->
+  <div class="week">
+    <div class="week-head"><b id="streak"></b><span class="muted" id="weekTotal"></span></div>
+    <div class="bars" id="weekBars" role="img"></div>
+  </div>
+
   <details>
     <summary>Blocked sites</summary>
     <label class="group"><input type="checkbox" id="appBuilders"> Also block AI app builders
@@ -82,6 +97,7 @@
   </div>
   <script src="../shared/constants.js"></script>
   <script src="../shared/sites.js"></script>
+  <script src="../shared/streaks.js"></script>
   <script src="../shared/browser.js"></script>
   <script src="../shared/setup.js"></script>
   <script src="popup.js"></script>

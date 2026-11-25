@@ -1,5 +1,5 @@
-// The numbers, the unlock answer checks, and the app builder group
-importScripts("../shared/constants.js", "../shared/reason.js", "../shared/sites.js");
+// The numbers, the unlock answer checks, the app builder group and the daily history
+importScripts("../shared/constants.js", "../shared/reason.js", "../shared/sites.js", "../shared/streaks.js");
 
 const DEFAULT_SITES = [
   "chatgpt.com", "chat.openai.com", "gemini.google.com", "aistudio.google.com",
@@ -30,7 +30,9 @@ const WELCOME_PAGE = "src/welcome/welcome.html";
 // or Copilot in Edge back on
 const UNINSTALL_URL = "https://github.com/rishi555123/focus-guard#removed-focus-guard";
 const BLOCK_PAGE = () => chrome.runtime.getURL("src/blocked/blocked.html");
-const emptyStats = () => ({ blocked: 0, sessions: 0, minutes: 0, unlocks: 0, log: [] });
+// `days` is the daily history (shared/streaks.js). Stats saved before it existed get it
+// through addStats, which fills in anything missing, so their history starts on update.
+const emptyStats = () => ({ blocked: 0, sessions: 0, minutes: 0, unlocks: 0, log: [], days: {} });
 
 // Run state changes one at a time, so two events can't interleave their
 // storage and rule updates. Only event listeners use this, never helpers,
@@ -223,8 +225,13 @@ async function finishSession(completed) {
   await chrome.alarms.clearAll(); // includes passWarn and passEnd, so no pass notifications follow
   const { session } = await chrome.storage.local.get("session");
   if (session) {
-    const mins = Math.round((Math.min(Date.now(), session.endsAt) - session.startedAt) / 60000);
-    await addStats((s) => { s.minutes += mins; if (completed) s.sessions += 1; });
+    const endedAt = Math.min(Date.now(), session.endsAt);
+    const mins = Math.round((endedAt - session.startedAt) / 60000);
+    await addStats((s) => {
+      s.minutes += mins;
+      if (completed) s.sessions += 1;
+      if (mins > 0 || completed) s.days = recordSession(s.days, endedAt, mins, completed); // from shared/streaks.js
+    });
   }
   await chrome.storage.local.remove(["session", "pass", "passUntil"]);
   chrome.notifications.clear(NOTIFY_ID).catch(() => {}); // a leftover "1 minute left" no longer applies

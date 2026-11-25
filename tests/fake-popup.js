@@ -13,7 +13,7 @@ const SCRIPTS = [...HTML.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) 
 function element(id) {
   const classes = new Set();
   return {
-    id, hidden: false, disabled: false, checked: false, textContent: "", value: "", dataset: {}, children: [],
+    id, hidden: false, disabled: false, checked: false, textContent: "", value: "", dataset: {}, children: [], style: {},
     attributes: {}, listeners: {},
     classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c),
       toggle: (c, on) => ((on ?? !classes.has(c)) ? classes.add(c) : classes.delete(c)) },
