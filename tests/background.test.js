@@ -9,6 +9,8 @@ const vm = require("node:vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "../src/background/background.js"), "utf8");
 const CONSTANTS = fs.readFileSync(path.join(__dirname, "../src/shared/constants.js"), "utf8");
+// What background.js may importScripts, by path from src/background/
+const IMPORTABLE = { "src/shared/reason.js": fs.readFileSync(path.join(__dirname, "../src/shared/reason.js"), "utf8") };
 
 // Read block page links the same way the block page does (src/blocked/links.js)
 const linksContext = vm.createContext({ URL, URLSearchParams });
@@ -19,7 +21,12 @@ function linkOf(url) {
   assert.ok(url.startsWith(BLOCK_PAGE + "?"), url);
   return structuredClone(vm.runInContext("readBlockLink", linksContext)(url.slice(BLOCK_PAGE.length)));
 }
-const REASON = "I tried reading the error, logging the values and the docs, still stuck.";
+// The block page's three answers (see src/shared/reason.js)
+const ANSWERS = {
+  tried: "I read the error and logged the values before the loop",
+  expected: "The function should return the sorted list of names",
+  got: "It returns undefined and the console shows a TypeError"
+};
 
 // Like Chrome, only show a tab's url and pendingUrl if the real manifest grants the
 // "tabs" permission or a matching host permission. Chrome's docs: Tab.url "is only
@@ -105,8 +112,10 @@ async function load(saved = {}, reason = Object.keys(saved).length ? "update" : 
   // importScripts like a service worker's: paths are relative to src/background/
   const importScripts = (...files) => {
     for (const file of files) {
-      assert.equal(path.posix.join("src/background", file), "src/shared/constants.js", "only constants.js is imported");
-      vm.runInContext(constants, context);
+      const where = path.posix.join("src/background", file);
+      if (where === "src/shared/constants.js") vm.runInContext(constants, context);
+      else if (IMPORTABLE[where]) vm.runInContext(IMPORTABLE[where], context);
+      else assert.fail("unexpected importScripts: " + where);
     }
   };
   const context = vm.createContext({ chrome, console: quietConsole, structuredClone, URL, URLSearchParams, importScripts });
@@ -184,7 +193,7 @@ test("a blocked visit during a session is counted", async () => {
 test("a pass unlocks only that site", async () => {
   const env = await inSession();
   env.tabs = [{ id: 1, url: "https://chatgpt.com/c/1" }, { id: 2, url: "https://claude.ai/new" }];
-  const res = await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/c/1" });
+  const res = await env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/c/1" });
 
   assert.equal(res.granted, true);
   assert.equal(res.domain, "chatgpt.com");
@@ -198,7 +207,7 @@ test("a pass unlocks only that site", async () => {
 
 test("the backup tab listener respects the pass", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" });
   env.updates = [];
   await env.fire.tabUpdated(5, { url: "https://www.chatgpt.com/" });
   await env.fire.tabUpdated(6, { url: "https://claude.ai/" });
@@ -207,7 +216,7 @@ test("the backup tab listener respects the pass", async () => {
 
 test("a leftover block page for a passed site reopens it without counting", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" });
   const res = await env.send({ type: "blocked", url: "https://chatgpt.com/" });
   assert.equal(res.blocked, false);
   assert.equal(res.reopen, true);
@@ -216,17 +225,17 @@ test("a leftover block page for a passed site reopens it without counting", asyn
 
 test("a second pass replaces the first and re-blocks its tabs", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" });
   env.tabs = [{ id: 1, url: "https://chatgpt.com/" }, { id: 3, url: "https://gemini.google.com/app" }];
   env.updates = [];
-  const res = await env.send({ type: "unlock", reason: REASON, url: "https://gemini.google.com/app" });
+  const res = await env.send({ type: "unlock", answers: ANSWERS, url: "https://gemini.google.com/app" });
   assert.equal(res.domain, "gemini.google.com");
   assert.deepEqual(env.updatedTabs(), [1]);
 });
 
 test("unlocking a site that isn't on the blocklist is refused", async () => {
   const env = await inSession();
-  const res = await env.send({ type: "unlock", reason: REASON, url: "https://example.com/" });
+  const res = await env.send({ type: "unlock", answers: ANSWERS, url: "https://example.com/" });
   assert.equal(res.ok, false);
   assert.match(res.error, /Not a blocked site/);
   assert.equal(env.store.pass, undefined);
@@ -234,7 +243,7 @@ test("unlocking a site that isn't on the blocklist is refused", async () => {
 
 test("when a pass ends, its site is blocked again", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://gemini.google.com/app" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://gemini.google.com/app" });
   env.tabs = [{ id: 3, url: "https://gemini.google.com/app" }];
   env.updates = [];
   await env.fire.alarm({ name: "passEnd" });
@@ -252,7 +261,7 @@ test("outside a session the block page counts nothing and grants nothing", async
   let res = await env.send({ type: "blocked", url: "https://chatgpt.com/" });
   assert.equal(res.blocked, false);
   assert.equal(res.reopen, true);
-  res = await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  res = await env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" });
   assert.equal(res.granted, false);
   assert.equal(res.reopen, true);
 
@@ -271,7 +280,7 @@ test("overlapping entries: the pass uses the most specific one", async () => {
   const env = await load();
   env.store.sites = ["google.com", "gemini.google.com"];
   await env.send({ type: "start", minutes: 25 });
-  const res = await env.send({ type: "unlock", reason: REASON, url: "https://gemini.google.com/app" });
+  const res = await env.send({ type: "unlock", answers: ANSWERS, url: "https://gemini.google.com/app" });
   assert.equal(res.domain, "gemini.google.com");
   assert.equal(env.store.pass.domains.includes("google.com"), false);
 
@@ -282,7 +291,7 @@ test("overlapping entries: the pass uses the most specific one", async () => {
 
 test("a pass from chat.openai.com covers chatgpt.com, where it redirects", async () => {
   const env = await inSession();
-  const res = await env.send({ type: "unlock", reason: REASON, url: "https://chat.openai.com/" });
+  const res = await env.send({ type: "unlock", answers: ANSWERS, url: "https://chat.openai.com/" });
   assert.equal(res.domain, "chatgpt.com");
   assert.deepEqual(env.store.pass.domains, ["chatgpt.com", "chat.openai.com"]);
   assert.equal(env.allows().length, 2);
@@ -295,7 +304,7 @@ test("a pass from chat.openai.com covers chatgpt.com, where it redirects", async
 
 test("a pass from chatgpt.com also covers chat.openai.com", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" });
   assert.deepEqual(env.store.pass.domains, ["chatgpt.com", "chat.openai.com"]);
 });
 
@@ -328,7 +337,7 @@ test("reconcile recreates lost alarms and clears the old passUntil key", async (
 
 test("a pass from kimi.moonshot.cn covers kimi.com, where it redirects", async () => {
   const env = await inSession();
-  const res = await env.send({ type: "unlock", reason: REASON, url: "https://kimi.moonshot.cn/" });
+  const res = await env.send({ type: "unlock", answers: ANSWERS, url: "https://kimi.moonshot.cn/" });
   assert.equal(res.domain, "kimi.com");
   assert.deepEqual(env.store.pass.domains, ["kimi.com", "kimi.moonshot.cn"]);
 });
@@ -408,17 +417,17 @@ test("the backup tab listener uses a tab link that isn't a sweep", async () => {
 
 test("a tab re-blocked because the pass moved says where it moved to", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   env.tabs = [{ id: 1, url: "https://claude.ai/new" }];
   env.updates = [];
-  await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" });
   const link = linkOf(env.updates[0].url);
   assert.deepEqual([link.url, link.sweep, link.why, link.to], ["https://claude.ai/new", true, "moved", "chatgpt.com"]);
 });
 
 test("a tab re-blocked because the pass ended says so", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   env.tabs = [{ id: 1, url: "https://claude.ai/new" }];
   env.updates = [];
   await env.fire.alarm({ name: "passEnd" });
@@ -478,8 +487,8 @@ test("ending a session and the timer firing together count it once", async () =>
 test("two unlocks together don't collide, and the second one wins", async () => {
   const env = await inSession();
   const [first, second] = await Promise.all([
-    env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" }),
-    env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" })
+    env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" }),
+    env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" })
   ]);
   assert.equal(first.ok, true, first.error);
   assert.equal(second.ok, true, second.error);
@@ -491,7 +500,7 @@ test("two unlocks together don't collide, and the second one wins", async () => 
 test("an unlock and a blocklist save together keep the pass's allow rules", async () => {
   const env = await inSession();
   const [unlock, saved] = await Promise.all([
-    env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" }),
+    env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" }),
     env.send({ type: "sitesChanged" })
   ]);
   assert.equal(unlock.ok, true);
@@ -503,7 +512,7 @@ test("an unlock and a blocklist save together keep the pass's allow rules", asyn
 test("one failed message doesn't block the ones after it", async () => {
   const env = await inSession();
   const [bad, good] = await Promise.all([
-    env.send({ type: "unlock", reason: REASON, url: "https://example.com/" }),
+    env.send({ type: "unlock", answers: ANSWERS, url: "https://example.com/" }),
     env.send({ type: "blocked", url: "https://claude.ai/" })
   ]);
   assert.equal(bad.ok, false);
@@ -517,7 +526,7 @@ const messages = (env) => env.notifications.map((n) => n.message);
 
 test("an unlock sets a warning alarm one minute before the pass ends", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   assert.equal(env.alarms.passWarn.when, env.store.pass.until - 60000);
   assert.equal(env.alarms.passEnd.when, env.store.pass.until);
   assert.deepEqual(env.notifications, [], "a first pass doesn't notify");
@@ -525,7 +534,7 @@ test("an unlock sets a warning alarm one minute before the pass ends", async () 
 
 test("one minute before the pass ends: 1 minute left notification", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   await env.fire.alarm({ name: "passWarn" });
   assert.deepEqual(messages(env), ["1 minute left on your claude.ai pass."]);
   const [n] = env.notifications;
@@ -537,15 +546,15 @@ test("one minute before the pass ends: 1 minute left notification", async () => 
 
 test("when the pass ends: pass is over notification", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   await env.fire.alarm({ name: "passEnd" });
   assert.deepEqual(messages(env), ["Your 5-minute pass for claude.ai is over. It's blocked again."]);
 });
 
 test("when the pass moves: moved notification, and both alarms follow the new pass", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
-  await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" });
   assert.deepEqual(messages(env), [
     "Your pass moved to chatgpt.com, so claude.ai is blocked again. Only one site can be unlocked at a time."
   ]);
@@ -558,21 +567,21 @@ test("when the pass moves: moved notification, and both alarms follow the new pa
 
 test("unlocking the same site again doesn't say the pass moved", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/new" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/new" });
   assert.deepEqual(env.notifications, []);
 });
 
 test("an expired pass doesn't count as moving", async () => {
   const env = await inSession();
   env.store.pass = { domain: "claude.ai", domains: ["claude.ai"], until: Date.now() - 1000 };
-  await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" });
   assert.deepEqual(env.notifications, []);
 });
 
 test("ending the session early during a pass clears its alarms and notifications", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   await env.send({ type: "stop" });
   assert.equal(env.alarms.passWarn, undefined);
   assert.equal(env.alarms.passEnd, undefined);
@@ -582,7 +591,7 @@ test("ending the session early during a pass clears its alarms and notifications
 
 test("ending the session early clears every alarm, even if a later step fails", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   delete env.alarms.passWarn; // as after the "1 minute left" shortcut fires
   env.failRemove = true; // like the worker stopping partway through
   const reply = await env.send({ type: "stop" });
@@ -592,7 +601,7 @@ test("ending the session early clears every alarm, even if a later step fails", 
 
 test("ending the session early clears leftover alarms when no session is saved", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   delete env.store.session; // a session that didn't finish cleaning up
   await env.send({ type: "stop" });
   assert.deepEqual(Object.keys(env.alarms), []);
@@ -603,7 +612,7 @@ test("ending the session early clears leftover alarms when no session is saved",
 
 test("reconcile clears leftover alarms when no session is saved", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   delete env.store.session;
   await env.fire.startup();
   assert.deepEqual(Object.keys(env.alarms), []);
@@ -612,7 +621,7 @@ test("reconcile clears leftover alarms when no session is saved", async () => {
 test("no pass notifications when the session itself ends during the pass", async () => {
   const env = await inSession();
   env.store.session.endsAt = Date.now() + 2 * 60000; // session ends before the 5-minute pass
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
 
   await env.fire.alarm({ name: "passWarn" }); // fires before the session ends
   assert.deepEqual(env.notifications, [], "no 1 minute warning for a pass the session will end first");
@@ -625,7 +634,7 @@ test("no pass notifications when the session itself ends during the pass", async
 
 test("reconcile recreates a lost warning alarm", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   env.alarms = {};
   await env.fire.startup();
   assert.equal(env.alarms.passWarn.when, env.store.pass.until - 60000);
@@ -634,7 +643,7 @@ test("reconcile recreates a lost warning alarm", async () => {
 
 test("reconcile doesn't make a late warning in the pass's last minute", async () => {
   const env = await inSession();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   env.store.pass.until = Date.now() + 30000;
   env.alarms = {};
   await env.fire.startup();
@@ -707,8 +716,8 @@ test("a failed test notification is reported, not hidden", async () => {
 test("a failed pass notification doesn't break the pass", async () => {
   const env = await inSession();
   env.failNotifications = true;
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
-  const res = await env.send({ type: "unlock", reason: REASON, url: "https://chatgpt.com/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
+  const res = await env.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" });
   assert.equal(res.ok, true);
   assert.equal(env.store.pass.domain, "chatgpt.com");
 });
@@ -716,14 +725,14 @@ test("a failed pass notification doesn't break the pass", async () => {
 test("missing stats don't break an unlock", async () => {
   const env = await inSession();
   delete env.store.stats;
-  const res = await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  const res = await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   assert.equal(res.ok, true);
   assert.equal(env.store.stats.unlocks, 1);
 });
 
 test("session lengths and the pass length come from shared/constants.js", async () => {
   const env = await load({}, "install",
-    "const SESSION_LENGTHS = [15, 45]; const PASS_MINUTES = 7; const UNLOCK_MIN_CHARS = 60; const UNLOCK_WAIT_SECONDS = 60;" +
+    "const SESSION_LENGTHS = [15, 45]; const PASS_MINUTES = 7; const UNLOCK_MIN_CHARS = 20; const UNLOCK_WAIT_SECONDS = 60;" +
     "const minutesText = (n) => `${n} minute${n === 1 ? \"\" : \"s\"}`;");
   const refused = await env.send({ type: "start", minutes: 25 });
   assert.equal(refused.ok, false, "25 isn't a session length any more");
@@ -732,10 +741,44 @@ test("session lengths and the pass length come from shared/constants.js", async 
   assert.equal(env.store.session.endsAt - env.store.session.startedAt, 45 * 60000);
 
   const before = Date.now();
-  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   const length = env.store.pass.until - before;
   assert.ok(length >= 7 * 60000 && length < 7 * 60000 + 1000, "a 7-minute pass");
   assert.equal(env.alarms.passEnd.when, env.store.pass.until, "and its alarm");
   await env.fire.alarm({ name: "passEnd" });
   assert.deepEqual(messages(env), ["Your 7-minute pass for claude.ai is over. It's blocked again."]);
+});
+
+test("a pass is only granted for three real answers", async () => {
+  const env = await inSession();
+  for (const answers of [
+    undefined,
+    { ...ANSWERS, got: "" },
+    { ...ANSWERS, expected: "too short" },
+    { ...ANSWERS, tried: "asdfasdf asdfasdf asdfasdf" }
+  ]) {
+    const res = await env.send({ type: "unlock", answers, url: "https://claude.ai/" });
+    assert.equal(res.ok, false, JSON.stringify(answers));
+    assert.match(res.error, /Answer all three questions first/);
+  }
+  assert.equal(env.store.pass, undefined, "no pass was granted");
+  assert.equal(env.store.stats.unlocks, 0);
+});
+
+test("the unlock note keeps all three answers in one line each", async () => {
+  const env = await inSession();
+  await env.send({ type: "unlock", answers: { ...ANSWERS, tried: "  " + ANSWERS.tried + "  " }, url: "https://claude.ai/" });
+  assert.equal(env.store.stats.log[0].reason,
+    `Tried: ${ANSWERS.tried}
+Expected: ${ANSWERS.expected}
+Instead: ${ANSWERS.got}`);
+});
+
+test("upgrading keeps unlock notes saved by 1.0.0 as they were", async () => {
+  const old = { at: 1, domain: "claude.ai", reason: "I tried reading the error, logging the values and the docs, still stuck." };
+  const env = await load({ sites: ["claude.ai"], stats: { blocked: 1, sessions: 1, minutes: 25, unlocks: 1, log: [old] } });
+  await env.send({ type: "start", minutes: 25 });
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
+  assert.deepEqual(env.store.stats.log[1], old);
+  assert.equal(env.store.stats.unlocks, 2);
 });

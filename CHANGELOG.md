@@ -9,12 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Dark mode for the popup, the setup checklist and the block page, in the same colours as the website's dark theme. It follows your system setting, or pick Auto, Light or Dark at the bottom of the popup. Every Focus Guard page switches straight away, with no flash of the wrong theme when one opens. In dark mode the logo is drawn with light lines.
+- After a pass is granted, the block page waits for you to open the site and offers **Copy as AI prompt**. It copies your three answers with a request for a hint or an explanation of the cause rather than the full solution.
 
 ### Changed
 
 - A new, original Focus Guard logo replaces the Flaticon icon: a brain over an "FG" shield between code brackets, in navy and yellow. It's used for the toolbar, extension and notification icons. The 16-pixel toolbar icon shows just the FG shield, so it stays readable at that size.
 - The logo now appears inside Focus Guard too: next to the name in the popup, above the welcome on the setup checklist, and small at the top of the block page.
 - The website uses the new logo and favicon. In dark mode it shows a version of the logo with light lines instead of inverting the colours, so the yellow stays yellow.
+- Unlocking asks three questions instead of one box: what you tried, what you expected and what happened instead, each in at least 20 characters. Answers that look like random typing, like `asdfasdf` or the same word over and over, are turned down, and Focus Guard checks again before it grants a pass.
 
 ### Fixed
 

@@ -60,7 +60,8 @@ test("the check catches the ways these numbers used to be typed out", () => {
     'count.textContent = `Pass granted for ${res.domain} for 5 minutes`;',
     'const MIN_CHARS = 60, WAIT_SECONDS = 60;',
     '<button id="unlock" disabled>Start 60-second wait</button>',
-    '<span id="count" class="muted">Write at least 60 characters</span>'
+    `<span id="count" class="muted">Write at least ${C.UNLOCK_MIN_CHARS} characters</span>`,
+    `count.textContent = left > 0 ? \`\${left} more characters\` : "Ready"; // with ${C.UNLOCK_MIN_CHARS} more characters`
   ];
   for (const snippet of old) assert.notDeepEqual(hardCoded("src/example.js", snippet), [], snippet);
   assert.deepEqual(hardCoded("src/blocked/questions.js", '"Have you stepped away for 5 minutes?"'), [], "the allowed question");
@@ -76,7 +77,7 @@ test("constants.js holds sensible values", () => {
 });
 
 test("every script that uses the constants loads constants.js first", () => {
-  assert.match(read("src/background/background.js"), /^importScripts\("\.\.\/shared\/constants\.js"\);/);
+  assert.match(read("src/background/background.js"), /^importScripts\("\.\.\/shared\/constants\.js"[,)]/);
   for (const [page, first] of [["src/popup/popup.html", "../shared/constants.js"], ["src/blocked/blocked.html", "../shared/constants.js"]]) {
     const scripts = [...read(page).split("</head>")[1].matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
     assert.equal(scripts[0], first, `${page} loads constants.js before its other scripts`);

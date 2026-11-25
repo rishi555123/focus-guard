@@ -14,7 +14,10 @@
   label.check { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; line-height: 1.45; cursor: pointer; }
   label.check input { margin-top: 4px; accent-color: var(--ink); width: 16px; height: 16px; }
   label.check:has(input:checked) span { color: var(--pencil); text-decoration: line-through; }
-  textarea { height: 96px; margin: 8px 0 6px; }
+  label.answer { display: block; font-weight: 600; margin: 14px 0 0; }
+  textarea { height: 64px; margin: 6px 0 2px; }
+  .hint { font: 13px var(--code); color: var(--pencil); margin: 0; min-height: 1.4em; }
+  .hint.failed { color: var(--redpen); }
   .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
   #count { font: 600 13px var(--code); }
   #count.failed { color: var(--redpen); }
@@ -45,16 +48,31 @@
     <!-- The unlock wording is filled in by blocked.js from shared/constants.js -->
     <p class="muted" style="margin:0" id="unlockIntro"></p>
     <p class="warn" id="passWarning" role="status" hidden></p>
-    <textarea id="reason" placeholder="I tried ... and I expected ... but got ..."></textarea>
+    <label class="answer" for="tried">What did you try?</label>
+    <textarea id="tried" aria-describedby="triedHint" placeholder="I printed the values before the loop and ..."></textarea>
+    <p class="hint" id="triedHint"></p>
+    <label class="answer" for="expected">What did you expect?</label>
+    <textarea id="expected" aria-describedby="expectedHint" placeholder="It should return ..."></textarea>
+    <p class="hint" id="expectedHint"></p>
+    <label class="answer" for="got">What happened instead?</label>
+    <textarea id="got" aria-describedby="gotHint" placeholder="It returned ... / The error says ..."></textarea>
+    <p class="hint" id="gotHint"></p>
     <div class="row">
       <button id="unlock" disabled></button>
       <span id="count" class="muted"></span>
+    </div>
+    <!-- Shown once a pass is granted: the site doesn't open until you choose to -->
+    <div class="row" id="granted" hidden>
+      <button id="open"></button>
+      <button class="ghost" id="copyPrompt">Copy as AI prompt</button>
+      <span id="copied" class="muted" role="status"></span>
     </div>
   </div>
 
   <button class="ghost" id="back">Back to my code</button>
 </main>
 <script src="../shared/constants.js"></script>
+<script src="../shared/reason.js"></script>
 <script src="../shared/browser.js"></script>
 <script src="questions.js"></script>
 <script src="links.js"></script>

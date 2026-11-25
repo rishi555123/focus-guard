@@ -9,8 +9,9 @@ const SESSION_LENGTHS = [25, 50, 90];
 // How long a pass unlocks a site for, in minutes
 const PASS_MINUTES = 5;
 
-// Unlocking on the block page: write at least this many characters, then wait this long
-const UNLOCK_MIN_CHARS = 60;
+// Unlocking on the block page: answer each of the three questions with at least this many
+// characters (shared/reason.js also rejects random typing), then wait this long
+const UNLOCK_MIN_CHARS = 20;
 const UNLOCK_WAIT_SECONDS = 60;
 
 // "1 minute", "5 minutes"

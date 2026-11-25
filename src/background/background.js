@@ -1,4 +1,4 @@
-importScripts("../shared/constants.js"); // SESSION_LENGTHS, PASS_MINUTES and minutesText
+importScripts("../shared/constants.js", "../shared/reason.js"); // the numbers, and the unlock answer checks
 
 const DEFAULT_SITES = [
   "chatgpt.com", "chat.openai.com", "gemini.google.com", "aistudio.google.com",
@@ -296,6 +296,8 @@ async function handleMessage(msg) {
       const { sites = [] } = await chrome.storage.local.get("sites");
       return { granted: false, reopen: isListed(msg.url, sites) }; // no session, nothing to unlock
     }
+    // The block page checks the answers too, but a pass is only ever granted for real ones
+    if (!answersOk(msg.answers)) throw new Error("Answer all three questions first");
     // Use the most specific matching entry so the pass covers as little as possible
     const host = hostOf(msg.url);
     const entry = state.sites.filter((d) => onSite(host, d)).sort((a, b) => b.length - a.length)[0];
@@ -316,7 +318,7 @@ async function handleMessage(msg) {
     }
     await addStats((s) => {
       s.unlocks += 1;
-      s.log.unshift({ at: Date.now(), domain, reason: msg.reason });
+      s.log.unshift({ at: Date.now(), domain, reason: answersNote(msg.answers) });
       s.log = s.log.slice(0, 20);
     });
     return { granted: true, domain };
