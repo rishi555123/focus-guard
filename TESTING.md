@@ -2,7 +2,7 @@
 
 The automated tests (`node --test`) check the logic, but some things only show up in a real browser: redirects, notifications, settings pages and how pages look. Use this checklist before a release, or test the sections your change touches.
 
-Sections 1 to 12 are written for Chrome. Section 13 repeats the parts that differ in Microsoft Edge. In Edge, use `edge://extensions` wherever a step says `chrome://extensions`; the console shortcuts work the same way.
+Sections 1 to 12, 14 and 15 are written for Chrome. Section 13 repeats the parts that differ in Microsoft Edge. In Edge, use `edge://extensions` wherever a step says `chrome://extensions`; the console shortcuts work the same way.
 
 Tick each box as you go. If a step fails, note the section and step number in your issue or pull request.
 
@@ -62,6 +62,8 @@ Chrome can delay alarms by up to about 30 seconds, so a notification may take a 
 
 ## 3. Per-site passes and aliases
 
+To unlock a site, answer the three questions on its block page, wait out the timer, then click **Open** with the site's name.
+
 - [ ] 3.1 During a session, unlock `chatgpt.com`. ChatGPT opens, and the popup shows "Pass for chatgpt.com".
 - [ ] 3.2 While that pass is active, `claude.ai` is still blocked.
 - [ ] 3.3 While that pass is active, `www.chatgpt.com` opens.
@@ -89,8 +91,8 @@ All notifications show the Focus Guard icon and the title "Focus Guard".
 
 - [ ] 5.1 The block page has its normal styling (graph paper background, highlighted "first.").
 - [ ] 5.2 The questions cross out when ticked.
-- [ ] 5.3 The unlock button stays disabled until you've typed 60 characters, and the counter counts down as you type.
-- [ ] 5.4 Clicking the button starts a 60-second wait and locks the text box.
+- [ ] 5.3 The unlock button stays disabled until all three answers are long enough, and each answer shows how many characters it still needs as you type.
+- [ ] 5.4 Clicking the button starts a 60-second wait and locks the three answers.
 - [ ] 5.5 An ordinary block (typing a blocked site yourself) shows no note.
 - [ ] 5.6 **Back to my code** after typing a blocked site: in a tab, open `example.com`, then type `chatgpt.com`. The button takes you back to `example.com`.
 - [ ] 5.7 **Back to my code** after a tab was moved: open `example.com`, then `chatgpt.com` in the same tab, then start a session. The button takes you to `example.com`, not ChatGPT.
@@ -117,8 +119,8 @@ Note "AI visits blocked" and "passes used" in the popup before each step.
 
 ## 7. Site list editor
 
-- [ ] 7.1 With no session running, expand **Blocked sites**. The list shows one domain per line.
-- [ ] 7.2 Add `https://www.Example.com/page?x=1` and save. The list shows `example.com`.
+- [ ] 7.1 With no session running, expand **Blocked sites**. The list shows one entry per line.
+- [ ] 7.2 Add `https://www.Example.com/` and save. The list shows `example.com`.
 - [ ] 7.3 Add `not a site` and `localhost` and save. Nothing is saved, both lines are listed in red, and your text stays in the box.
 - [ ] 7.4 Add the same site twice and save. It appears once.
 - [ ] 7.5 During a session, the list and **Save sites** are disabled.

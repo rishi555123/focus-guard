@@ -8,7 +8,7 @@ The listing deliberately doesn't mention other browsers: policy 1.1.2 says an ex
 
 ## Decisions
 
-- **Version:** a plain `1.0.0`, with no `version_name`. Microsoft's policies don't allow "non-production builds", like an extension "still in an experimental stage", so the listing never calls it a beta.
+- **Version:** a plain version number, like `1.1.0`, with no `version_name`. Microsoft's policies don't allow "non-production builds", like an extension "still in an experimental stage", so the listing never calls it a beta.
 - **Permissions:** the `tabs` permission was removed. Chrome's tabs documentation says a tab's `url` and `pendingUrl` are present if the extension "has the "tabs" permission or has host permissions for the page", and Focus Guard has `<all_urls>`. Creating, navigating, removing and finding tabs need no permission. Policy 1.6 says to "only request those permissions that are necessary".
 - **Short description:** kept as the manifest's `description`.
 - **Not included for now:** an Edge screenshot of the setup checklist (`docs/screenshots/welcome.png` shows the Chrome steps, so it isn't used), and the optional promotional tiles.
