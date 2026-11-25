@@ -114,6 +114,7 @@ h3 { font-size: 21px; margin: 28px 0 8px; }
 .button:hover { filter: brightness(1.12); }
 .button.big { font-size: 20px; padding: 16px 26px; }
 .button.ghost { background: transparent; color: var(--ink); }
+.button.compact { font-size: 16px; padding: 8px 16px; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 24px 0 8px; }
 .small { font-size: 15px; }
 
@@ -151,6 +152,10 @@ ol.steps > li::before { content: counter(step); position: absolute; left: 0; top
 .release header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
 .release h2 { margin: 0; }
 .release time { font: 600 15px var(--code); color: var(--pencil); }
+/* The newest version's tag, and each version's own download (see CONTRIBUTING.md) */
+.badge { font: 700 13px var(--code); color: var(--mark-text); background: var(--marker); padding: 2px 8px; border-radius: 4px; }
+.release-download { margin: 14px 0 0; }
+.note.older { font-size: 15px; margin: 12px 0 0; }
 .release h3 { font-size: 20px; margin: 20px 0 4px; }
 .release h4.group { font-size: 16px; margin: 18px 0 2px; }
 .release ul { margin: 4px 0; padding-left: 22px; }

@@ -195,6 +195,27 @@ test("the releases page lists every version and date in CHANGELOG.md", () => {
   for (const [, bullet] of released.matchAll(/^- (.+)$/gm)) assert.ok(page.includes(plain(bullet)), "missing: " + bullet.slice(0, 60));
 });
 
+test("every version on the releases page has its own download, and only the newest is Latest", () => {
+  const changelog = read(path.join(ROOT, "CHANGELOG.md"));
+  const html = read(path.join(SITE, "releases.html"));
+  const released = [...changelog.matchAll(/^## \[(\d+\.\d+\.\d+)\] - \d{4}-\d{2}-\d{2}$/gm)].map((m) => m[1]);
+  const articles = [...html.matchAll(/<article class="release card" id="v([\d.]+)"[\s\S]*?<\/article>/g)].map(([body, version]) => ({ version, body }));
+  assert.deepEqual(articles.map((a) => a.version), released, "one entry per released version, newest first");
+  articles.forEach(({ version, body }, i) => {
+    const zip = `https://github.com/rishi555123/focus-guard/releases/download/v${version}/focus-guard-${version}.zip`;
+    const links = [...body.matchAll(/<a class="button( ghost)? compact" href="([^"]+)">Download ([\d.]+)<\/a>/g)];
+    assert.equal(links.length, 1, `${version} has one download button`);
+    const [, ghost, href, label] = links[0];
+    assert.equal(href, zip, `${version} downloads its own zip`);
+    assert.equal(label, version, `${version}'s button names its version`);
+    const latest = i === 0;
+    assert.equal(/<span class="badge">Latest<\/span>/.test(body), latest, `${version}: only the newest says Latest`);
+    assert.equal(!ghost, latest, `${version}: only the newest has the solid button`);
+    assert.equal(/<p class="note older">Older versions don't get fixes\./.test(body), !latest, `${version}: older versions carry the note`);
+  });
+  assert.match(html, /<a class="button" href="https:\/\/github\.com\/rishi555123\/focus-guard\/releases\/latest\/download\/focus-guard\.zip">Download the newest version<\/a>/);
+});
+
 test("the privacy page matches PRIVACY.md", () => {
   const privacy = read(path.join(ROOT, "PRIVACY.md"));
   const html = read(path.join(SITE, "privacy.html"));
