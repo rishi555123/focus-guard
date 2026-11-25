@@ -1,5 +1,14 @@
 const $ = (id) => document.getElementById(id);
-let minutes = 25, timer, sitesEdited = false;
+let minutes = SESSION_LENGTHS[0], timer, sitesEdited = false; // lengths from shared/constants.js
+
+// One button per session length, the default one pressed
+for (const m of SESSION_LENGTHS) {
+  const b = document.createElement("button");
+  b.dataset.min = m;
+  b.textContent = `${m} min`;
+  b.setAttribute("aria-pressed", m === minutes);
+  document.querySelector(".durations").append(b);
+}
 
 function pickMinutes(m) {
   minutes = m;
@@ -16,7 +25,7 @@ document.querySelectorAll(".durations button").forEach((b) =>
 
 // Start with the length picked last time
 chrome.storage.local.get("lastMinutes").then(({ lastMinutes }) => {
-  if ([25, 50, 90].includes(lastMinutes)) pickMinutes(lastMinutes);
+  if (SESSION_LENGTHS.includes(lastMinutes)) pickMinutes(lastMinutes);
 });
 
 // Setup reminders and links (helpers from shared/browser.js and shared/setup.js)

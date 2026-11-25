@@ -7,6 +7,7 @@ const path = require("node:path");
 const vm = require("node:vm");
 
 const context = vm.createContext({ URL, URLSearchParams });
+vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/shared/constants.js"), "utf8"), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/blocked/links.js"), "utf8"), context);
 const readBlockLink = (search) => structuredClone(vm.runInContext("readBlockLink", context)(search));
 const backSteps = vm.runInContext("backSteps", context);
@@ -87,4 +88,12 @@ test("the pass warning works with passes saved before aliases existed", () => {
 test("Back reports 0 when there's nothing to go back to", () => {
   assert.equal(backSteps({ fromTab: false }, 1), 0);
   assert.equal(backSteps({ fromTab: true }, 2), 0, "going back 1 would land on the AI page");
+});
+
+test("the pass-ended note uses the pass length from shared/constants.js", () => {
+  assert.equal(sweepNote({ why: "ended", to: "" }), `Your ${vm.runInContext("PASS_MINUTES", context)}-minute pass for this site has ended.`);
+  const seven = vm.createContext({ URL, URLSearchParams });
+  vm.runInContext("const PASS_MINUTES = 7;", seven);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/blocked/links.js"), "utf8"), seven);
+  assert.equal(vm.runInContext("sweepNote", seven)({ why: "ended", to: "" }), "Your 7-minute pass for this site has ended.");
 });

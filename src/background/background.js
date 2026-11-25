@@ -1,3 +1,5 @@
+importScripts("../shared/constants.js"); // SESSION_LENGTHS, PASS_MINUTES and minutesText
+
 const DEFAULT_SITES = [
   "chatgpt.com", "chat.openai.com", "gemini.google.com", "aistudio.google.com",
   "claude.ai", "copilot.microsoft.com", "copilot.cloud.microsoft", "perplexity.ai",
@@ -20,9 +22,7 @@ const SITE_ALIASES = {
   "bard.google.com": "gemini.google.com",
   "kimi.moonshot.cn": "kimi.com"
 };
-const PASS_MINUTES = 5;
 const PASS_WARN_MS = 60000; // "1 minute left" notification
-const SESSION_LENGTHS = [25, 50, 90];
 const NOTIFY_ID = "focus-guard-pass"; // one id, so a newer pass notification replaces an older one
 const WELCOME_PAGE = "src/welcome/welcome.html";
 // Opened by Chrome or Edge after Focus Guard is removed: how to turn Gemini in Chrome
@@ -260,7 +260,7 @@ chrome.alarms.onAlarm.addListener((alarm) => serial(async () => {
     await chrome.storage.local.remove("pass");
     if (await syncRules()) {
       await blockOpenTabs({ why: "ended" });
-      if (passEndsInSession(pass, session)) await notify(`Your 5-minute pass for ${pass.domain} is over. It's blocked again.`);
+      if (passEndsInSession(pass, session)) await notify(`Your ${PASS_MINUTES}-minute pass for ${pass.domain} is over. It's blocked again.`);
     }
   }
 }));

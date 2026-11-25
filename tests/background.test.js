@@ -8,9 +8,11 @@ const path = require("node:path");
 const vm = require("node:vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "../src/background/background.js"), "utf8");
+const CONSTANTS = fs.readFileSync(path.join(__dirname, "../src/shared/constants.js"), "utf8");
 
 // Read block page links the same way the block page does (src/blocked/links.js)
 const linksContext = vm.createContext({ URL, URLSearchParams });
+vm.runInContext(CONSTANTS, linksContext);
 vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/blocked/links.js"), "utf8"), linksContext);
 const BLOCK_PAGE = "chrome-extension://ID/src/blocked/blocked.html";
 function linkOf(url) {
@@ -38,8 +40,9 @@ function scrubTab(tab) {
 
 // Load a fresh copy of background.js with its own fake chrome.
 // `saved` is what chrome.storage.local already holds before install/update runs.
+// `constants` replaces src/shared/constants.js, to check nothing has its numbers built in.
 // With nothing saved it's a first install; with saved data it's an update.
-async function load(saved = {}, reason = Object.keys(saved).length ? "update" : "install") {
+async function load(saved = {}, reason = Object.keys(saved).length ? "update" : "install", constants = CONSTANTS) {
   const listeners = {};
   const ev = (name) => ({ addListener: (fn) => (listeners[name] = fn) });
   const env = {
@@ -99,7 +102,14 @@ async function load(saved = {}, reason = Object.keys(saved).length ? "update" : 
     }
   };
   const quietConsole = { ...console, error: (...a) => env.errors.push(a.join(" ")) };
-  const context = vm.createContext({ chrome, console: quietConsole, structuredClone, URL, URLSearchParams });
+  // importScripts like a service worker's: paths are relative to src/background/
+  const importScripts = (...files) => {
+    for (const file of files) {
+      assert.equal(path.posix.join("src/background", file), "src/shared/constants.js", "only constants.js is imported");
+      vm.runInContext(constants, context);
+    }
+  };
+  const context = vm.createContext({ chrome, console: quietConsole, structuredClone, URL, URLSearchParams, importScripts });
   vm.runInContext(SOURCE, context);
   env.get = (name) => structuredClone(vm.runInContext(name, context)); // read a top-level const
 
@@ -709,4 +719,23 @@ test("missing stats don't break an unlock", async () => {
   const res = await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
   assert.equal(res.ok, true);
   assert.equal(env.store.stats.unlocks, 1);
+});
+
+test("session lengths and the pass length come from shared/constants.js", async () => {
+  const env = await load({}, "install",
+    "const SESSION_LENGTHS = [15, 45]; const PASS_MINUTES = 7; const UNLOCK_MIN_CHARS = 60; const UNLOCK_WAIT_SECONDS = 60;" +
+    "const minutesText = (n) => `${n} minute${n === 1 ? \"\" : \"s\"}`;");
+  const refused = await env.send({ type: "start", minutes: 25 });
+  assert.equal(refused.ok, false, "25 isn't a session length any more");
+  assert.match(refused.error, /Session length must be 15, 45 minutes/);
+  assert.equal((await env.send({ type: "start", minutes: 45 })).ok, true);
+  assert.equal(env.store.session.endsAt - env.store.session.startedAt, 45 * 60000);
+
+  const before = Date.now();
+  await env.send({ type: "unlock", reason: REASON, url: "https://claude.ai/" });
+  const length = env.store.pass.until - before;
+  assert.ok(length >= 7 * 60000 && length < 7 * 60000 + 1000, "a 7-minute pass");
+  assert.equal(env.alarms.passEnd.when, env.store.pass.until, "and its alarm");
+  await env.fire.alarm({ name: "passEnd" });
+  assert.deepEqual(messages(env), ["Your 7-minute pass for claude.ai is over. It's blocked again."]);
 });

@@ -1,8 +1,15 @@
-const MIN_CHARS = 60, WAIT_SECONDS = 60;
+// Limits from shared/constants.js
+const MIN_CHARS = UNLOCK_MIN_CHARS, WAIT_SECONDS = UNLOCK_WAIT_SECONDS;
 const link = readBlockLink(location.search); // from links.js
 const target = link.url;
 
 document.getElementById("site").textContent = target || "AI chat site";
+
+// Unlock wording, built from the limits so it always matches them
+document.getElementById("unlockIntro").textContent =
+  `Write what you've tried. You'll get a ${PASS_MINUTES}-minute pass for this site after a ${WAIT_SECONDS}-second wait.`;
+document.getElementById("unlock").textContent = `Start ${WAIT_SECONDS}-second wait`;
+document.getElementById("count").textContent = `Write at least ${MIN_CHARS} characters`;
 
 // Random questions, picked once per visit. Ticking a box only changes that box,
 // so the list never reshuffles while you're using it.
@@ -63,7 +70,7 @@ reason.addEventListener("input", () => {
   const left = MIN_CHARS - reason.value.trim().length;
   btn.disabled = left > 0;
   count.classList.remove("failed");
-  count.textContent = left > 0 ? `${left} more characters` : "Ready";
+  count.textContent = left > 0 ? `${left} more character${left === 1 ? "" : "s"}` : "Ready";
 });
 
 btn.addEventListener("click", () => {
@@ -92,7 +99,7 @@ btn.addEventListener("click", () => {
         return;
       }
       if (res.granted) {
-        count.textContent = `Pass granted for ${res.domain} for 5 minutes`;
+        count.textContent = `Pass granted for ${res.domain} for ${minutesText(PASS_MINUTES)}`;
         location.href = target;
       } else if (res.reopen) {
         count.textContent = "No session is running, so this site isn't blocked";

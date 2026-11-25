@@ -42,17 +42,19 @@
 
   <div class="sheet">
     <h2>Still truly stuck?</h2>
-    <p class="muted" style="margin:0">Write what you've tried. You'll get a 5-minute pass for this site after a 60-second wait.</p>
+    <!-- The unlock wording is filled in by blocked.js from shared/constants.js -->
+    <p class="muted" style="margin:0" id="unlockIntro"></p>
     <p class="warn" id="passWarning" role="status" hidden></p>
     <textarea id="reason" placeholder="I tried ... and I expected ... but got ..."></textarea>
     <div class="row">
-      <button id="unlock" disabled>Start 60-second wait</button>
-      <span id="count" class="muted">Write at least 60 characters</span>
+      <button id="unlock" disabled></button>
+      <span id="count" class="muted"></span>
     </div>
   </div>
 
   <button class="ghost" id="back">Back to my code</button>
 </main>
+<script src="../shared/constants.js"></script>
 <script src="../shared/browser.js"></script>
 <script src="questions.js"></script>
 <script src="links.js"></script>
