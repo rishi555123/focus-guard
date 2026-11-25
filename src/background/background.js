@@ -6,7 +6,10 @@ const DEFAULT_SITES = [
   "claude.ai", "copilot.microsoft.com", "copilot.cloud.microsoft", "perplexity.ai",
   "deepseek.com", "chat.mistral.ai", "meta.ai", "chat.qwen.ai", "kimi.com",
   "kimi.moonshot.cn", "chat.z.ai", "grok.com", "poe.com", "you.com", "phind.com",
-  "blackbox.ai", "lmarena.ai", "duck.ai", "pi.ai", "t3.chat", "typingmind.com"
+  "blackbox.ai", "lmarena.ai", "duck.ai", "pi.ai", "t3.chat", "typingmind.com",
+  // AI features inside sites that are otherwise fine to use
+  "github.com/copilot", "x.com/i/grok", "bing.com/chat", "huggingface.co/chat",
+  "google.com/search?udm=50" // Google Search AI Mode
 ];
 // The v1.0 list, for installs from before knownDefaults was saved
 const V1_DEFAULTS = [
@@ -69,7 +72,8 @@ function mergeDefaults(sites, known) {
   const deleted = known.filter((d) => !sites.includes(d));
   const skip = new Set([...known, ...deleted.map((d) => REPLACED_DEFAULTS[d]).filter(Boolean)]);
   const merged = sites.map((d) => REPLACED_DEFAULTS[d] || d);
-  for (const d of DEFAULT_SITES) if (!skip.has(d)) merged.push(d);
+  // Never a default the user deleted, or one their own list already covers (github.com covers github.com/copilot)
+  for (const d of DEFAULT_SITES) if (!skip.has(d) && !merged.some((e) => entryCovers(e, d))) merged.push(d);
   return [...new Set(merged)];
 }
 chrome.runtime.onStartup.addListener(() => serial(async () => {
@@ -77,18 +81,10 @@ chrome.runtime.onStartup.addListener(() => serial(async () => {
   await reconcile();
 }));
 
-const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const siteRegex = (domain) => "^https?://([^/]*\\.)?" + escapeRe(domain) + "(/.*)?$";
-const onSite = (host, domain) => host === domain || host.endsWith("." + domain);
-
-function hostOf(url) {
-  try { return new URL(url).hostname; } catch (_) { return ""; } // missing or unparseable URL
-}
-
-const isListed = (url, sites) => {
-  const host = hostOf(url);
-  return !!host && sites.some((d) => onSite(host, d));
-};
+// Entries can be a whole site or one part of it, like github.com/copilot. Matching and the
+// rules' regular expressions are in shared/sites.js (entryMatches, entryRegex), shared
+// with the block page.
+const isListed = (url, sites) => sites.some((entry) => entryMatches(url, entry));
 
 // Every site on the blocklist: your own, plus the AI app builders if that group is on
 async function listedSites() {
@@ -105,20 +101,21 @@ async function getBlockState() {
   return { sites: await listedSites(), pass: pass && pass.until > now ? pass : null };
 }
 
-// The final site plus every old address that redirects to it
+// The final site plus every old address that redirects to it. Only whole sites have
+// aliases; a pass for part of a site covers just that part.
 function passDomains(entry) {
   const final = SITE_ALIASES[entry] || entry;
   const aliases = Object.keys(SITE_ALIASES).filter((a) => SITE_ALIASES[a] === final);
   return [...new Set([final, entry, ...aliases])];
 }
 
-// Passes saved before aliases existed only have `domain`
+// Passes saved before aliases existed only have `domain`. Despite the names, `domain` and
+// `domains` hold blocklist entries, so they can include a path.
 const coveredBy = (pass) => pass.domains || [pass.domain];
 
 function isBlockedUrl(url, state) {
   if (!state || !isListed(url, state.sites)) return false;
-  const host = hostOf(url);
-  return !(state.pass && coveredBy(state.pass).some((d) => onSite(host, d)));
+  return !(state.pass && isListed(url, coveredBy(state.pass)));
 }
 
 // Turn the blocklist into redirect rules (only while a session is active).
@@ -132,13 +129,13 @@ async function syncRules() {
       id: i + 1,
       priority: 1,
       action: { type: "redirect", redirect: { regexSubstitution: BLOCK_PAGE() + "?u=\\0" } },
-      condition: { regexFilter: siteRegex(domain), resourceTypes: ["main_frame"] }
+      condition: { regexFilter: entryRegex(domain), isUrlFilterCaseSensitive: false, resourceTypes: ["main_frame"] }
     }));
     if (state.pass) coveredBy(state.pass).forEach((domain, i) => addRules.push({
       id: state.sites.length + 1 + i,
       priority: 2,
       action: { type: "allow" },
-      condition: { regexFilter: siteRegex(domain), resourceTypes: ["main_frame"] }
+      condition: { regexFilter: entryRegex(domain), isUrlFilterCaseSensitive: false, resourceTypes: ["main_frame"] }
     }));
   }
   await chrome.declarativeNetRequest.updateDynamicRules({
@@ -312,8 +309,7 @@ async function handleMessage(msg) {
     // The block page checks the answers too, but a pass is only ever granted for real ones
     if (!answersOk(msg.answers)) throw new Error("Answer all three questions first");
     // Use the most specific matching entry so the pass covers as little as possible
-    const host = hostOf(msg.url);
-    const entry = state.sites.filter((d) => onSite(host, d)).sort((a, b) => b.length - a.length)[0];
+    const entry = state.sites.filter((e) => entryMatches(msg.url, e)).sort((a, b) => b.length - a.length)[0];
     if (!entry) throw new Error("Not a blocked site: " + (msg.url || "(no address)"));
     const domains = passDomains(entry);
     const domain = domains[0];

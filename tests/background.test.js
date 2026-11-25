@@ -16,6 +16,7 @@ const IMPORTABLE = Object.fromEntries(["src/shared/reason.js", "src/shared/sites
 // Read block page links the same way the block page does (src/blocked/links.js)
 const linksContext = vm.createContext({ URL, URLSearchParams });
 vm.runInContext(CONSTANTS, linksContext);
+vm.runInContext(IMPORTABLE["src/shared/sites.js"], linksContext);
 vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/blocked/links.js"), "utf8"), linksContext);
 const BLOCK_PAGE = "chrome-extension://ID/src/blocked/blocked.html";
 function linkOf(url) {
@@ -892,4 +893,91 @@ test("the history keeps recent days it already had and drops ones over 60 days o
   await env.fire.alarm({ name: "sessionEnd" });
   assert.deepEqual(Object.keys(env.store.stats.days), [recent, localDay(Date.now())]);
   assert.deepEqual(env.store.stats.days[recent], { sessions: 1, minutes: 50 });
+});
+
+// Blocking part of a site: entries like github.com/copilot (matching is in src/shared/sites.js)
+
+const PATH_DEFAULTS = ["github.com/copilot", "x.com/i/grok", "bing.com/chat", "huggingface.co/chat", "google.com/search?udm=50"];
+// Whether the rules would send this address to the block page, the way Chrome picks a rule:
+// the highest-priority match wins, and the rules ignore case
+function ruleFor(env, url) {
+  const hits = env.rules.filter((r) => new RegExp(r.condition.regexFilter, r.condition.isUrlFilterCaseSensitive === false ? "i" : "").test(url));
+  return hits.sort((a, b) => b.priority - a.priority)[0]?.action.type || "none";
+}
+
+test("a fresh install blocks AI features inside sites, but not the rest of those sites", async () => {
+  const env = await inSession();
+  for (const d of PATH_DEFAULTS) assert.ok(env.store.sites.includes(d), d);
+  for (const url of ["https://github.com/copilot", "https://github.com/copilot/c/1", "https://x.com/i/grok?conversation=9",
+    "https://www.bing.com/chat?form=x", "https://huggingface.co/chat/", "https://www.google.com/search?q=sort+a+list&udm=50"]) {
+    assert.equal(ruleFor(env, url), "redirect", url);
+  }
+  for (const url of ["https://github.com/rishi555123/focus-guard", "https://x.com/home", "https://www.bing.com/search?q=x",
+    "https://huggingface.co/models", "https://www.google.com/search?q=sort+a+list", "https://github.com/copilotx"]) {
+    assert.equal(ruleFor(env, url), "none", url);
+  }
+});
+
+test("updating from 1.0.0 adds the part-of-a-site defaults", async () => {
+  const env0 = await load();
+  const env = await load({ sites: [...env0.get("V1_DEFAULTS"), "mysite.dev"] });
+  for (const d of PATH_DEFAULTS) assert.ok(env.store.sites.includes(d), d);
+  assert.ok(env.store.sites.includes("mysite.dev"));
+});
+
+test("a part-of-a-site default you deleted stays deleted on the next update", async () => {
+  const first = await load({ sites: ["chatgpt.com"], knownDefaults: ["chatgpt.com"] });
+  const kept = first.store.sites.filter((s) => s !== "x.com/i/grok");
+  const second = await load({ sites: kept, knownDefaults: first.store.knownDefaults });
+  assert.ok(!second.store.sites.includes("x.com/i/grok"));
+  assert.ok(second.store.sites.includes("github.com/copilot"));
+});
+
+test("a default isn't added when your list already blocks the whole site", async () => {
+  const env = await load({ sites: ["chatgpt.com", "github.com"], knownDefaults: ["chatgpt.com"] });
+  assert.ok(env.store.sites.includes("github.com"));
+  assert.ok(!env.store.sites.includes("github.com/copilot"), "github.com already covers it");
+  assert.ok(env.store.sites.includes("x.com/i/grok"));
+});
+
+test("whole-site rules are the same as in 1.0.0, so saved sites keep working", async () => {
+  const env = await load({ sites: ["claude.ai"], knownDefaults: [...(await load()).get("DEFAULT_SITES")] });
+  await env.send({ type: "start", minutes: 25 });
+  assert.deepEqual(env.redirects().map((r) => r.condition.regexFilter), [String.raw`^https?://([^/]*\.)?claude\.ai(/.*)?$`]);
+});
+
+test("a pass for part of a site unlocks just that part", async () => {
+  const env = await load({ sites: ["github.com/copilot", "chatgpt.com"], knownDefaults: (await load()).get("DEFAULT_SITES") });
+  await env.send({ type: "start", minutes: 25 });
+  const res = await env.send({ type: "unlock", answers: ANSWERS, url: "https://github.com/copilot/c/1" });
+  assert.equal(res.domain, "github.com/copilot");
+  assert.deepEqual(structuredClone(env.store.pass.domains), ["github.com/copilot"], "no aliases for part of a site");
+  assert.equal(ruleFor(env, "https://github.com/copilot/c/2"), "allow");
+  assert.equal(ruleFor(env, "https://chatgpt.com/"), "redirect");
+  assert.equal((await env.send({ type: "blocked", url: "https://github.com/copilot" })).blocked, false);
+});
+
+test("the pass goes to the most specific entry, so it unlocks as little as possible", async () => {
+  const env = await load({ sites: ["google.com/search", "google.com/search?udm=50"], knownDefaults: (await load()).get("DEFAULT_SITES") });
+  await env.send({ type: "start", minutes: 25 });
+  const res = await env.send({ type: "unlock", answers: ANSWERS, url: "https://www.google.com/search?q=a&udm=50" });
+  assert.equal(res.domain, "google.com/search?udm=50");
+  assert.equal(ruleFor(env, "https://www.google.com/search?q=a"), "redirect", "plain search is still blocked by its own entry");
+});
+
+test("moving inside a single-page app to a blocked part is caught by the backup listener", async () => {
+  const env = await inSession();
+  await env.fire.tabUpdated(4, { url: "https://x.com/home" });
+  await env.fire.tabUpdated(5, { url: "https://x.com/i/grok" });
+  await env.fire.tabUpdated(6, { url: "https://github.com/copilot/chat" });
+  assert.deepEqual(env.updatedTabs(), [5, 6]);
+  assert.equal(linkOf(env.updates[0].url).url, "https://x.com/i/grok");
+});
+
+test("a pass for a whole site saved by 1.0.0 still works after updating", async () => {
+  const env = await inSession();
+  env.store.pass = { domain: "claude.ai", until: Date.now() + 60000 }; // 1.0.0 passes had no `domains`
+  await env.send({ type: "sitesChanged" });
+  assert.equal(ruleFor(env, "https://claude.ai/new"), "allow");
+  assert.equal((await env.send({ type: "blocked", url: "https://claude.ai/new" })).blocked, false);
 });

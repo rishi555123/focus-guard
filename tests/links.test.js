@@ -8,6 +8,7 @@ const vm = require("node:vm");
 
 const context = vm.createContext({ URL, URLSearchParams });
 vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/shared/constants.js"), "utf8"), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/shared/sites.js"), "utf8"), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/blocked/links.js"), "utf8"), context);
 const readBlockLink = (search) => structuredClone(vm.runInContext("readBlockLink", context)(search));
 const backSteps = vm.runInContext("backSteps", context);
@@ -96,4 +97,13 @@ test("the pass-ended note uses the pass length from shared/constants.js", () => 
   vm.runInContext("const PASS_MINUTES = 7;", seven);
   vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/blocked/links.js"), "utf8"), seven);
   assert.equal(vm.runInContext("sweepNote", seven)({ why: "ended", to: "" }), "Your 7-minute pass for this site has ended.");
+});
+
+test("the other-pass warning understands passes for part of a site", () => {
+  const now = Date.now();
+  const pass = { domain: "github.com/copilot", domains: ["github.com/copilot"], until: now + 60000 };
+  assert.equal(otherPass(pass, "https://github.com/copilot/c/1", now), "", "the same part");
+  assert.equal(otherPass(pass, "https://chatgpt.com/", now), "github.com/copilot");
+  const search = { domain: "google.com/search?udm=50", domains: ["google.com/search?udm=50"], until: now + 60000 };
+  assert.equal(otherPass(search, "https://www.google.com/search?q=a&udm=50", now), "");
 });

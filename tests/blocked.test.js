@@ -7,7 +7,7 @@ const path = require("node:path");
 const vm = require("node:vm");
 
 // In the order blocked.html loads them
-const SCRIPTS = ["src/shared/constants.js", "src/shared/reason.js", "src/shared/browser.js", "src/blocked/questions.js", "src/blocked/links.js", "src/blocked/blocked.js"]
+const SCRIPTS = ["src/shared/constants.js", "src/shared/reason.js", "src/shared/sites.js", "src/shared/browser.js", "src/blocked/questions.js", "src/blocked/links.js", "src/blocked/blocked.js"]
   .map((f) => fs.readFileSync(path.join(__dirname, "..", f), "utf8"));
 const TARGET = "https://chatgpt.com/";
 // Elements blocked.html starts hidden, so the stand-ins start the same way

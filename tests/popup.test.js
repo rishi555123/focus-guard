@@ -71,3 +71,28 @@ test("a short bar is still visible, and the chart's markup is in popup.html", ()
   assert.match(html, /<div class="bars" id="weekBars" role="img"><\/div>/);
   assert.match(html, /<script src="\.\.\/shared\/streaks\.js"><\/script>\s*<script src="\.\.\/shared\/browser\.js">/);
 });
+
+// Saving the blocklist
+
+test("saving says which entries were left out and which block only part of a site", async () => {
+  const popup = loadPopup({ store: { sites: ["chatgpt.com", "github.com/copilot"] } });
+  await popup.settle();
+  popup.els.sites.value = "chatgpt.com\nchatgpt.com/c/123\ngithub.com/copilot\nhttps://claude.ai/new\n";
+  await popup.els.saveSites.onclick();
+  assert.deepEqual(popup.store.sites, ["chatgpt.com", "github.com/copilot", "claude.ai/new"]);
+  assert.equal(popup.els.saved.textContent,
+    "Saved. Left out chatgpt.com/c/123 (chatgpt.com already blocks it). " +
+    "These block only part of a site: claude.ai/new. To block a whole site, remove everything after its name.");
+});
+
+test("a plain save just says Saved, and bad lines are refused with the reason", async () => {
+  const popup = loadPopup({ store: { sites: [] } });
+  await popup.settle();
+  popup.els.sites.value = "chatgpt.com\nclaude.ai";
+  await popup.els.saveSites.onclick();
+  assert.equal(popup.els.saved.textContent, "Saved");
+  popup.els.sites.value = "chatgpt.com\nhttps://www.google.com/search?q=hi&udm=50";
+  await popup.els.saveSites.onclick();
+  assert.match(popup.els.saved.textContent, /^Not saved\. .*google\.com\/search\?q=hi&udm=50\. A page can have one \?name=value at most\.$/);
+  assert.deepEqual(popup.store.sites, ["chatgpt.com", "claude.ai"], "nothing saved");
+});

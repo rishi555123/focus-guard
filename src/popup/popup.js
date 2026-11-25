@@ -79,19 +79,26 @@ $("stop").onclick = async () => {
 };
 
 $("saveSites").onclick = async () => {
-  const { sites, invalid } = parseSites($("sites").value); // from shared/sites.js
+  const { sites, invalid, covered } = parseSites($("sites").value); // from shared/sites.js
   if (invalid.length) {
     $("saved").className = "error";
-    $("saved").textContent = "Not saved. These don't look like domains: " + invalid.join(", ");
+    $("saved").textContent = "Not saved. These aren't sites or pages of a site: " + invalid.join(", ") +
+      ". A page can have one ?name=value at most.";
     return;
   }
+  const { sites: before = [] } = await chrome.storage.local.get("sites");
   sitesEdited = false;
   $("sites").value = sites.join("\n");
   await chrome.storage.local.set({ sites });
   await chrome.runtime.sendMessage({ type: "sitesChanged" });
-  $("saved").className = "muted";
-  $("saved").textContent = "Saved";
-  setTimeout(() => ($("saved").textContent = ""), 1500);
+  // Say what didn't go in as typed: entries already covered, and new ones that only block part of a site
+  const notes = [];
+  if (covered.length) notes.push("Left out " + covered.map(([entry, by]) => `${entry} (${by} already blocks it)`).join(", ") + ".");
+  const partial = sites.filter((s) => s.includes("/") && !before.includes(s));
+  if (partial.length) notes.push(`These block only part of a site: ${partial.join(", ")}. To block a whole site, remove everything after its name.`);
+  $("saved").className = notes.length ? "muted note" : "muted";
+  $("saved").textContent = notes.length ? "Saved. " + notes.join(" ") : "Saved";
+  if (!notes.length) setTimeout(() => ($("saved").textContent = ""), 1500);
 };
 
 async function render() {

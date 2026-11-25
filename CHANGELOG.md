@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - After a pass is granted, the block page waits for you to open the site and offers **Copy as AI prompt**. It copies your three answers with a request for a hint or an explanation of the cause rather than the full solution.
 - An optional **Also block AI app builders** choice under **Blocked sites** in the popup, for v0.app, bolt.new and lovable.dev. It's off unless you turn it on, it's locked during a session like the list, and turning it off never removes sites you added yourself.
 - A daily streak and a weekly chart in the popup. A day counts toward your streak when you finish at least one session, and a streak lasts until the end of the next day. The chart shows your focused minutes for each of the last 7 days. Focus Guard keeps daily totals for the last 60 days; history starts with your first session after updating, and your existing totals are kept.
+- Blocking just part of a site: an entry like `github.com/copilot` blocks that page and the pages under it, and `google.com/search?udm=50` blocks Google's AI Mode but not normal searches. New defaults cover GitHub Copilot (`github.com/copilot`), Grok on X (`x.com/i/grok`), Copilot on Bing (`bing.com/chat`), HuggingChat (`huggingface.co/chat`) and Google AI Mode (`google.com/search?udm=50`). They're added on update like other new defaults, unless your list already blocks the whole site or you deleted them.
 
 ### Changed
 
@@ -20,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The website uses the new logo and favicon. In dark mode it shows a version of the logo with light lines instead of inverting the colours, so the yellow stays yellow.
 - Unlocking asks three questions instead of one box: what you tried, what you expected and what happened instead, each in at least 20 characters. Answers that look like random typing, like `asdfasdf` or the same word over and over, are turned down, and Focus Guard checks again before it grants a pass.
 - The toolbar icon has a thin light outline, so the navy stands out on dark browser toolbars and themes as well as light ones. The website's favicon matches.
+- The blocklist keeps the path of an address you paste, so it can block part of a site. After saving, the popup says which lines it left out because another entry already blocks them, and which new entries block only part of a site.
 
 ### Fixed
 

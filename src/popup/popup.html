@@ -23,12 +23,14 @@
   .bar span { font: 600 10px var(--code); color: var(--pencil); }
   .bar.today span { color: var(--ink); }
   details summary { cursor: pointer; font-size: 13px; font-weight: 600; }
-  details textarea { height: 140px; margin: 8px 0; }
+  details textarea { height: 140px; margin: 8px 0 2px; }
+  .help { font-size: 11px; line-height: 1.4; margin: 0 0 8px; }
   label.group { display: block; margin: 8px 0 0; font-size: 12px; font-weight: 600; cursor: pointer; }
   label.group input { margin: 0 4px 0 0; vertical-align: -2px; accent-color: var(--ink); }
   label.group span { font-weight: 400; }
   .hidden { display: none; }
   #saved.error { display: block; margin-top: 6px; color: var(--redpen); }
+  #saved.note { display: block; margin-top: 6px; line-height: 1.4; }
   .start-error { margin: 6px 0 0; font-size: 12px; line-height: 1.4; color: var(--redpen); }
   .note { font-size: 12px; line-height: 1.45; margin: 10px 0 0; padding: 6px 9px;
           background: var(--card); border: 2px solid var(--marker); border-radius: 6px; }
@@ -83,7 +85,8 @@
     <summary>Blocked sites</summary>
     <label class="group"><input type="checkbox" id="appBuilders"> Also block AI app builders
       <span class="muted" id="appBuilderNames"></span></label>
-    <textarea id="sites" aria-label="Blocked sites, one per line"></textarea>
+    <textarea id="sites" aria-label="Blocked sites, one per line" aria-describedby="sitesHelp"></textarea>
+    <p class="help muted" id="sitesHelp">One per line. Add a path to block just part of a site, like github.com/copilot.</p>
     <button id="saveSites" class="ghost">Save sites</button>
     <span id="saved" class="muted" style="font-size:12px"></span>
   </details>
