@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The logo now appears inside Focus Guard too: next to the name in the popup, above the welcome on the setup checklist, and small at the top of the block page.
 - The website uses the new logo and favicon. In dark mode it shows a version of the logo with light lines instead of inverting the colours, so the yellow stays yellow.
 - Unlocking asks three questions instead of one box: what you tried, what you expected and what happened instead, each in at least 20 characters. Answers that look like random typing, like `asdfasdf` or the same word over and over, are turned down, and Focus Guard checks again before it grants a pass.
+- The toolbar icon has a thin light outline, so the navy stands out on dark browser toolbars and themes as well as light ones. The website's favicon matches.
 
 ### Fixed
 
