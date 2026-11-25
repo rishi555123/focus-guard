@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Focus Guard: Code Without the Crutch",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Blocks AI chat sites during coding sessions so you solve problems yourself first.",
   "permissions": ["declarativeNetRequest", "storage", "alarms", "notifications"],
   "host_permissions": ["<all_urls>"],
   "background": { "service_worker": "src/background/background.js" },
+  "incognito": "split",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -21,6 +22,6 @@
     }
   },
   "web_accessible_resources": [
-    { "resources": ["src/blocked/blocked.html", "src/shared/browser.js", "src/blocked/questions.js", "src/blocked/links.js", "src/blocked/blocked.js", "src/shared/style.css"], "matches": ["<all_urls>"] }
+    { "resources": ["src/blocked/blocked.html", "src/shared/browser.js", "src/blocked/questions.js", "src/blocked/links.js", "src/blocked/blocked.js", "src/shared/style.css", "src/shared/theme.js", "src/shared/constants.js", "src/shared/reason.js", "src/shared/sites.js", "icons/logo-256.png", "icons/logo-256-dark.png"], "matches": ["<all_urls>"] }
   ]
 }

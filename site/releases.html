@@ -14,7 +14,7 @@
 
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="index.html"><img class="icon-ink" src="images/icon-128.png" alt="" width="32" height="32"> Focus Guard</a>
+      <a class="brand" href="index.html"><img class="logo logo-light" src="images/icon-128.png" alt="" width="32" height="32"><img class="logo logo-dark" src="images/icon-128-dark.png" alt="" width="32" height="32"> Focus Guard</a>
       <nav class="site-nav" aria-label="Main">
         <ul>
           <li><a href="index.html">Home</a></li>
@@ -38,6 +38,42 @@
       <a class="button ghost" href="https://github.com/rishi555123/focus-guard/releases">All releases on GitHub</a>
     </div>
     <p class="small muted">Already installed? See <a href="install.html#updating">how to update</a>.</p>
+    <article class="release card" id="v1.1.0" aria-labelledby="h-v1.1.0">
+      <header>
+        <h2 id="h-v1.1.0">Version 1.1.0</h2>
+        <time datetime="2026-11-25">25 November 2026</time>
+        <a class="small" href="https://github.com/rishi555123/focus-guard/releases/tag/v1.1.0">Release on GitHub</a>
+      </header>
+<p>Focus Guard's own logo, dark mode, three questions before unlocking with a copy-as-prompt button, blocking AI features inside normal sites like GitHub Copilot and Google AI Mode, daily streaks and a weekly chart, and the block page in Incognito and InPrivate windows.</p>
+<h3>Added</h3>
+<ul>
+<li>Dark mode for the popup, the setup checklist and the block page, in the same colours as the website's dark theme. It follows your system setting, or pick Auto, Light or Dark at the bottom of the popup. Every Focus Guard page switches straight away, with no flash of the wrong theme when one opens. In dark mode the logo is drawn with light lines.</li>
+<li>After a pass is granted, the block page waits for you to open the site and offers <b>Copy as AI prompt</b>. It copies your three answers with a request for a hint or an explanation of the cause rather than the full solution.</li>
+<li>An optional <b>Also block AI app builders</b> choice under <b>Blocked sites</b> in the popup, for v0.app, bolt.new and lovable.dev. It's off unless you turn it on, it's locked during a session like the list, and turning it off never removes sites you added yourself.</li>
+<li>A daily streak and a weekly chart in the popup. A day counts toward your streak when you finish at least one session, which the popup explains under the streak, and a streak lasts until the end of the next day. The chart shows the last 7 days with each day's focused time on its bar (like 45m or 1h 20m), today marked, and the week's total time and finished sessions. Arrows step back through earlier weeks. Focus Guard keeps daily totals for the last 60 days; history starts with your first session after updating, and your existing totals are kept.</li>
+<li>Blocking just part of a site: an entry like <code>github.com/copilot</code> blocks that page and the pages under it, and <code>google.com/search?udm=50</code> blocks Google's AI Mode but not normal searches. New defaults cover GitHub Copilot (<code>github.com/copilot</code>), Grok on X (<code>x.com/i/grok</code>), Copilot on Bing (<code>bing.com/chat</code>), HuggingChat (<code>huggingface.co/chat</code>) and Google AI Mode (<code>google.com/search?udm=50</code>). They're added on update like other new defaults, unless your list already blocks the whole site or you deleted them.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>A new, original Focus Guard logo replaces the Flaticon icon: a brain over an "FG" shield between code brackets, in navy and yellow. It's used for the toolbar, extension and notification icons. The 16-pixel toolbar icon shows just the FG shield, so it stays readable at that size.</li>
+<li>The logo now appears inside Focus Guard too: next to the name in the popup, above the welcome on the setup checklist, and small at the top of the block page.</li>
+<li>The website uses the new logo and favicon. In dark mode it shows a version of the logo with light lines instead of inverting the colours, so the yellow stays yellow.</li>
+<li>Unlocking asks three questions instead of one box: what you tried, what you expected and what happened instead, each in at least 20 characters. Answers that look like random typing, like <code>asdfasdf</code> or the same word over and over, are turned down, and Focus Guard checks again before it grants a pass.</li>
+<li>The toolbar icon has a thin light outline, so the navy stands out on dark browser toolbars and themes as well as light ones. The website's favicon matches.</li>
+<li>The blocklist keeps the path of an address you paste, so it can block part of a site. After saving, the popup says which lines it left out because another entry already blocks them, and which new entries block only part of a site.</li>
+<li>In Incognito and InPrivate windows, blocked sites now show Focus Guard's block page with the questions and the unlock, instead of the browser's error page, once you allow Focus Guard there. Passes, sessions and notifications work across normal and private windows. Focus Guard now runs a separate copy of itself for private windows ("split" incognito mode), and the two copies stay in step through extension storage.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>If a pass can't be granted after the 60-second wait, the block page now shows the error in red and lets you try again, keeping what you wrote. Before, the button stayed disabled until you reloaded the page.</li>
+<li>If a session can't be started, the popup now says why instead of doing nothing.</li>
+<li>The keyboard focus outline in the popup, setup checklist and block page is now navy instead of yellow, so you can see it against the light background.</li>
+</ul>
+<h3>Removed</h3>
+<ul>
+<li>The Flaticon icon credit, from the README and the website footer, now that the icon is Focus Guard's own.</li>
+</ul>
+    </article>
     <article class="release card" id="v1.0.0" aria-labelledby="h-v1.0.0">
       <header>
         <h2 id="h-v1.0.0">Version 1.0.0</h2>
@@ -123,7 +159,6 @@
         <li><a href="https://github.com/rishi555123/focus-guard/blob/main/LICENSE">MIT License</a></li>
         <li><a href="privacy.html">Privacy policy</a></li>
       </ul>
-      <p><a href="https://www.flaticon.com/free-icon/security-agent_11618268">Security agent icon</a> by Any Icon from Flaticon, recolored and resized.</p>
     </div>
   </footer>
   <script src="assets/theme.js"></script>

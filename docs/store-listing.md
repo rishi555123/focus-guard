@@ -10,15 +10,15 @@ The listing deliberately doesn't mention other browsers: policy 1.1.2 says an ex
 
 - **Version:** a plain `1.0.0`, with no `version_name`. Microsoft's policies don't allow "non-production builds", like an extension "still in an experimental stage", so the listing never calls it a beta.
 - **Permissions:** the `tabs` permission was removed. Chrome's tabs documentation says a tab's `url` and `pendingUrl` are present if the extension "has the "tabs" permission or has host permissions for the page", and Focus Guard has `<all_urls>`. Creating, navigating, removing and finding tabs need no permission. Policy 1.6 says to "only request those permissions that are necessary".
-- **Short description:** kept as the manifest's `description`. The full description carries the Flaticon credit.
+- **Short description:** kept as the manifest's `description`.
 - **Not included for now:** an Edge screenshot of the setup checklist (`docs/screenshots/welcome.png` shows the Chrome steps, so it isn't used), and the optional promotional tiles.
 
 ## Package
 
-Upload `dist/focus-guard-1.0.0.zip`, built with:
+Upload `dist/focus-guard-1.1.0.zip`, built with:
 
 ```bash
-git -c core.autocrlf=false archive --format=zip -9 -o dist/focus-guard-1.0.0.zip HEAD manifest.json src icons
+git -c core.autocrlf=false archive --format=zip -9 -o dist/focus-guard-1.1.0.zip HEAD manifest.json src icons
 ```
 
 It contains `manifest.json` at the root plus `src/` and `icons/`, nothing else. `core.autocrlf=false` keeps the files byte for byte as they are in the repository, with no Windows line endings. Rebuild it from the commit you're releasing whenever anything changes.
@@ -80,12 +80,6 @@ Partner Center takes this from the manifest's `description` field and doesn't le
 
 > Blocks AI chat sites during coding sessions so you solve problems yourself first.
 
-To end the short description with the icon credit too, change the manifest's `description` to this (105 characters, within the 132-character manifest limit) and rebuild the package:
-
-> Blocks AI chat sites while you code. Security agent icon by Any Icon from Flaticon, recolored and resized
-
-The full description below already ends with the credit, which covers Flaticon's attribution requirement on the listing page.
-
 ### Description
 
 Required: 250 to 10,000 characters. This draft is about 2,100.
@@ -96,14 +90,14 @@ Focus Guard helps you learn to code by making you try first. During a coding ses
 HOW IT WORKS
 - Start a 25, 50 or 90 minute coding session from the toolbar. The toolbar badge shows the minutes left.
 - Open an AI chat site and you'll see 6 questions to try first: 3 debugging questions, like "What changed since it last worked?", and 3 problem-solving questions, like "What's the brute-force solution, even if it's slow?". They're picked at random from a larger pool each time.
-- Still stuck? Write what you tried (at least 60 characters), wait 60 seconds, and get a 5-minute pass for that one site. Every other AI site stays blocked.
+- Still stuck? Answer three questions about what you tried, expected and got (at least 20 characters each), wait 60 seconds, and get a 5-minute pass for that one site. Every other AI site stays blocked.
 - Notifications tell you one minute before a pass ends, when it ends, and when it moves to another site.
 - Outside a session, every site works normally.
 
 FEATURES
-- Blocks 25 AI chat sites and their subdomains by default.
+- Blocks 25 AI chat sites and their subdomains by default, plus AI features inside other sites like GitHub Copilot and Google's AI Mode.
 - Edit the blocklist yourself. It's locked during a session, so you can't quietly remove a site.
-- Simple stats: sessions finished, focused minutes, AI visits blocked and passes used.
+- Simple stats: sessions finished, focused minutes, AI visits blocked and passes used, with a daily streak and a weekly chart.
 - A short setup checklist on first install, including an optional step to turn off Copilot in Edge.
 
 PRIVACY
@@ -111,29 +105,27 @@ Focus Guard collects no data and sends nothing anywhere. Your blocklist, session
 
 LIMITATIONS
 - Edge's Copilot button and sidebar are part of the browser, so Focus Guard can't block them. The setup checklist shows how to turn them off.
-- In InPrivate windows, blocked sites show the browser's error page instead of Focus Guard's page, so you can't unlock them there. Allow Focus Guard in InPrivate on its extension settings page, and unlock from a normal window.
+- InPrivate windows are only covered once you allow Focus Guard in InPrivate on its extension settings page.
 - AI features inside other sites, like coding assistants in your editor or AI answers in search results, aren't blocked.
 
 Focus Guard is open source under the MIT license.
-
-Security agent icon by Any Icon from Flaticon, recolored and resized
 ```
 
 ### Images
 
-All in `docs/store/`, made from real screenshots of the extension:
+All in `docs/store/`, made from real screenshots of the extension. The three screenshots show version 1.0.0 and need retaking before a submission:
 
 | Field | File | Size | Microsoft's requirement |
 | --- | --- | --- | --- |
 | Extension logo (required) | `logo-300.png` | 300 × 300 | 1:1, recommended 300 × 300, minimum 128 × 128 |
-| (fallback logo) | `logo-128.png` | 128 × 128 | The original icon, pixel for pixel |
+| (fallback logo) | `logo-128.png` | 128 × 128 | The logo with a tighter crop than the toolbar icon |
 | Screenshot 1 | `screenshot-1-questions.png` | 1280 × 800 | Up to 6, each 640 × 480 or 1280 × 800 |
 | Screenshot 2 | `screenshot-2-unlock.png` | 1280 × 800 | |
 | Screenshot 3 | `screenshot-3-popup.png` | 1280 × 800 | |
 | Small promotional tile (optional) | Not made | | 440 × 280 |
 | Large promotional tile (optional) | Not made | | 1400 × 560 |
 
-The largest icon in the extension is 128 × 128. `logo-300.png` was rebuilt from its outline in the same navy (`#1D3B6E`) so the edges stay sharp, rather than stretching the pixels. Policy 1.1.2 says screenshots "must not be stretched or blurry", so the screenshots use the original captures at their own resolution or smaller, never enlarged.
+Both logos are scaled down from the original 2000 × 2000 logo artwork, so the edges stay sharp rather than stretched. Policy 1.1.2 says screenshots "must not be stretched or blurry", so the screenshots use the original captures at their own resolution or smaller, never enlarged.
 
 ### Search terms
 
@@ -160,7 +152,7 @@ HOW TO TEST
 1. After installing, a "Welcome to Focus Guard" setup page opens. Its steps are optional.
 2. Click the Focus Guard toolbar icon, pick 25 min and click "Start coding session". The badge shows the minutes left.
 3. Open https://chatgpt.com. You're redirected to Focus Guard's "Your brain first." page with 6 questions.
-4. In "Still truly stuck?", type at least 60 characters, click "Start 60-second wait" and wait 60 seconds. You're sent to chatgpt.com with a 5-minute pass. Other AI sites, like https://claude.ai, stay blocked.
+4. In "Still truly stuck?", answer the three questions (at least 20 characters each), click "Start 60-second wait", wait 60 seconds, then click "Open chatgpt.com". It opens with a 5-minute pass. Other AI sites, like https://claude.ai, stay blocked.
 5. Click "End session early" in the popup. All sites open normally again.
 
 TESTING TIMERS WITHOUT WAITING
@@ -171,7 +163,7 @@ At edge://extensions, open Focus Guard's "service worker" console and run:
 
 THINGS THAT MAY LOOK UNUSUAL
 - Blocking only happens during a session. Outside one, nothing is blocked.
-- In InPrivate windows, blocked sites show the browser's error page, not Focus Guard's page. Extensions can't show their own pages in InPrivate tabs without split incognito mode. This is documented in the listing.
+- Focus Guard uses split incognito mode, so a second copy of it runs for InPrivate windows and shows its block page there. The two copies stay in step through extension storage.
 - Edge's built-in Copilot sidebar isn't blocked. The setup page offers optional steps to turn it off.
 - The code contains chrome:// addresses and Chrome wording. Focus Guard detects the browser with User-Agent Client Hints, as Microsoft recommends, and only uses edge:// addresses and Edge wording in Microsoft Edge.
 - After removal, the browser opens a section of the project's README on GitHub explaining how to turn Copilot back on. No data is sent with it.

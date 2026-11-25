@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script>try{if(localStorage.getItem("fg-theme")==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
   <title>Focus Guard: code without the crutch</title>
-  <meta name="description" content="Focus Guard is a free browser extension for Chrome and Edge that blocks AI chat sites while you code, so you try solving the problem yourself first.">
+  <meta name="description" content="Focus Guard is a free browser extension for Chrome and Edge that blocks AI chat sites, and AI inside sites like GitHub and Google, while you code, so you try solving the problem yourself first.">
   <link rel="icon" href="images/favicon-32.png" type="image/png">
   <link rel="stylesheet" href="assets/style.css">
 </head>
@@ -14,7 +14,7 @@
 
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="index.html"><img class="icon-ink" src="images/icon-128.png" alt="" width="32" height="32"> Focus Guard</a>
+      <a class="brand" href="index.html"><img class="logo logo-light" src="images/icon-128.png" alt="" width="32" height="32"><img class="logo logo-dark" src="images/icon-128-dark.png" alt="" width="32" height="32"> Focus Guard</a>
       <nav class="site-nav" aria-label="Main">
         <ul>
           <li><a href="index.html" aria-current="page">Home</a></li>
@@ -60,7 +60,7 @@
         </div>
         <div class="card">
           <h3>3. Still stuck? Earn a pass</h3>
-          <p>Write what you tried, wait 60 seconds, and get 5 minutes on that one site. Every other AI site stays blocked. Outside a session, everything works normally.</p>
+          <p>Answer three questions: what you tried, what you expected and what happened. Wait 60 seconds, and get 5 minutes on that one site, with your answers ready to copy as a prompt that asks for a hint. Every other AI site stays blocked.</p>
         </div>
       </div>
     </section>
@@ -70,13 +70,13 @@
       <div class="shots">
         <figure>
           <img src="images/blocked.png" width="1920" height="1080" loading="lazy"
-               alt="The Your brain first block page, showing three debugging questions, three problem-solving questions with checkboxes, and a box to write what you tried before a 60-second wait.">
+               alt="The Your brain first block page, showing three debugging questions and three problem-solving questions with checkboxes, then the first of three questions to answer before a 60-second wait: what did you try.">
           <figcaption>The block page: questions to try first, then a 5-minute pass if you're still stuck.</figcaption>
         </figure>
         <figure>
-          <img src="images/popup.png" width="722" height="872" loading="lazy"
-               alt="The Focus Guard popup with 25, 50 and 90 minute buttons, a Start coding session button, and stats for sessions finished, focused minutes, AI visits blocked and passes used.">
-          <figcaption>The popup: pick a session length and see your stats.</figcaption>
+          <img src="images/popup.png" width="704" height="1295" loading="lazy"
+               alt="The Focus Guard popup with 25, 50 and 90 minute buttons, a Start coding session button, stats for sessions finished, focused minutes, AI visits blocked and passes used, a 5-day streak with its rule, a bar chart of the last 7 days with each day's focused time and the week's total, arrows for earlier weeks, and Auto, Light and Dark theme buttons.">
+          <figcaption>The popup: pick a session length, and see your stats, streak and week.</figcaption>
         </figure>
         <figure>
           <img src="images/welcome.png" width="1920" height="1080" loading="lazy"
@@ -90,16 +90,20 @@
       <h2 id="features-title">What's included</h2>
       <div class="grid grid-2">
         <div class="card">
-          <h3>Blocks 25 AI chat sites</h3>
-          <p>ChatGPT, Gemini, Claude, Microsoft Copilot, Perplexity, DeepSeek and more, including their subdomains. Add or remove sites yourself; the list is locked during a session.</p>
+          <h3>Blocks 25 AI chat sites, and AI inside other sites</h3>
+          <p>ChatGPT, Gemini, Claude, Microsoft Copilot, Perplexity, DeepSeek and more, including their subdomains, plus GitHub Copilot, Grok on X and Google's AI Mode without blocking the rest of those sites. Add or remove sites yourself, or turn on the optional AI app builders group (v0.app, bolt.new, lovable.dev). The list is locked during a session.</p>
         </div>
         <div class="card">
           <h3>One site at a time</h3>
           <p>A pass unlocks only the site you were stuck on. Notifications tell you one minute before it ends, when it ends, and if it moves to another site.</p>
         </div>
         <div class="card">
-          <h3>Simple stats</h3>
-          <p>Sessions finished, focused minutes, AI visits blocked and passes used, right in the popup.</p>
+          <h3>Stats and streaks</h3>
+          <p>Sessions finished, focused minutes, AI visits blocked and passes used, plus a daily streak and a chart of your last 7 days, right in the popup.</p>
+        </div>
+        <div class="card">
+          <h3>Light or dark, and private windows too</h3>
+          <p>Dark mode follows your system, or pick Light or Dark. Allow Focus Guard in Incognito or InPrivate and the block page works there as well.</p>
         </div>
         <div class="card">
           <h3>Private by design</h3>
@@ -120,7 +124,6 @@
         <li><a href="https://github.com/rishi555123/focus-guard/blob/main/LICENSE">MIT License</a></li>
         <li><a href="privacy.html">Privacy policy</a></li>
       </ul>
-      <p><a href="https://www.flaticon.com/free-icon/security-agent_11618268">Security agent icon</a> by Any Icon from Flaticon, recolored and resized.</p>
     </div>
   </footer>
   <script src="assets/theme.js"></script>

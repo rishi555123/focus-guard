@@ -2,26 +2,34 @@
 <html lang="en"><head><meta charset="utf-8"><title>Your brain first</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../shared/style.css">
+<script src="../shared/theme.js"></script>
 <style>
   main { max-width: 620px; margin: 0 auto; padding: 56px 24px; }
+  .logo { display: block; margin: 0 0 20px; }
   h1 { font-size: clamp(36px, 7vw, 60px); line-height: 1.05; margin: 0 0 12px; letter-spacing: -1.5px; }
   .site { font: 14px var(--code); color: var(--redpen); text-decoration: line-through; margin: 0 0 28px; word-break: break-all; }
-  .sheet { background: var(--white); border: 2px solid var(--ink); border-radius: 8px; padding: 20px 22px; margin-bottom: 18px; }
+  .sheet { background: var(--card); border: 2px solid var(--ink); border-radius: 8px; padding: 20px 22px; margin-bottom: 18px; }
   h2 { font-size: 17px; margin: 0 0 10px; }
   h3 { font: 600 12px var(--code); text-transform: uppercase; letter-spacing: .5px; color: var(--pencil); margin: 12px 0 2px; }
   label.check { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; line-height: 1.45; cursor: pointer; }
   label.check input { margin-top: 4px; accent-color: var(--ink); width: 16px; height: 16px; }
   label.check:has(input:checked) span { color: var(--pencil); text-decoration: line-through; }
-  textarea { height: 96px; margin: 8px 0 6px; }
+  label.answer { display: block; font-weight: 600; margin: 14px 0 0; }
+  textarea { height: 64px; margin: 6px 0 2px; }
+  .hint { font: 13px var(--code); color: var(--pencil); margin: 0; min-height: 1.4em; }
+  .hint.failed { color: var(--redpen); }
   .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
   #count { font: 600 13px var(--code); }
-  .notice { background: var(--white); border: 2px solid var(--marker); border-radius: 8px;
+  #count.failed { color: var(--redpen); }
+  .notice { background: var(--card); border: 2px solid var(--marker); border-radius: 8px;
             padding: 12px 16px; margin: -12px 0 18px; line-height: 1.45; }
   .warn { color: var(--redpen); font-weight: 600; line-height: 1.45; margin: 10px 0 0; }
   @media (prefers-reduced-motion: no-preference) { h1 { animation: in .5s ease-out; } }
   @keyframes in { from { opacity: 0; transform: translateY(8px); } }
 </style></head>
 <body><main>
+  <img class="logo logo-light" src="../../icons/logo-256.png" alt="" width="32" height="32">
+  <img class="logo logo-dark" src="../../icons/logo-256-dark.png" alt="" width="32" height="32">
   <h1>Your brain <span class="mark">first.</span></h1>
   <p class="site" id="site"></p>
   <p class="notice" id="why" role="status" hidden></p>
@@ -37,17 +45,35 @@
 
   <div class="sheet">
     <h2>Still truly stuck?</h2>
-    <p class="muted" style="margin:0">Write what you've tried. You'll get a 5-minute pass for this site after a 60-second wait.</p>
+    <!-- The unlock wording is filled in by blocked.js from shared/constants.js -->
+    <p class="muted" style="margin:0" id="unlockIntro"></p>
     <p class="warn" id="passWarning" role="status" hidden></p>
-    <textarea id="reason" placeholder="I tried ... and I expected ... but got ..."></textarea>
+    <label class="answer" for="tried">What did you try?</label>
+    <textarea id="tried" aria-describedby="triedHint" placeholder="I printed the values before the loop and ..."></textarea>
+    <p class="hint" id="triedHint"></p>
+    <label class="answer" for="expected">What did you expect?</label>
+    <textarea id="expected" aria-describedby="expectedHint" placeholder="It should return ..."></textarea>
+    <p class="hint" id="expectedHint"></p>
+    <label class="answer" for="got">What happened instead?</label>
+    <textarea id="got" aria-describedby="gotHint" placeholder="It returned ... / The error says ..."></textarea>
+    <p class="hint" id="gotHint"></p>
     <div class="row">
-      <button id="unlock" disabled>Start 60-second wait</button>
-      <span id="count" class="muted">Write at least 60 characters</span>
+      <button id="unlock" disabled></button>
+      <span id="count" class="muted"></span>
+    </div>
+    <!-- Shown once a pass is granted: the site doesn't open until you choose to -->
+    <div class="row" id="granted" hidden>
+      <button id="open"></button>
+      <button class="ghost" id="copyPrompt">Copy as AI prompt</button>
+      <span id="copied" class="muted" role="status"></span>
     </div>
   </div>
 
   <button class="ghost" id="back">Back to my code</button>
 </main>
+<script src="../shared/constants.js"></script>
+<script src="../shared/reason.js"></script>
+<script src="../shared/sites.js"></script>
 <script src="../shared/browser.js"></script>
 <script src="questions.js"></script>
 <script src="links.js"></script>

@@ -1,43 +1,67 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><link rel="stylesheet" href="../shared/style.css">
+<script src="../shared/theme.js"></script>
 <style>
   body { width: 320px; padding: 16px; }
-  h1 { font-size: 18px; margin: 0 0 2px; }
+  h1 { font-size: 18px; margin: 0 0 2px; display: flex; align-items: center; gap: 8px; }
   .sub { font-size: 12px; margin: 0 0 14px; }
-  .durations { display: flex; gap: 6px; margin-bottom: 10px; }
+  .durations { display: flex; gap: 6px; margin-bottom: 10px; min-height: 43px; } /* buttons added by popup.js */
   .durations button { flex: 1; }
-  .durations button[aria-pressed="false"] { background: var(--white); color: var(--ink); }
+  .durations button[aria-pressed="false"] { background: var(--card); color: var(--ink); }
   #start, #stop { width: 100%; }
   .clock { font: 700 46px/1 var(--code); text-align: center; margin: 6px 0 4px; letter-spacing: -1px; }
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; font-size: 12px;
-           background: var(--white); border: 2px solid var(--ink); border-radius: 6px; padding: 10px; margin: 14px 0; }
+           background: var(--card); border: 2px solid var(--ink); border-radius: 6px; padding: 10px; margin: 14px 0; }
   .stats b { display: block; font-size: 18px; }
+  .week { margin: -6px 0 14px; padding: 10px; background: var(--card); border: 2px solid var(--ink); border-radius: 6px; font-size: 12px; }
+  .week-head b { font-size: 14px; }
+  .streak-rule { margin: 1px 0 8px; font-size: 11px; }
+  .week-nav { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .week-nav button { padding: 0 8px; min-width: 28px; height: 24px; font-size: 14px; line-height: 1; border-radius: 5px; }
+  .week-nav button { background: var(--card); color: var(--ink); }
+  #weekRange { font-weight: 600; }
+  .week-summary { margin: 4px 0 6px; text-align: center; }
+  .bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; height: 76px; }
+  .bar { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; gap: 2px; min-width: 0; }
+  .bar b { font-size: 9px; font-weight: 600; white-space: nowrap; color: var(--ink); }
+  .bar i { display: block; width: 100%; max-width: 22px; background: var(--ink); border-radius: 3px 3px 0 0; }
+  .bar.today i { background: var(--marker); outline: 2px solid var(--ink); outline-offset: -2px; }
+  .bar span { font: 600 10px var(--code); color: var(--pencil); }
+  .bar.today span { color: var(--ink); text-decoration: underline 2px var(--marker); text-underline-offset: 3px; }
   details summary { cursor: pointer; font-size: 13px; font-weight: 600; }
-  details textarea { height: 140px; margin: 8px 0; }
+  details textarea { height: 140px; margin: 8px 0 2px; }
+  .help { font-size: 11px; line-height: 1.4; margin: 0 0 8px; }
+  label.group { display: block; margin: 8px 0 0; font-size: 12px; font-weight: 600; cursor: pointer; }
+  label.group input { margin: 0 4px 0 0; vertical-align: -2px; accent-color: var(--ink); }
+  label.group span { font-weight: 400; }
   .hidden { display: none; }
   #saved.error { display: block; margin-top: 6px; color: var(--redpen); }
+  #saved.note { display: block; margin-top: 6px; line-height: 1.4; }
+  .start-error { margin: 6px 0 0; font-size: 12px; line-height: 1.4; color: var(--redpen); }
   .note { font-size: 12px; line-height: 1.45; margin: 10px 0 0; padding: 6px 9px;
-          background: var(--white); border: 2px solid var(--marker); border-radius: 6px; }
+          background: var(--card); border: 2px solid var(--marker); border-radius: 6px; }
   .note label { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-weight: 600; cursor: pointer; }
   .note input { margin: 0; accent-color: var(--ink); }
   button.link { padding: 0; border: 0; background: none; color: var(--ink); text-decoration: underline; }
-  .footer { margin: 12px 0 0; font-size: 12px; text-align: right; }
+  .footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 12px; }
+  .themes { display: flex; gap: 4px; }
+  .themes button { padding: 3px 8px; border-radius: 5px; font-size: 12px; }
+  .themes button[aria-pressed="false"] { background: var(--card); color: var(--ink); }
 </style></head>
 <body>
-  <h1>Focus Guard</h1>
+  <h1><img class="logo-light" src="../../icons/logo-256.png" alt="" width="26" height="26"><img class="logo-dark" src="../../icons/logo-256-dark.png" alt="" width="26" height="26">Focus Guard</h1>
   <p class="sub muted">AI chat sites are blocked while a session runs.</p>
 
   <section id="idle">
     <div class="durations" role="group" aria-label="Session length">
-      <button data-min="25" aria-pressed="true">25 min</button>
-      <button data-min="50" aria-pressed="false">50 min</button>
-      <button data-min="90" aria-pressed="false">90 min</button>
+      <!-- One button per session length in shared/constants.js, added by popup.js -->
     </div>
     <button id="start">Start coding session</button>
+    <p class="start-error" id="startError" role="alert" hidden></p>
   </section>
 
   <section id="active" class="hidden">
-    <div class="clock" id="clock">25:00</div>
+    <div class="clock" id="clock"></div>
     <p class="sub muted" style="text-align:center" id="passNote">Solve it yourself. You've got this.</p>
     <button id="stop" class="ghost">End session early</button>
   </section>
@@ -57,14 +81,39 @@
     <div><b id="sUnlocks">0</b>passes used</div>
   </div>
 
+  <!-- The streak and focused minutes for the last 7 days, filled in by popup.js -->
+  <div class="week">
+    <div class="week-head"><b id="streak"></b></div>
+    <p class="streak-rule muted">Finish at least one session a day to keep your streak.</p>
+    <div class="week-nav">
+      <button id="prevWeek" aria-label="Previous week">&lsaquo;</button>
+      <span id="weekRange" aria-live="polite"></span>
+      <button id="nextWeek" aria-label="Next week">&rsaquo;</button>
+    </div>
+    <p class="week-summary muted" id="weekTotal"></p>
+    <div class="bars" id="weekBars" role="img"></div>
+  </div>
+
   <details>
     <summary>Blocked sites</summary>
-    <textarea id="sites" aria-label="Blocked sites, one per line"></textarea>
+    <label class="group"><input type="checkbox" id="appBuilders"> Also block AI app builders
+      <span class="muted" id="appBuilderNames"></span></label>
+    <textarea id="sites" aria-label="Blocked sites, one per line" aria-describedby="sitesHelp"></textarea>
+    <p class="help muted" id="sitesHelp">One per line. Add a path to block just part of a site, like github.com/copilot.</p>
     <button id="saveSites" class="ghost">Save sites</button>
     <span id="saved" class="muted" style="font-size:12px"></span>
   </details>
-  <p class="footer"><button class="link" id="openChecklist">Setup checklist</button></p>
+  <div class="footer">
+    <div class="themes" role="group" aria-label="Theme">
+      <button data-theme-choice="auto" aria-pressed="true">Auto</button>
+      <button data-theme-choice="light" aria-pressed="false">Light</button>
+      <button data-theme-choice="dark" aria-pressed="false">Dark</button>
+    </div>
+    <button class="link" id="openChecklist">Setup checklist</button>
+  </div>
+  <script src="../shared/constants.js"></script>
   <script src="../shared/sites.js"></script>
+  <script src="../shared/streaks.js"></script>
   <script src="../shared/browser.js"></script>
   <script src="../shared/setup.js"></script>
   <script src="popup.js"></script>

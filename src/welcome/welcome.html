@@ -2,14 +2,16 @@
 <html lang="en"><head><meta charset="utf-8"><title>Set up Focus Guard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../shared/style.css">
+<script src="../shared/theme.js"></script>
 <style>
   main { max-width: 640px; margin: 0 auto; padding: 48px 24px 64px; }
+  .logo { display: block; margin: 0 0 16px; }
   h1 { font-size: clamp(32px, 6vw, 48px); line-height: 1.1; margin: 0 0 10px; letter-spacing: -1px; }
   .lead { font-size: 16px; line-height: 1.5; margin: 0 0 28px; }
-  .sheet { background: var(--white); border: 2px solid var(--ink); border-radius: 8px; padding: 20px 22px; margin-bottom: 18px; }
+  .sheet { background: var(--card); border: 2px solid var(--ink); border-radius: 8px; padding: 20px 22px; margin-bottom: 18px; }
   h2 { font-size: 18px; margin: 0 0 8px; display: flex; gap: 10px; align-items: baseline; }
   .num { font: 700 14px var(--code); }
-  .done { margin-left: auto; font: 600 13px var(--code); color: var(--white); background: var(--ink);
+  .done { margin-left: auto; font: 600 13px var(--code); color: var(--on-ink); background: var(--ink);
           padding: 2px 8px; border-radius: 4px; }
   p, li { line-height: 1.5; }
   ol { margin: 8px 0 14px; padding-left: 22px; }
@@ -19,6 +21,8 @@
   .small { font-size: 13px; }
 </style></head>
 <body><main>
+  <img class="logo logo-light" src="../../icons/logo-256.png" alt="" width="96" height="96">
+  <img class="logo logo-dark" src="../../icons/logo-256-dark.png" alt="" width="96" height="96">
   <h1>Welcome to <span class="mark">Focus Guard.</span></h1>
   <p class="lead">A few quick steps close the gaps an extension can't close on its own. You can come back to this page any time from the popup's <b>Setup checklist</b> link.</p>
 
@@ -60,7 +64,7 @@
       <span class="done" id="incognitoDone" hidden>Done</span></h2>
     <p id="incognitoTodo"><span data-text="browser">Chrome</span> doesn't run extensions in <span data-text="private">Incognito</span> windows unless you allow it, so AI sites would be open there. On Focus Guard's settings page, turn on <b>Allow in <span data-text="private">Incognito</span></b>.</p>
     <p id="incognitoOk" hidden>Focus Guard is allowed in <span data-text="private">Incognito</span> windows, so AI sites are blocked there too.</p>
-    <p class="small muted">In <span data-text="private">Incognito</span>, <span data-text="browser">Chrome</span> shows its own error page instead of Focus Guard's, so you can't unlock a site there. Unlock it from a normal window instead, then type the site's address again in the <span data-text="private">Incognito</span> window. Reloading the error page won't open it.</p>
+    <p class="small muted">Once it's allowed, the questions and the unlock work in <span data-text="private">Incognito</span> windows too, and a pass works in both kinds of window.</p>
     <div class="row">
       <button id="openIncognito">Open Focus Guard settings</button>
     </div>

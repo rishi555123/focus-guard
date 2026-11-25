@@ -1,4 +1,5 @@
 // Reads the block page's own address. Loaded by blocked.html before blocked.js, and by the tests.
+// Needs shared/constants.js and shared/sites.js loaded first, for PASS_MINUTES and entryMatches.
 //
 // The block page is opened two ways:
 //   ?u=<address>                 by a redirect rule. Chrome pastes the address in as-is,
@@ -28,7 +29,7 @@ function sweepNote(link) {
   if (link.why === "moved" && link.to) {
     return `Your pass moved to ${link.to}, so this site is blocked again. You can only have one pass at a time.`;
   }
-  if (link.why === "ended") return "Your 5-minute pass for this site has ended.";
+  if (link.why === "ended") return `Your ${PASS_MINUTES}-minute pass for this site has ended.`;
   return "";
 }
 
@@ -36,9 +37,7 @@ function sweepNote(link) {
 // Returns that site, or "" if there's no such pass.
 function otherPass(pass, url, now) {
   if (!pass || !(pass.until > now)) return "";
-  let host = "";
-  try { host = new URL(url).hostname; } catch (_) {}
-  const covered = (pass.domains || [pass.domain]).some((d) => host === d || host.endsWith("." + d));
+  const covered = (pass.domains || [pass.domain]).some((entry) => entryMatches(url, entry));
   return covered ? "" : pass.domain;
 }
 

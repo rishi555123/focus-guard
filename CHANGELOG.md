@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-25
+
+Focus Guard's own logo, dark mode, three questions before unlocking with a copy-as-prompt button, blocking AI features inside normal sites like GitHub Copilot and Google AI Mode, daily streaks and a weekly chart, and the block page in Incognito and InPrivate windows.
+
+### Added
+
+- Dark mode for the popup, the setup checklist and the block page, in the same colours as the website's dark theme. It follows your system setting, or pick Auto, Light or Dark at the bottom of the popup. Every Focus Guard page switches straight away, with no flash of the wrong theme when one opens. In dark mode the logo is drawn with light lines.
+- After a pass is granted, the block page waits for you to open the site and offers **Copy as AI prompt**. It copies your three answers with a request for a hint or an explanation of the cause rather than the full solution.
+- An optional **Also block AI app builders** choice under **Blocked sites** in the popup, for v0.app, bolt.new and lovable.dev. It's off unless you turn it on, it's locked during a session like the list, and turning it off never removes sites you added yourself.
+- A daily streak and a weekly chart in the popup. A day counts toward your streak when you finish at least one session, which the popup explains under the streak, and a streak lasts until the end of the next day. The chart shows the last 7 days with each day's focused time on its bar (like 45m or 1h 20m), today marked, and the week's total time and finished sessions. Arrows step back through earlier weeks. Focus Guard keeps daily totals for the last 60 days; history starts with your first session after updating, and your existing totals are kept.
+- Blocking just part of a site: an entry like `github.com/copilot` blocks that page and the pages under it, and `google.com/search?udm=50` blocks Google's AI Mode but not normal searches. New defaults cover GitHub Copilot (`github.com/copilot`), Grok on X (`x.com/i/grok`), Copilot on Bing (`bing.com/chat`), HuggingChat (`huggingface.co/chat`) and Google AI Mode (`google.com/search?udm=50`). They're added on update like other new defaults, unless your list already blocks the whole site or you deleted them.
+
+### Changed
+
+- A new, original Focus Guard logo replaces the Flaticon icon: a brain over an "FG" shield between code brackets, in navy and yellow. It's used for the toolbar, extension and notification icons. The 16-pixel toolbar icon shows just the FG shield, so it stays readable at that size.
+- The logo now appears inside Focus Guard too: next to the name in the popup, above the welcome on the setup checklist, and small at the top of the block page.
+- The website uses the new logo and favicon. In dark mode it shows a version of the logo with light lines instead of inverting the colours, so the yellow stays yellow.
+- Unlocking asks three questions instead of one box: what you tried, what you expected and what happened instead, each in at least 20 characters. Answers that look like random typing, like `asdfasdf` or the same word over and over, are turned down, and Focus Guard checks again before it grants a pass.
+- The toolbar icon has a thin light outline, so the navy stands out on dark browser toolbars and themes as well as light ones. The website's favicon matches.
+- The blocklist keeps the path of an address you paste, so it can block part of a site. After saving, the popup says which lines it left out because another entry already blocks them, and which new entries block only part of a site.
+- In Incognito and InPrivate windows, blocked sites now show Focus Guard's block page with the questions and the unlock, instead of the browser's error page, once you allow Focus Guard there. Passes, sessions and notifications work across normal and private windows. Focus Guard now runs a separate copy of itself for private windows ("split" incognito mode), and the two copies stay in step through extension storage.
+
+### Fixed
+
+- If a pass can't be granted after the 60-second wait, the block page now shows the error in red and lets you try again, keeping what you wrote. Before, the button stayed disabled until you reloaded the page.
+- If a session can't be started, the popup now says why instead of doing nothing.
+- The keyboard focus outline in the popup, setup checklist and block page is now navy instead of yellow, so you can see it against the light background.
+
+### Removed
+
+- The Flaticon icon credit, from the README and the website footer, now that the icon is Focus Guard's own.
+
 ## [1.0.0] - 2026-10-02
 
 The first public release, for Google Chrome and Microsoft Edge, installed from GitHub releases with Load unpacked.
@@ -69,5 +101,6 @@ The first public release, for Google Chrome and Microsoft Edge, installed from G
 
 Known limitations, like Chrome's built-in Gemini panel, Edge's Copilot sidebar and the block page in private windows, are listed in the [README](README.md#known-limitations).
 
-[Unreleased]: https://github.com/rishi555123/focus-guard/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/rishi555123/focus-guard/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/rishi555123/focus-guard/releases/tag/v1.1.0
 [1.0.0]: https://github.com/rishi555123/focus-guard/releases/tag/v1.0.0

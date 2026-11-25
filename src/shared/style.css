@@ -5,9 +5,28 @@
   --pencil: #5E6A80;
   --marker: #FFE45C;
   --redpen: #B8322A;
-  --white: #FFFFFF;
+  --card: #FFFFFF;        /* sheets, stats, notes and text boxes */
+  --on-ink: #FFFFFF;      /* text on navy buttons and badges */
+  --mark-text: #1D3B6E;   /* text on the yellow highlight */
+  --focus: #1D3B6E;       /* navy focus ring: yellow on light paper is too faint (needs 3:1) */
   --font: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
   --code: "Cascadia Code", Consolas, "SF Mono", monospace;
+  color-scheme: light;
+}
+/* Dark theme, from the website's dark colours. shared/theme.js sets data-theme on every page
+   before it draws: the choice from the popup, or the system setting when that's Auto. */
+:root[data-theme="dark"] {
+  --paper: #0F1A2C;
+  --grid: #1B2A42;
+  --ink: #DCE6F5;
+  --pencil: #A9B6CC;
+  --marker: #FFE45C;
+  --redpen: #FF8A80;
+  --card: #15233A;
+  --on-ink: #0F1A2C;
+  --mark-text: #1D3B6E;   /* navy text on the yellow highlight in both themes */
+  --focus: #FFE45C;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body {
@@ -20,15 +39,19 @@ body {
 }
 button {
   font: inherit; font-weight: 600; cursor: pointer;
-  border: 2px solid var(--ink); background: var(--ink); color: var(--white);
+  border: 2px solid var(--ink); background: var(--ink); color: var(--on-ink);
   padding: 9px 14px; border-radius: 6px;
 }
 button.ghost { background: transparent; color: var(--ink); }
 button:disabled { opacity: .45; cursor: not-allowed; }
-button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--marker); outline-offset: 2px; }
+button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 textarea {
   width: 100%; font: 13px/1.5 var(--code); color: var(--ink);
-  border: 2px solid var(--ink); border-radius: 6px; padding: 8px; background: var(--white);
+  border: 2px solid var(--ink); border-radius: 6px; padding: 8px; background: var(--card);
 }
-.mark { background: linear-gradient(transparent 55%, var(--marker) 55%); }
+.mark { color: var(--mark-text); background: linear-gradient(transparent 55%, var(--marker) 55%); }
+/* Light text on a half-height highlight is hard to read, so dark mode highlights the whole word */
+[data-theme="dark"] .mark { background: var(--marker); border-radius: 3px; padding: 0 6px; }
+/* The logo is navy and yellow, so dark mode shows a copy with the navy drawn in the light ink */
+[data-theme="dark"] .logo-light, :root:not([data-theme="dark"]) .logo-dark { display: none; }
 .muted { color: var(--pencil); }
