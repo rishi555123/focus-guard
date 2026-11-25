@@ -39,6 +39,13 @@ $("geminiOff").onchange = () => chrome.storage.local.set({ geminiOff: $("geminiO
 
 $("sites").addEventListener("input", () => (sitesEdited = true));
 
+// The optional AI app builders group (APP_BUILDER_SITES is from shared/sites.js)
+$("appBuilderNames").textContent = `(${APP_BUILDER_SITES.join(", ")})`;
+$("appBuilders").onchange = async () => {
+  await chrome.storage.local.set({ blockAppBuilders: $("appBuilders").checked });
+  await chrome.runtime.sendMessage({ type: "sitesChanged" });
+};
+
 // Theme: Auto follows the system setting (setTheme is from shared/theme.js)
 const themeButtons = document.querySelectorAll(".themes button");
 function showTheme(theme) {
@@ -88,8 +95,8 @@ $("saveSites").onclick = async () => {
 };
 
 async function render() {
-  const { session, sites = [], stats = {}, pass, geminiOff = false, theme } =
-    await chrome.storage.local.get(["session", "sites", "stats", "pass", "geminiOff", "theme"]);
+  const { session, sites = [], stats = {}, pass, geminiOff = false, theme, blockAppBuilders = false } =
+    await chrome.storage.local.get(["session", "sites", "stats", "pass", "geminiOff", "theme", "blockAppBuilders"]);
   showTheme(theme);
   const active = !!session && session.endsAt > Date.now();
 
@@ -107,7 +114,8 @@ async function render() {
   // No editing the blocklist mid-session, so you can't cheat yourself.
   // Unsaved edits in the box are kept when the popup refreshes.
   if (!sitesEdited) $("sites").value = sites.join("\n");
-  $("sites").disabled = $("saveSites").disabled = active;
+  $("sites").disabled = $("saveSites").disabled = $("appBuilders").disabled = active;
+  $("appBuilders").checked = blockAppBuilders;
 
   clearInterval(timer);
   if (active) {

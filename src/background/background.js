@@ -1,4 +1,5 @@
-importScripts("../shared/constants.js", "../shared/reason.js"); // the numbers, and the unlock answer checks
+// The numbers, the unlock answer checks, and the app builder group
+importScripts("../shared/constants.js", "../shared/reason.js", "../shared/sites.js");
 
 const DEFAULT_SITES = [
   "chatgpt.com", "chat.openai.com", "gemini.google.com", "aistudio.google.com",
@@ -87,13 +88,19 @@ const isListed = (url, sites) => {
   return !!host && sites.some((d) => onSite(host, d));
 };
 
+// Every site on the blocklist: your own, plus the AI app builders if that group is on
+async function listedSites() {
+  const { sites = [], blockAppBuilders = false } = await chrome.storage.local.get(["sites", "blockAppBuilders"]);
+  return withAppBuilders(sites, blockAppBuilders); // from shared/sites.js
+}
+
 // What's blocked right now: null outside a session, otherwise the blocklist
 // plus the one site a pass has unlocked (if any)
 async function getBlockState() {
   const now = Date.now();
-  const { session, sites = [], pass } = await chrome.storage.local.get(["session", "sites", "pass"]);
+  const { session, pass } = await chrome.storage.local.get(["session", "pass"]);
   if (!session || session.endsAt <= now) return null;
-  return { sites, pass: pass && pass.until > now ? pass : null };
+  return { sites: await listedSites(), pass: pass && pass.until > now ? pass : null };
 }
 
 // The final site plus every old address that redirects to it
@@ -284,7 +291,7 @@ async function handleMessage(msg) {
     // Only count real blocks, and only fresh visits (the page sends count: false for
     // reloads, Back/Forward and sweeps). A leftover block page for a listed site that
     // isn't blocked right now (session over, or a pass covers it) is told to reopen it.
-    const { sites = [] } = await chrome.storage.local.get("sites");
+    const sites = await listedSites();
     const state = await getBlockState();
     const blocked = msg.url ? isBlockedUrl(msg.url, state) : !!state;
     if (blocked && msg.count !== false) await addStats((s) => { s.blocked += 1; });
@@ -293,8 +300,7 @@ async function handleMessage(msg) {
   if (msg.type === "unlock") {
     const state = await getBlockState();
     if (!state) {
-      const { sites = [] } = await chrome.storage.local.get("sites");
-      return { granted: false, reopen: isListed(msg.url, sites) }; // no session, nothing to unlock
+      return { granted: false, reopen: isListed(msg.url, await listedSites()) }; // no session, nothing to unlock
     }
     // The block page checks the answers too, but a pass is only ever granted for real ones
     if (!answersOk(msg.answers)) throw new Error("Answer all three questions first");

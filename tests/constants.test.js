@@ -77,7 +77,7 @@ test("constants.js holds sensible values", () => {
 });
 
 test("every script that uses the constants loads constants.js first", () => {
-  assert.match(read("src/background/background.js"), /^importScripts\("\.\.\/shared\/constants\.js"[,)]/);
+  assert.match(read("src/background/background.js"), /^(\/\/.*\r?\n)*importScripts\("\.\.\/shared\/constants\.js"[,)]/, "constants.js is the first import, before any code");
   for (const [page, first] of [["src/popup/popup.html", "../shared/constants.js"], ["src/blocked/blocked.html", "../shared/constants.js"]]) {
     const scripts = [...read(page).split("</head>")[1].matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
     assert.equal(scripts[0], first, `${page} loads constants.js before its other scripts`);
@@ -85,38 +85,12 @@ test("every script that uses the constants loads constants.js first", () => {
 });
 
 // The popup, loaded with different numbers: its buttons come from the constants
-function loadPopup(constantsSource) {
-  const els = {};
-  const element = () => ({
-    hidden: false, disabled: false, textContent: "", value: "", dataset: {}, children: [],
-    classList: { toggle() {}, add() {}, remove() {} },
-    attributes: {}, setAttribute(k, v) { this.attributes[k] = String(v); },
-    addEventListener() {}, append(...kids) { this.children.push(...kids); }
-  });
-  const durations = element();
-  const document = {
-    getElementById: (id) => (els[id] ??= element()),
-    createElement: () => element(),
-    querySelector: (sel) => (sel === ".durations" ? durations : null),
-    querySelectorAll: (sel) => (sel === ".durations button" ? durations.children : [])
-  };
-  const chrome = {
-    storage: { local: { get: async () => ({}), set: async () => {} }, onChanged: { addListener() {} } },
-    runtime: { sendMessage: async () => ({ ok: true }) },
-    extension: { isAllowedIncognitoAccess: async () => true },
-    tabs: {}
-  };
-  const context = vm.createContext({ document, chrome, navigator: {}, URL, setInterval, clearInterval, confirm: () => false });
-  vm.runInContext(constantsSource, context);
-  for (const file of ["src/shared/sites.js", "src/shared/browser.js", "src/shared/setup.js", "src/popup/popup.js"]) {
-    vm.runInContext(read(file), context);
-  }
-  return durations.children.map((b) => [b.textContent, b.dataset.min, b.attributes["aria-pressed"]]);
-}
+const { loadPopup } = require("./fake-popup.js");
+const buttons = (popup) => popup.durations.children.map((b) => [b.textContent, b.dataset.min, b.attributes["aria-pressed"]]);
 
 test("the popup has one button per session length, the first one picked", () => {
-  assert.deepEqual(loadPopup(read(CONSTANTS_FILE)), C.SESSION_LENGTHS.map((m, i) => [`${m} min`, m, String(i === 0)]));
-  assert.deepEqual(loadPopup("const SESSION_LENGTHS = [15, 45]; const PASS_MINUTES = 5;"), [
+  assert.deepEqual(buttons(loadPopup()), C.SESSION_LENGTHS.map((m, i) => [`${m} min`, m, String(i === 0)]));
+  assert.deepEqual(buttons(loadPopup({ constants: "const SESSION_LENGTHS = [15, 45]; const PASS_MINUTES = 5;" })), [
     ["15 min", 15, "true"],
     ["45 min", 45, "false"]
   ]);

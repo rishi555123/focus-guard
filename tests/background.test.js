@@ -10,7 +10,8 @@ const vm = require("node:vm");
 const SOURCE = fs.readFileSync(path.join(__dirname, "../src/background/background.js"), "utf8");
 const CONSTANTS = fs.readFileSync(path.join(__dirname, "../src/shared/constants.js"), "utf8");
 // What background.js may importScripts, by path from src/background/
-const IMPORTABLE = { "src/shared/reason.js": fs.readFileSync(path.join(__dirname, "../src/shared/reason.js"), "utf8") };
+const IMPORTABLE = Object.fromEntries(["src/shared/reason.js", "src/shared/sites.js"]
+  .map((f) => [f, fs.readFileSync(path.join(__dirname, "..", f), "utf8")]));
 
 // Read block page links the same way the block page does (src/blocked/links.js)
 const linksContext = vm.createContext({ URL, URLSearchParams });
@@ -781,4 +782,63 @@ test("upgrading keeps unlock notes saved by 1.0.0 as they were", async () => {
   await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
   assert.deepEqual(env.store.stats.log[1], old);
   assert.equal(env.store.stats.unlocks, 2);
+});
+
+// The optional AI app builders group
+
+const BUILDERS = ["v0.app", "bolt.new", "lovable.dev"];
+const ruleSites = (env) => env.rules.filter((r) => r.action.type === "redirect").map((r) => r.condition.regexFilter);
+const blocks = (env, site) => ruleSites(env).some((re) => new RegExp(re).test(`https://${site}/`));
+
+test("the app builders are off by default and never added to your list", async () => {
+  const env = await inSession();
+  for (const site of BUILDERS) {
+    assert.equal(blocks(env, site), false, site);
+    assert.ok(!env.store.sites.includes(site), site);
+  }
+  assert.equal(env.store.blockAppBuilders, undefined);
+});
+
+test("turning the app builders on blocks them; turning it off unblocks them", async () => {
+  const env = await inSession();
+  env.store.blockAppBuilders = true;
+  await env.send({ type: "sitesChanged" });
+  for (const site of BUILDERS) assert.equal(blocks(env, site), true, site);
+  assert.equal(blocks(env, "chatgpt.com"), true, "your own list still blocked");
+  assert.ok(!BUILDERS.some((s) => env.store.sites.includes(s)), "your list is unchanged");
+  env.store.blockAppBuilders = false;
+  await env.send({ type: "sitesChanged" });
+  for (const site of BUILDERS) assert.equal(blocks(env, site), false, site);
+});
+
+test("an app builder you also listed yourself gets one rule, and stays blocked with the group off", async () => {
+  const env = await load({ sites: ["chatgpt.com", "bolt.new"], blockAppBuilders: true });
+  await env.send({ type: "start", minutes: 25 });
+  assert.equal(ruleSites(env).filter((re) => new RegExp(re).test("https://bolt.new/")).length, 1);
+  env.store.blockAppBuilders = false;
+  await env.send({ type: "sitesChanged" });
+  assert.equal(blocks(env, "bolt.new"), true);
+});
+
+test("app builder sites are blocked, counted and unlockable like any other", async () => {
+  const env = await load({ sites: ["chatgpt.com"], blockAppBuilders: true });
+  await env.send({ type: "start", minutes: 25 });
+  const res = await env.send({ type: "blocked", url: "https://v0.app/chat/1" });
+  assert.equal(res.blocked, true);
+  assert.equal(env.store.stats.blocked, 1);
+  const pass = await env.send({ type: "unlock", answers: ANSWERS, url: "https://v0.app/chat/1" });
+  assert.equal(pass.domain, "v0.app");
+});
+
+test("after a session, a leftover block page for an app builder reopens it only while the group is on", async () => {
+  const on = await load({ sites: [], blockAppBuilders: true });
+  assert.equal((await on.send({ type: "blocked", url: "https://lovable.dev/" })).reopen, true);
+  const off = await load({ sites: [] });
+  assert.equal((await off.send({ type: "blocked", url: "https://lovable.dev/" })).reopen, false, "not listed, so never reopened");
+});
+
+test("upgrading from 1.0.0 leaves the app builders off and the list as it was merged", async () => {
+  const env = await load({ sites: ["chatgpt.com", "claude.ai"], stats: { blocked: 3, sessions: 2, minutes: 50, unlocks: 1, log: [] } });
+  assert.equal(env.store.blockAppBuilders, undefined);
+  assert.ok(!BUILDERS.some((s) => env.store.sites.includes(s)));
 });

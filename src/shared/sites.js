@@ -1,5 +1,13 @@
-// Turns what people type into the blocklist box into clean domains.
-// Loaded by the popup before popup.js, and by the tests.
+// Turns what people type into the blocklist box into clean domains, and the optional
+// group of AI app builders. Loaded by the popup before popup.js, by the background
+// script (importScripts), and by the tests.
+
+// Blocked on top of your own list when "Also block AI app builders" is on (off by default).
+// Kept out of the saved list, so turning the group off never touches your own sites.
+const APP_BUILDER_SITES = ["v0.app", "bolt.new", "lovable.dev"];
+
+// Your list plus the app builders when that group is on, without duplicates
+const withAppBuilders = (sites, on) => [...new Set([...sites, ...(on ? APP_BUILDER_SITES : [])])];
 
 // One or more labels separated by dots, ending in a letter-based top-level domain
 const DOMAIN_RE = /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{1,59})$/;
