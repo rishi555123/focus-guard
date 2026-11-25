@@ -1,5 +1,6 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><link rel="stylesheet" href="../shared/style.css">
+<script src="../shared/theme.js"></script>
 <style>
   body { width: 320px; padding: 16px; }
   h1 { font-size: 18px; margin: 0 0 2px; display: flex; align-items: center; gap: 8px; }
@@ -22,7 +23,10 @@
   .note label { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-weight: 600; cursor: pointer; }
   .note input { margin: 0; accent-color: var(--ink); }
   button.link { padding: 0; border: 0; background: none; color: var(--ink); text-decoration: underline; }
-  .footer { margin: 12px 0 0; font-size: 12px; text-align: right; }
+  .footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 12px; }
+  .themes { display: flex; gap: 4px; }
+  .themes button { padding: 3px 8px; border-radius: 5px; font-size: 12px; }
+  .themes button[aria-pressed="false"] { background: var(--card); color: var(--ink); }
 </style></head>
 <body>
   <h1><img src="../../icons/logo-256.png" alt="" width="26" height="26">Focus Guard</h1>
@@ -65,7 +69,14 @@
     <button id="saveSites" class="ghost">Save sites</button>
     <span id="saved" class="muted" style="font-size:12px"></span>
   </details>
-  <p class="footer"><button class="link" id="openChecklist">Setup checklist</button></p>
+  <div class="footer">
+    <div class="themes" role="group" aria-label="Theme">
+      <button data-theme-choice="auto" aria-pressed="true">Auto</button>
+      <button data-theme-choice="light" aria-pressed="false">Light</button>
+      <button data-theme-choice="dark" aria-pressed="false">Dark</button>
+    </div>
+    <button class="link" id="openChecklist">Setup checklist</button>
+  </div>
   <script src="../shared/sites.js"></script>
   <script src="../shared/browser.js"></script>
   <script src="../shared/setup.js"></script>

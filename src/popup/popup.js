@@ -30,6 +30,17 @@ $("geminiOff").onchange = () => chrome.storage.local.set({ geminiOff: $("geminiO
 
 $("sites").addEventListener("input", () => (sitesEdited = true));
 
+// Theme: Auto follows the system setting (setTheme is from shared/theme.js)
+const themeButtons = document.querySelectorAll(".themes button");
+function showTheme(theme) {
+  const choice = theme === "light" || theme === "dark" ? theme : "auto";
+  themeButtons.forEach((b) => b.setAttribute("aria-pressed", b.dataset.themeChoice === choice));
+}
+themeButtons.forEach((b) => b.addEventListener("click", () => {
+  showTheme(b.dataset.themeChoice);
+  setTheme(b.dataset.themeChoice);
+}));
+
 $("start").onclick = async () => {
   $("startError").hidden = true;
   let res;
@@ -68,8 +79,9 @@ $("saveSites").onclick = async () => {
 };
 
 async function render() {
-  const { session, sites = [], stats = {}, pass, geminiOff = false } =
-    await chrome.storage.local.get(["session", "sites", "stats", "pass", "geminiOff"]);
+  const { session, sites = [], stats = {}, pass, geminiOff = false, theme } =
+    await chrome.storage.local.get(["session", "sites", "stats", "pass", "geminiOff", "theme"]);
+  showTheme(theme);
   const active = !!session && session.endsAt > Date.now();
 
   // Gemini reminder in Chrome, until the user says they've turned it off

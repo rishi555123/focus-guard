@@ -4,7 +4,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { palette, ratio, EXTENSION_PAIRS, EXTENSION_CSS } = require("./contrast.js");
 
-for (const theme of ["light"]) {
+for (const theme of ["light", "dark"]) {
   test(`extension ${theme} theme meets WCAG AA contrast for text and interface parts`, () => {
     const p = palette(theme, EXTENSION_CSS);
     for (const [what, fg, bg] of EXTENSION_PAIRS) {

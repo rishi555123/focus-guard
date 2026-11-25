@@ -142,6 +142,6 @@ test("nothing else is exposed to websites", () => {
   const exposed = manifest.web_accessible_resources.flatMap((w) => w.resources);
   assert.deepEqual(exposed.sort(), [
     "icons/logo-256.png", "src/blocked/blocked.html", "src/blocked/blocked.js", "src/blocked/links.js", "src/blocked/questions.js",
-    "src/shared/browser.js", "src/shared/style.css"
+    "src/shared/browser.js", "src/shared/style.css", "src/shared/theme.js"
   ]);
 });
