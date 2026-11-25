@@ -26,6 +26,20 @@ The block page shows 3 random debugging questions and 3 random problem-solving q
 
 Keep it short, end it with a question mark, and run `node --test` to check it.
 
+## Change a session length, pass length or unlock limit
+
+The session lengths, the 5-minute pass, the unlock limits (20 characters per answer, a 60-second wait) and how many days of history to keep all live in `src/shared/constants.js`. Every label and message in the extension is built from there, and `node --test` fails if one of these numbers is typed out anywhere else in `src/`.
+
+The docs can't read that file, so they repeat the numbers. When you change one, update these too:
+
+- `README.md`: How Focus Guard solves it, Features, How to use it
+- `PRIVACY.md` and `site/privacy.html`: the pass length and the days of history, kept matching each other
+- `site/index.html`: How it works
+- `TESTING.md`: the steps that wait out a pass or the unlock
+- `docs/store-listing.md`: the store description
+
+Don't change the numbers in `CHANGELOG.md` or `site/releases.html` for versions already released; they describe those versions.
+
 ## Run the tests
 
 The tests check the background logic (sessions, blocking rules, passes), the blocklist input cleaning, browser detection and the block page questions without opening a browser. You only need [Node.js](https://nodejs.org) 22 or newer. There's nothing to install.

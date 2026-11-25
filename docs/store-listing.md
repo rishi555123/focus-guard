@@ -15,10 +15,10 @@ The listing deliberately doesn't mention other browsers: policy 1.1.2 says an ex
 
 ## Package
 
-Upload `dist/focus-guard-1.0.0.zip`, built with:
+Upload `dist/focus-guard-1.1.0.zip`, built with:
 
 ```bash
-git -c core.autocrlf=false archive --format=zip -9 -o dist/focus-guard-1.0.0.zip HEAD manifest.json src icons
+git -c core.autocrlf=false archive --format=zip -9 -o dist/focus-guard-1.1.0.zip HEAD manifest.json src icons
 ```
 
 It contains `manifest.json` at the root plus `src/` and `icons/`, nothing else. `core.autocrlf=false` keeps the files byte for byte as they are in the repository, with no Windows line endings. Rebuild it from the commit you're releasing whenever anything changes.
@@ -90,14 +90,14 @@ Focus Guard helps you learn to code by making you try first. During a coding ses
 HOW IT WORKS
 - Start a 25, 50 or 90 minute coding session from the toolbar. The toolbar badge shows the minutes left.
 - Open an AI chat site and you'll see 6 questions to try first: 3 debugging questions, like "What changed since it last worked?", and 3 problem-solving questions, like "What's the brute-force solution, even if it's slow?". They're picked at random from a larger pool each time.
-- Still stuck? Write what you tried (at least 60 characters), wait 60 seconds, and get a 5-minute pass for that one site. Every other AI site stays blocked.
+- Still stuck? Answer three questions about what you tried, expected and got (at least 20 characters each), wait 60 seconds, and get a 5-minute pass for that one site. Every other AI site stays blocked.
 - Notifications tell you one minute before a pass ends, when it ends, and when it moves to another site.
 - Outside a session, every site works normally.
 
 FEATURES
-- Blocks 25 AI chat sites and their subdomains by default.
+- Blocks 25 AI chat sites and their subdomains by default, plus AI features inside other sites like GitHub Copilot and Google's AI Mode.
 - Edit the blocklist yourself. It's locked during a session, so you can't quietly remove a site.
-- Simple stats: sessions finished, focused minutes, AI visits blocked and passes used.
+- Simple stats: sessions finished, focused minutes, AI visits blocked and passes used, with a daily streak and a weekly chart.
 - A short setup checklist on first install, including an optional step to turn off Copilot in Edge.
 
 PRIVACY
@@ -113,7 +113,7 @@ Focus Guard is open source under the MIT license.
 
 ### Images
 
-All in `docs/store/`, made from real screenshots of the extension:
+All in `docs/store/`, made from real screenshots of the extension. The three screenshots show version 1.0.0 and need retaking before a submission:
 
 | Field | File | Size | Microsoft's requirement |
 | --- | --- | --- | --- |
@@ -152,7 +152,7 @@ HOW TO TEST
 1. After installing, a "Welcome to Focus Guard" setup page opens. Its steps are optional.
 2. Click the Focus Guard toolbar icon, pick 25 min and click "Start coding session". The badge shows the minutes left.
 3. Open https://chatgpt.com. You're redirected to Focus Guard's "Your brain first." page with 6 questions.
-4. In "Still truly stuck?", type at least 60 characters, click "Start 60-second wait" and wait 60 seconds. You're sent to chatgpt.com with a 5-minute pass. Other AI sites, like https://claude.ai, stay blocked.
+4. In "Still truly stuck?", answer the three questions (at least 20 characters each), click "Start 60-second wait", wait 60 seconds, then click "Open chatgpt.com". It opens with a 5-minute pass. Other AI sites, like https://claude.ai, stay blocked.
 5. Click "End session early" in the popup. All sites open normally again.
 
 TESTING TIMERS WITHOUT WAITING

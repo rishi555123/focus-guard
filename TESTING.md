@@ -31,8 +31,11 @@ The **Needs first** column says what has to be running before you use a command.
 | Pretend the session ran out while Chrome was closed (then reload the extension) | Nothing. Replaces any running session | `await chrome.storage.local.set({ session: { startedAt: Date.now() - 26 * 60000, endsAt: Date.now() - 60000, minutes: 25 } })` |
 | Remove the stats | Nothing | `await chrome.storage.local.remove("stats")` |
 | Bring back the Gemini reminder | Nothing | `await chrome.storage.local.remove("geminiOff")` |
+| Make the saved data look like Focus Guard 1.0.0 (then reload the extension) | Nothing. Replaces your list, stats and settings | `await chrome.storage.local.clear(); await chrome.storage.local.set({ sites: ["chatgpt.com", "chat.openai.com", "gemini.google.com", "claude.ai", "copilot.microsoft.com", "perplexity.ai", "chat.deepseek.com", "poe.com", "grok.com", "you.com", "phind.com", "mysite.dev"], stats: { blocked: 7, sessions: 4, minutes: 130, unlocks: 2, log: [{ at: Date.now(), domain: "claude.ai", reason: "An unlock note written in 1.0.0, kept as it was." }] }, lastMinutes: 50, geminiOff: true })` |
 
 An active pass also means a running session, since passes only exist during one.
+
+With an Incognito window open, Focus Guard's card on `chrome://extensions` shows a second **service worker (Incognito)** link. That's the Incognito copy (section 10). Run the shortcuts in the normal **service worker** console: it's the one that ends sessions and passes and sends notifications.
 
 Chrome can delay alarms by up to about 30 seconds, so a notification may take a while to appear after you run a shortcut. Wait at least 30 seconds before reporting it as failed.
 
@@ -191,6 +194,31 @@ Use a separate install in Edge. Turn on **Developer mode** at `edge://extensions
 - [ ] 13.10 **Back to my code** in a window's only tab, with nothing to go back to, shows Edge's new tab page.
 - [ ] 13.11 Turn on **Allow in InPrivate**. During a session, `chatgpt.com` in an InPrivate window shows Focus Guard's block page, and unlocking it there works.
 - [ ] 13.12 Open Edge's Copilot sidebar during a session and note what it shows. Focus Guard isn't designed to block it (see Known limitations), so it may work normally. Report it if it shows Focus Guard's block page or an error instead.
-- [ ] 13.13 The Focus Guard card on `edge://extensions` shows version **1.0.0**.
+- [ ] 13.13 The Focus Guard card on `edge://extensions` shows version **1.1.0**.
 - [ ] 13.15 On Focus Guard's **Details** page at `edge://extensions`, the permissions list access to all websites and notifications, but not your browsing history.
 - [ ] 13.14 Click **Remove** on Focus Guard. A tab opens on the README's **Removed Focus Guard?** section, which includes the Copilot in Edge steps.
+
+## 14. New in 1.1
+
+- [ ] 14.1 The toolbar icon is the new logo. With a dark Chrome theme, its thin light outline keeps it easy to see.
+- [ ] 14.2 The popup, setup checklist and block page show the logo. Pick **Dark** in the popup: the popup and any open Focus Guard pages turn dark straight away, with the light-line logo. Pick **Light**, then **Auto**: Auto follows the Windows light or dark setting.
+- [ ] 14.3 Reload a dark Focus Guard page. It opens dark without flashing light first.
+- [ ] 14.4 On the block page, each answer shows how many characters are still needed. Typing `asdfasdf asdfasdf` in one says it looks like random typing, and the button stays disabled until all three answers are real.
+- [ ] 14.5 After the wait, the pass is granted but the site doesn't open by itself. **Copy as AI prompt** says "Copied", and pasting gives "I tried: …", "I expected: …", "Instead: …" and the line asking for a hint. **Open chatgpt.com** then opens the site.
+- [ ] 14.6 During a session, `https://github.com/copilot` and `https://www.google.com/search?q=sort+a+list&udm=50` (Google's AI Mode) show the block page, while `https://github.com/rishi555123/focus-guard` and `https://www.google.com/search?q=sort+a+list` open normally.
+- [ ] 14.7 On `x.com`, moving from the home page to Grok inside the site (without reloading) lands on the block page.
+- [ ] 14.8 Unlock `github.com/copilot`. GitHub Copilot opens, and `chatgpt.com` is still blocked.
+- [ ] 14.9 Outside a session, add `https://claude.ai/new` and `chatgpt.com/c/123` to **Blocked sites** and save. The popup says `chatgpt.com/c/123` was left out because `chatgpt.com` already blocks it, and that `claude.ai/new` blocks only part of a site.
+- [ ] 14.10 Tick **Also block AI app builders**. During a session, `v0.app`, `bolt.new` and `lovable.dev` show the block page; the checkbox is disabled until the session ends. Untick it afterwards: they open again, and your own list is unchanged.
+- [ ] 14.11 Finish a session (use the "Finish the session in 2 seconds" shortcut). The popup shows "1-day streak", today's bar in yellow, and the minutes in "min this week".
+- [ ] 14.12 With a screen reader, or by inspecting the popup, the chart's label lists the minutes for each of the last 7 days.
+
+## 15. Updating from 1.0.0
+
+- [ ] 15.1 Load Focus Guard 1.0.0 (the `focus-guard-1.0.0.zip` release), or use the "Make the saved data look like Focus Guard 1.0.0" shortcut on 1.1.0 and skip to 15.3.
+- [ ] 15.2 In 1.0.0, remove `poe.com` from the list, finish a session and use a pass, so there's real 1.0.0 data. Then replace the folder's contents with 1.1.0 and click reload on the extension card.
+- [ ] 15.3 The popup still shows the same totals for sessions, minutes, visits blocked and passes. The streak says "Finish a session to start a streak" and the chart is empty, since 1.0.0 didn't save days.
+- [ ] 15.4 **Blocked sites** keeps your own sites, still doesn't have `poe.com`, and now has the new defaults, including `deepseek.com`, `github.com/copilot` and `google.com/search?udm=50`. **Also block AI app builders** is off.
+- [ ] 15.5 Your last session length (50 minutes after the shortcut) is still picked, and the Gemini reminder stays hidden if you'd ticked it.
+- [ ] 15.6 Start and finish a session: the totals go up by one and the streak starts. `await chrome.storage.local.get("stats")` in the service worker console shows the old unlock note unchanged, and the new one with "Tried:", "Expected:" and "Instead:" lines.
+- [ ] 15.7 No welcome page opened during the update.

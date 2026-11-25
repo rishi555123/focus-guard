@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-25
+
+Focus Guard's own logo, dark mode, three questions before unlocking with a copy-as-prompt button, blocking AI features inside normal sites like GitHub Copilot and Google AI Mode, daily streaks and a weekly chart, and the block page in Incognito and InPrivate windows.
+
 ### Added
 
 - Dark mode for the popup, the setup checklist and the block page, in the same colours as the website's dark theme. It follows your system setting, or pick Auto, Light or Dark at the bottom of the popup. Every Focus Guard page switches straight away, with no flash of the wrong theme when one opens. In dark mode the logo is drawn with light lines.
@@ -97,5 +101,6 @@ The first public release, for Google Chrome and Microsoft Edge, installed from G
 
 Known limitations, like Chrome's built-in Gemini panel, Edge's Copilot sidebar and the block page in private windows, are listed in the [README](README.md#known-limitations).
 
-[Unreleased]: https://github.com/rishi555123/focus-guard/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/rishi555123/focus-guard/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/rishi555123/focus-guard/releases/tag/v1.1.0
 [1.0.0]: https://github.com/rishi555123/focus-guard/releases/tag/v1.0.0
