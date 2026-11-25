@@ -105,7 +105,7 @@ Focus Guard collects no data and sends nothing anywhere. Your blocklist, session
 
 LIMITATIONS
 - Edge's Copilot button and sidebar are part of the browser, so Focus Guard can't block them. The setup checklist shows how to turn them off.
-- In InPrivate windows, blocked sites show the browser's error page instead of Focus Guard's page, so you can't unlock them there. Allow Focus Guard in InPrivate on its extension settings page, and unlock from a normal window.
+- InPrivate windows are only covered once you allow Focus Guard in InPrivate on its extension settings page.
 - AI features inside other sites, like coding assistants in your editor or AI answers in search results, aren't blocked.
 
 Focus Guard is open source under the MIT license.
@@ -163,7 +163,7 @@ At edge://extensions, open Focus Guard's "service worker" console and run:
 
 THINGS THAT MAY LOOK UNUSUAL
 - Blocking only happens during a session. Outside one, nothing is blocked.
-- In InPrivate windows, blocked sites show the browser's error page, not Focus Guard's page. Extensions can't show their own pages in InPrivate tabs without split incognito mode. This is documented in the listing.
+- Focus Guard uses split incognito mode, so a second copy of it runs for InPrivate windows and shows its block page there. The two copies stay in step through extension storage.
 - Edge's built-in Copilot sidebar isn't blocked. The setup page offers optional steps to turn it off.
 - The code contains chrome:// addresses and Chrome wording. Focus Guard detects the browser with User-Agent Client Hints, as Microsoft recommends, and only uses edge:// addresses and Edge wording in Microsoft Edge.
 - After removal, the browser opens a section of the project's README on GitHub explaining how to turn Copilot back on. No data is sent with it.

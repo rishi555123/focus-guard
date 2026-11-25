@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Unlocking asks three questions instead of one box: what you tried, what you expected and what happened instead, each in at least 20 characters. Answers that look like random typing, like `asdfasdf` or the same word over and over, are turned down, and Focus Guard checks again before it grants a pass.
 - The toolbar icon has a thin light outline, so the navy stands out on dark browser toolbars and themes as well as light ones. The website's favicon matches.
 - The blocklist keeps the path of an address you paste, so it can block part of a site. After saving, the popup says which lines it left out because another entry already blocks them, and which new entries block only part of a site.
+- In Incognito and InPrivate windows, blocked sites now show Focus Guard's block page with the questions and the unlock, instead of the browser's error page, once you allow Focus Guard there. Passes, sessions and notifications work across normal and private windows. Focus Guard now runs a separate copy of itself for private windows ("split" incognito mode), and the two copies stay in step through extension storage.
 
 ### Fixed
 

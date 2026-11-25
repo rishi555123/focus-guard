@@ -51,13 +51,24 @@ function scrubTab(tab) {
 // `saved` is what chrome.storage.local already holds before install/update runs.
 // `constants` replaces src/shared/constants.js, to check nothing has its numbers built in.
 // With nothing saved it's a first install; with saved data it's an update.
-async function load(saved = {}, reason = Object.keys(saved).length ? "update" : "install", constants = CONSTANTS) {
+// `incognito` loads the Incognito copy (split mode). `peer` is another loaded copy to run
+// alongside: like Chrome's two copies, they share storage and the blocking rules, and each
+// has its own tabs, alarms and notifications. Storage changes reach both copies' listeners.
+async function load(saved = {}, reason = Object.keys(saved).length ? "update" : "install", constants = CONSTANTS,
+  { incognito = false, peer = null } = {}) {
   const listeners = {};
   const ev = (name) => ({ addListener: (fn) => (listeners[name] = fn) });
+  const shared = peer ? peer.shared : { store: structuredClone(saved), rules: [], storageListeners: [] };
   const env = {
-    store: structuredClone(saved), rules: [], alarms: {}, tabs: [], updates: [], errors: [],
+    shared, alarms: {}, tabs: [], updates: [], errors: [],
     notifications: [], cleared: [], created: [], uninstallUrls: [], failNotifications: false,
     failRemove: false
+  };
+  Object.defineProperty(env, "store", { get: () => shared.store, set: (v) => { shared.store = v; } });
+  Object.defineProperty(env, "rules", { get: () => shared.rules, set: (v) => { shared.rules = v; } });
+  // Like Chrome, storage changes are announced to every copy a moment after they're saved
+  const announce = (changes) => {
+    if (Object.keys(changes).length) setTimeout(() => shared.storageListeners.forEach((fn) => fn(structuredClone(changes), "local")), 0);
   };
 
   const chrome = {
@@ -72,12 +83,20 @@ async function load(saved = {}, reason = Object.keys(saved).length ? "update" : 
         for (const k of [].concat(keys)) if (k in env.store) out[k] = structuredClone(env.store[k]);
         return out;
       },
-      set: async (o) => { Object.assign(env.store, structuredClone(o)); },
+      set: async (o) => {
+        const changes = Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { oldValue: env.store[k], newValue: structuredClone(v) }]));
+        Object.assign(env.store, structuredClone(o));
+        announce(changes);
+      },
       remove: async (keys) => {
         if (env.failRemove) throw new Error("Storage is unavailable");
-        for (const k of [].concat(keys)) delete env.store[k];
+        const changes = {};
+        for (const k of [].concat(keys)) if (k in env.store) { changes[k] = { oldValue: env.store[k] }; delete env.store[k]; }
+        announce(changes);
       }
-    } },
+    },
+    onChanged: { addListener: (fn) => shared.storageListeners.push(fn) } },
+    extension: { inIncognitoContext: incognito },
     declarativeNetRequest: {
       getDynamicRules: async () => env.rules,
       updateDynamicRules: async ({ removeRuleIds, addRules }) => {
@@ -91,6 +110,7 @@ async function load(saved = {}, reason = Object.keys(saved).length ? "update" : 
     alarms: {
       create: (name, o) => { env.alarms[name] = o; },
       get: async (name) => env.alarms[name],
+      clear: async (name) => { const had = name in env.alarms; delete env.alarms[name]; return had; },
       clearAll: async () => { env.alarms = {}; },
       onAlarm: ev("alarm")
     },
@@ -980,4 +1000,138 @@ test("a pass for a whole site saved by 1.0.0 still works after updating", async 
   await env.send({ type: "sitesChanged" });
   assert.equal(ruleFor(env, "https://claude.ai/new"), "allow");
   assert.equal((await env.send({ type: "blocked", url: "https://claude.ai/new" })).blocked, false);
+});
+
+// Incognito in split mode: a normal copy and an Incognito copy share storage and rules,
+// can't message each other, and each has its own tabs, alarms and notifications
+
+// Let storage announcements and the work they start finish
+const settle = async () => { for (let i = 0; i < 10; i++) await new Promise((r) => setTimeout(r, 2)); };
+async function twoCopies(saved) {
+  const normal = await load(saved);
+  const incognito = await load({}, null, CONSTANTS, { incognito: true, peer: normal });
+  return { normal, incognito };
+}
+
+test("the Incognito copy leaves install-time work to the normal copy", async () => {
+  const env = await load({}, "install", CONSTANTS, { incognito: true });
+  assert.equal(env.store.sites, undefined, "no defaults written");
+  assert.deepEqual(env.created, [], "no welcome page");
+  assert.deepEqual(env.uninstallUrls, [], "no uninstall page");
+  await env.fire.startup();
+  assert.deepEqual(env.uninstallUrls, []);
+});
+
+test("a session started in a normal window reaches Incognito tabs and timers", async () => {
+  const { normal, incognito } = await twoCopies();
+  incognito.tabs = [{ id: 9, url: "https://chatgpt.com/c/1", incognito: true }];
+  normal.tabs = [{ id: 1, url: "https://claude.ai/" }];
+  await normal.send({ type: "start", minutes: 25 });
+  await settle();
+  assert.deepEqual(normal.updatedTabs(), [1]);
+  assert.deepEqual(incognito.updatedTabs(), [9], "the Incognito copy re-blocks its own tab");
+  assert.equal(incognito.alarms.sessionEnd.when, normal.store.session.endsAt);
+});
+
+test("a session started from an Incognito popup gets the normal copy's timers", async () => {
+  const { normal, incognito } = await twoCopies();
+  normal.tabs = [{ id: 1, url: "https://claude.ai/" }];
+  await incognito.send({ type: "start", minutes: 50 });
+  await settle();
+  assert.equal(normal.alarms.sessionEnd.when, normal.store.session.endsAt);
+  assert.deepEqual(normal.updatedTabs(), [1]);
+});
+
+test("when both copies get the session's end alarm, the session is counted once", async () => {
+  const { normal, incognito } = await twoCopies();
+  await normal.send({ type: "start", minutes: 25 });
+  await settle();
+  normal.store.session.endsAt = Date.now() - 1000;
+  normal.store.session.startedAt = normal.store.session.endsAt - 25 * 60000;
+  await Promise.all([incognito.fire.alarm({ name: "sessionEnd" }), normal.fire.alarm({ name: "sessionEnd" })]);
+  await settle();
+  assert.equal(normal.store.stats.sessions, 1);
+  assert.equal(normal.store.stats.minutes, 25);
+  assert.equal(normal.store.session, undefined);
+  assert.equal(normal.rules.length, 0, "nothing blocked any more");
+});
+
+test("the Incognito copy never ends a session on its own, so the normal copy can count it", async () => {
+  const { normal, incognito } = await twoCopies();
+  await incognito.send({ type: "start", minutes: 25 });
+  await settle();
+  normal.store.session.endsAt = Date.now() - 1000;
+  await incognito.fire.alarm({ name: "sessionEnd" });
+  await incognito.fire.startup();
+  assert.ok(normal.store.session, "still saved for the normal copy");
+  assert.equal(normal.store.stats.sessions, 0);
+  assert.equal(normal.rules.length, 0, "but nothing is blocked");
+  await normal.fire.startup(); // e.g. the next time the normal copy wakes up
+  assert.equal(normal.store.stats.sessions, 1);
+});
+
+test("ending a session early from an Incognito popup ends it for both", async () => {
+  const { normal, incognito } = await twoCopies();
+  await normal.send({ type: "start", minutes: 25 });
+  await settle();
+  await incognito.send({ type: "stop" });
+  await settle();
+  assert.equal(normal.store.session, undefined);
+  assert.deepEqual(normal.alarms, {}, "the normal copy's timers are cleared");
+  assert.equal(normal.rules.length, 0);
+});
+
+test("a pass granted in Incognito works everywhere, and the normal copy ends it with one notification", async () => {
+  const { normal, incognito } = await twoCopies();
+  await normal.send({ type: "start", minutes: 25 });
+  await settle();
+  const res = await incognito.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" });
+  assert.equal(res.granted, true);
+  await settle();
+  assert.equal(normal.alarms.passEnd.when, normal.store.pass.until, "the normal copy has the pass's timers");
+  assert.equal(normal.alarms.passWarn.when, normal.store.pass.until - 60000);
+  normal.tabs = [{ id: 1, url: "https://chatgpt.com/" }];
+  incognito.tabs = [{ id: 9, url: "https://chatgpt.com/" }];
+  normal.store.pass.until = Date.now() - 1; // the pass runs out
+  await Promise.all([incognito.fire.alarm({ name: "passWarn" }), normal.fire.alarm({ name: "passWarn" })]);
+  await Promise.all([incognito.fire.alarm({ name: "passEnd" }), normal.fire.alarm({ name: "passEnd" })]);
+  await settle();
+  assert.equal(normal.store.pass, undefined);
+  assert.equal(incognito.notifications.length, 0, "only the normal copy notifies");
+  assert.equal(messages(normal).filter((m) => /is over/.test(m)).length, 1);
+  assert.ok(incognito.updatedTabs().includes(9), "the Incognito tab is blocked again");
+  assert.ok(normal.updatedTabs().includes(1));
+});
+
+test("when the other copy moves the pass, this copy's timers follow it", async () => {
+  const { normal, incognito } = await twoCopies();
+  await normal.send({ type: "start", minutes: 25 });
+  await normal.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
+  await settle();
+  const firstWarn = normal.alarms.passWarn.when;
+  await new Promise((r) => setTimeout(r, 5));
+  await incognito.send({ type: "unlock", answers: ANSWERS, url: "https://chatgpt.com/" });
+  await settle();
+  assert.equal(normal.store.pass.domain, "chatgpt.com");
+  assert.equal(normal.alarms.passWarn.when, normal.store.pass.until - 60000);
+  assert.ok(normal.alarms.passWarn.when > firstWarn, "no stale warning for the old pass");
+});
+
+test("a copy doesn't react to its own saves", async () => {
+  const env = await inSession();
+  env.tabs = [{ id: 3, url: "https://chatgpt.com/" }];
+  env.updates = [];
+  await env.send({ type: "unlock", answers: ANSWERS, url: "https://claude.ai/" });
+  await settle();
+  assert.deepEqual(env.updatedTabs(), [3], "swept once, by the unlock itself");
+});
+
+test("rules stay consistent when both copies update them at the same time", async () => {
+  const { normal, incognito } = await twoCopies();
+  await Promise.all([normal.send({ type: "start", minutes: 25 }), incognito.send({ type: "sitesChanged" })]);
+  await settle();
+  const ids = normal.rules.map((r) => r.id);
+  assert.equal(new Set(ids).size, ids.length, "no duplicate rule ids");
+  assert.equal(normal.redirects().length, normal.store.sites.length);
+  assert.deepEqual(normal.errors.concat(incognito.errors), []);
 });

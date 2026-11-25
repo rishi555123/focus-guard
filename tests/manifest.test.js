@@ -100,21 +100,25 @@ test("the uninstall page points at a README heading that exists", () => {
   assert.ok(anchors.includes(url.split("#")[1]), "README has no heading for #" + url.split("#")[1]);
 });
 
-// In split mode Chrome runs a second, separate copy of the background script for
-// Incognito. The two copies can't talk to each other, so the serial() queue no longer
-// protects rule updates, re-blocking tabs only reaches one side, and how alarms and
-// rules behave isn't documented. Until that's handled, Focus Guard stays in spanning
-// mode and the README explains the Incognito block page limitation.
-test("Focus Guard stays in spanning Incognito mode", () => {
-  assert.ok(manifest.incognito === undefined || manifest.incognito === "spanning",
-    `"incognito": "${manifest.incognito}" needs the background script to coordinate between two copies first`);
+// In split mode Chrome runs a second copy of the background script for Incognito, which
+// lets the real block page show there (in spanning mode Chrome shows its error page).
+// The two copies share storage but can't message each other, so background.js works
+// through storage; tests/background.test.js runs the two copies side by side.
+test("Focus Guard runs in split Incognito mode, so the block page works in Incognito", () => {
+  assert.equal(manifest.incognito, "split");
+  const background = fs.readFileSync(path.join(ROOT, manifest.background.service_worker), "utf8");
+  assert.match(background, /chrome\.extension\?\.inIncognitoContext/, "knows which copy it is");
+  assert.match(background, /chrome\.storage\.onChanged\.addListener/, "follows the other copy through storage");
 });
 
-test("the README explains why the block page doesn't show in Incognito", () => {
+test("the README and setup checklist no longer send Incognito users to a normal window to unlock", () => {
   const readme = fs.readFileSync(path.join(ROOT, "README.md"), "utf8");
   const limits = readme.split("## Known limitations")[1].split(/\n## /)[0];
-  assert.match(limits, /block page in Incognito/i);
-  assert.match(limits, /unlock the site from a normal window/i);
+  assert.doesNotMatch(limits, /error page/i);
+  assert.doesNotMatch(limits, /unlock the site from a normal window/i);
+  assert.match(limits, /separate copy of itself in private windows/i);
+  const welcome = fs.readFileSync(path.join(ROOT, "src/welcome/welcome.html"), "utf8");
+  assert.doesNotMatch(welcome, /error page/i);
 });
 
 // Chrome and Edge only accept 1 to 4 dot-separated numbers in "version"

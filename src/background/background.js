@@ -37,6 +37,30 @@ const BLOCK_PAGE = () => chrome.runtime.getURL("src/blocked/blocked.html");
 // through addStats, which fills in anything missing, so their history starts on update.
 const emptyStats = () => ({ blocked: 0, sessions: 0, minutes: 0, unlocks: 0, log: [], days: {} });
 
+// Incognito: Focus Guard runs in "split" mode, so Chrome runs a second copy of this script
+// for Incognito windows. The two copies share chrome.storage.local, but they can't message
+// each other and each only sees its own tabs. So everything goes through storage: each copy
+// notices what the other one saves (the storage listener at the end) and keeps its own
+// tabs, timers and rules in step. Work that must happen once belongs to the normal copy:
+// install-time setup, ending a session when its time is up (and counting it), and ending
+// a pass with its notifications. Both copies can get the same alarm, so the Incognito copy
+// only brings its own rules and tabs up to date when one fires.
+const INCOGNITO = chrome.extension?.inIncognitoContext === true;
+
+// The saved keys the other copy reacts to, and what this copy last wrote for each, so it
+// can tell its own changes from the other copy's
+const SHARED_STATE = ["session", "pass", "sites", "blockAppBuilders"];
+const ownWrites = new Map();
+const remember = (key, value) => { if (SHARED_STATE.includes(key)) ownWrites.set(key, String(JSON.stringify(value))); };
+async function save(items) {
+  for (const [key, value] of Object.entries(items)) remember(key, value);
+  await chrome.storage.local.set(items);
+}
+async function forget(keys) {
+  for (const key of [].concat(keys)) remember(key, undefined);
+  await chrome.storage.local.remove(keys);
+}
+
 // Run state changes one at a time, so two events can't interleave their
 // storage and rule updates. Only event listeners use this, never helpers,
 // so nothing waits on itself.
@@ -50,10 +74,11 @@ function serial(fn) {
 // Runs on first install, on updates (including clicking reload on an unpacked
 // extension) and on Chrome updates. Only a first install opens the welcome page.
 chrome.runtime.onInstalled.addListener((details) => serial(async () => {
+  if (INCOGNITO) return reconcile(); // the normal copy does the install-time work
   const s = await chrome.storage.local.get(["sites", "stats", "knownDefaults"]);
   const sites = s.sites ? mergeDefaults(s.sites, s.knownDefaults || V1_DEFAULTS) : DEFAULT_SITES;
   const knownDefaults = [...new Set([...(s.knownDefaults || V1_DEFAULTS), ...DEFAULT_SITES])];
-  await chrome.storage.local.set({ sites, knownDefaults });
+  await save({ sites, knownDefaults });
   if (!s.stats) await chrome.storage.local.set({ stats: emptyStats() });
   setUninstallPage();
   await reconcile();
@@ -77,7 +102,7 @@ function mergeDefaults(sites, known) {
   return [...new Set(merged)];
 }
 chrome.runtime.onStartup.addListener(() => serial(async () => {
-  setUninstallPage();
+  if (!INCOGNITO) setUninstallPage();
   await reconcile();
 }));
 
@@ -139,7 +164,9 @@ async function syncRules() {
     }));
   }
   await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: old.map((r) => r.id),
+    // Also the ids about to be added: the other copy (see INCOGNITO) may have just added
+    // them, and adding an id that exists fails
+    removeRuleIds: [...new Set([...old.map((r) => r.id), ...addRules.map((r) => r.id)])],
     addRules
   });
   await updateBadge();
@@ -230,7 +257,7 @@ async function finishSession(completed) {
       if (mins > 0 || completed) s.days = recordSession(s.days, endedAt, mins, completed); // from shared/streaks.js
     });
   }
-  await chrome.storage.local.remove(["session", "pass", "passUntil"]);
+  await forget(["session", "pass", "passUntil"]);
   chrome.notifications.clear(NOTIFY_ID).catch(() => {}); // a leftover "1 minute left" no longer applies
   await syncRules();
 }
@@ -240,17 +267,21 @@ async function finishSession(completed) {
 async function reconcile() {
   const now = Date.now();
   const { session, pass } = await chrome.storage.local.get(["session", "pass"]);
-  if (session && session.endsAt <= now) return finishSession(true);
+  // A session whose time is up is ended by the normal copy; the Incognito copy just stops blocking
+  if (session && session.endsAt <= now) return INCOGNITO ? syncRules() : finishSession(true);
   await chrome.storage.local.remove("passUntil"); // all-sites pass from before passes were per site
-  if (pass && pass.until <= now) await chrome.storage.local.remove("pass");
+  const activePass = pass && pass.until > now ? pass : null;
+  if (pass && !activePass) await forget("pass");
   if (session) {
-    if (!(await chrome.alarms.get("sessionEnd"))) chrome.alarms.create("sessionEnd", { when: session.endsAt });
+    // Set from what's saved every time, so a pass the other copy granted or moved
+    // gets the right timers here too (an alarm with the same name is replaced)
+    chrome.alarms.create("sessionEnd", { when: session.endsAt });
     if (!(await chrome.alarms.get("tick"))) chrome.alarms.create("tick", { periodInMinutes: 1 });
-    if (pass && pass.until > now && !(await chrome.alarms.get("passEnd"))) chrome.alarms.create("passEnd", { when: pass.until });
+    if (activePass) chrome.alarms.create("passEnd", { when: activePass.until });
+    else await chrome.alarms.clear("passEnd");
     // No late warning if the last minute already started while Chrome was closed
-    if (pass && pass.until - PASS_WARN_MS > now && !(await chrome.alarms.get("passWarn"))) {
-      chrome.alarms.create("passWarn", { when: pass.until - PASS_WARN_MS });
-    }
+    if (activePass && activePass.until - PASS_WARN_MS > now) chrome.alarms.create("passWarn", { when: activePass.until - PASS_WARN_MS });
+    else await chrome.alarms.clear("passWarn");
   } else {
     await chrome.alarms.clearAll(); // leftovers from a session that didn't finish cleaning up
   }
@@ -258,6 +289,12 @@ async function reconcile() {
 }
 
 chrome.alarms.onAlarm.addListener((alarm) => serial(async () => {
+  // The Incognito copy leaves ending sessions and passes to the normal copy (see INCOGNITO);
+  // its rules and tabs follow from what's saved, which no longer counts as blocked
+  if (INCOGNITO && ["sessionEnd", "passWarn", "passEnd"].includes(alarm.name)) {
+    if (alarm.name !== "passWarn" && (await syncRules())) await blockOpenTabs({ why: alarm.name === "passEnd" ? "ended" : "" });
+    return;
+  }
   if (alarm.name === "sessionEnd") await finishSession(true);
   if (alarm.name === "tick") await updateBadge();
   if (alarm.name === "passWarn") {
@@ -268,7 +305,7 @@ chrome.alarms.onAlarm.addListener((alarm) => serial(async () => {
   }
   if (alarm.name === "passEnd") {
     const { session, pass } = await chrome.storage.local.get(["session", "pass"]);
-    await chrome.storage.local.remove("pass");
+    await forget("pass");
     if (await syncRules()) {
       await blockOpenTabs({ why: "ended" });
       if (passEndsInSession(pass, session)) await notify(`Your ${PASS_MINUTES}-minute pass for ${pass.domain} is over. It's blocked again.`);
@@ -282,7 +319,7 @@ async function handleMessage(msg) {
       throw new Error("Session length must be " + SESSION_LENGTHS.join(", ") + " minutes");
     }
     const now = Date.now();
-    await chrome.storage.local.set({
+    await save({
       session: { startedAt: now, endsAt: now + msg.minutes * 60000, minutes: msg.minutes }
     });
     chrome.alarms.create("sessionEnd", { when: now + msg.minutes * 60000 });
@@ -315,7 +352,7 @@ async function handleMessage(msg) {
     const domain = domains[0];
     // Pass, alarm and rules first, so a stats failure can't leave a pass that never ends
     const until = Date.now() + PASS_MINUTES * 60000;
-    await chrome.storage.local.set({ pass: { domain, domains, until } });
+    await save({ pass: { domain, domains, until } });
     // Same alarm names, so these replace the previous pass's alarms
     chrome.alarms.create("passEnd", { when: until });
     chrome.alarms.create("passWarn", { when: until - PASS_WARN_MS });
@@ -345,4 +382,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
     (err) => { console.error("Focus Guard:", msg.type, err); reply({ ok: false, error: String(err) }); }
   );
   return true;
+});
+
+// Changes the other copy saved (see INCOGNITO above): a session started or ended, a pass
+// granted, moved or ended, or the blocklist edited. Bring this copy's timers, rules and
+// tabs in line. Its own changes are skipped, since it did that work when it made them.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+  const fromElsewhere = Object.keys(changes).some((key) => SHARED_STATE.includes(key) &&
+    ownWrites.get(key) !== String(JSON.stringify(changes[key].newValue)));
+  if (fromElsewhere) serial(reconcile);
 });

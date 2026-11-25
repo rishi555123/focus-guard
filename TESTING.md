@@ -150,8 +150,13 @@ The first-install check (the welcome page opening on its own) is in section 11, 
 - [ ] 10.1 With **Allow in Incognito** off, the popup shows the Incognito note.
 - [ ] 10.2 **Allow Focus Guard in Incognito** in the popup opens Focus Guard's card on `chrome://extensions`.
 - [ ] 10.3 Turn on **Allow in Incognito**. If Chrome closes the welcome page, reopen it from the popup. Step 2 shows **Done**, and the popup note is gone.
-- [ ] 10.4 During a session, `chatgpt.com` is blocked in an Incognito window. You see Chrome's error page, not the block page. That's expected (see Known limitations in the README).
-- [ ] 10.5 Unlock `chatgpt.com` in a normal window, then type `chatgpt.com` again in the Incognito address bar. It opens there too while the pass lasts. Clicking **Reload** on Chrome's error page doesn't open it; that's expected (see Known limitations in the README).
+- [ ] 10.4 Start a session in a normal window. In an Incognito window, `chatgpt.com` shows Focus Guard's block page ("Your brain first."), not Chrome's error page.
+- [ ] 10.5 An AI tab that was already open in Incognito before the session started is moved to the block page when the session starts.
+- [ ] 10.6 Unlock `chatgpt.com` from the Incognito block page. **Open chatgpt.com** opens it, and it also opens in a normal window while the pass lasts.
+- [ ] 10.7 Unlock `claude.ai` in a normal window. An open `chatgpt.com` tab in the Incognito window goes back to the block page with the "pass moved" note.
+- [ ] 10.8 Let a pass run out (use the 90-second shortcut on the pass). You get one "1 minute left" and one "pass is over" notification, not two of each, and the site is blocked again in both windows.
+- [ ] 10.9 Start a session from the popup of an Incognito window. The badge and countdown show in normal windows too, and when it ends it's counted once in **sessions finished**.
+- [ ] 10.10 With the theme set to **Dark**, open the first Focus Guard page in a new Incognito window. It may flash light for a moment (see Known limitations in the README); later pages open dark straight away.
 
 ## 11. Restarts and reloads
 
@@ -184,7 +189,7 @@ Use a separate install in Edge. Turn on **Developer mode** at `edge://extensions
 - [ ] 13.8 During a session, `chatgpt.com` and `copilot.microsoft.com` show the block page, with 3 debugging and 3 problem-solving questions.
 - [ ] 13.9 Unlock a site, then unlock another. The "pass moved" notification appears.
 - [ ] 13.10 **Back to my code** in a window's only tab, with nothing to go back to, shows Edge's new tab page.
-- [ ] 13.11 Turn on **Allow in InPrivate**. During a session, `chatgpt.com` in an InPrivate window shows Edge's error page, not the block page. That's expected (see Known limitations in the README).
+- [ ] 13.11 Turn on **Allow in InPrivate**. During a session, `chatgpt.com` in an InPrivate window shows Focus Guard's block page, and unlocking it there works.
 - [ ] 13.12 Open Edge's Copilot sidebar during a session and note what it shows. Focus Guard isn't designed to block it (see Known limitations), so it may work normally. Report it if it shows Focus Guard's block page or an error instead.
 - [ ] 13.13 The Focus Guard card on `edge://extensions` shows version **1.0.0**.
 - [ ] 13.15 On Focus Guard's **Details** page at `edge://extensions`, the permissions list access to all websites and notifications, but not your browsing history.
