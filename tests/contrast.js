@@ -61,7 +61,8 @@ const EXTENSION_PAIRS = [
   ["button and sheet borders against paper", "ink", "paper", 3],
   ["unpicked duration button border on its fill", "ink", "card", 3],
   ["weekly chart bars and today's bar outline on the sheet", "ink", "card", 3],
-  ["weekly chart day labels on the sheet", "pencil", "card", 4.5]
+  ["weekly chart day labels and the streak rule on the sheet", "pencil", "card", 4.5],
+  ["minutes above the chart bars, the week and the arrows on the sheet", "ink", "card", 4.5]
 ];
 
 module.exports = { palette, ratio, PAIRS, CSS, EXTENSION_PAIRS, EXTENSION_CSS };

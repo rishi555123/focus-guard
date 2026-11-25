@@ -74,6 +74,7 @@ function loadPopup({ store = {}, constants, now } = {}) {
   }
   return {
     els, store, sent, durations,
+    save: (items) => chrome.storage.local.set(items), // like another page saving, which refreshes the popup
     settle: () => new Promise((resolve) => setImmediate(() => setImmediate(resolve))) // let render() finish
   };
 }

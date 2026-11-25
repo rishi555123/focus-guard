@@ -210,8 +210,9 @@ Use a separate install in Edge. Turn on **Developer mode** at `edge://extensions
 - [ ] 14.8 Unlock `github.com/copilot`. GitHub Copilot opens, and `chatgpt.com` is still blocked.
 - [ ] 14.9 Outside a session, add `https://claude.ai/new` and `chatgpt.com/c/123` to **Blocked sites** and save. The popup says `chatgpt.com/c/123` was left out because `chatgpt.com` already blocks it, and that `claude.ai/new` blocks only part of a site.
 - [ ] 14.10 Tick **Also block AI app builders**. During a session, `v0.app`, `bolt.new` and `lovable.dev` show the block page; the checkbox is disabled until the session ends. Untick it afterwards: they open again, and your own list is unchanged.
-- [ ] 14.11 Finish a session (use the "Finish the session in 2 seconds" shortcut). The popup shows "1-day streak", today's bar in yellow, and the minutes in "min this week".
+- [ ] 14.11 Finish a session (use the "Finish the session in 2 seconds" shortcut). The popup shows "1-day streak" with the streak rule under it, today's bar in yellow with its time above it (like "25m") and today's day underlined, and the week's total time and "1 session finished".
 - [ ] 14.12 With a screen reader, or by inspecting the popup, the chart's label lists the minutes for each of the last 7 days.
+- [ ] 14.13 The right arrow is disabled on "Last 7 days". With a session finished more than 7 days ago (edit `stats.days` in the service worker console to add one), the left arrow shows that week's dates and totals, and is disabled on the oldest week with any focus.
 
 ## 15. Updating from 1.0.0
 

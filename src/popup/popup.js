@@ -141,27 +141,42 @@ async function render() {
   }
 }
 
-// The streak and a bar per day for the last 7 days (from shared/streaks.js)
+// The streak, and a bar per day for a week: the last 7 days, or an earlier week from the
+// saved history (helpers from shared/streaks.js). The arrows move a week at a time.
+let shownDays = {}, weeksBack = 0;
+$("prevWeek").onclick = () => { weeksBack += 1; showWeek(shownDays); };
+$("nextWeek").onclick = () => { weeksBack = Math.max(0, weeksBack - 1); showWeek(shownDays); };
+
 function showWeek(days) {
+  shownDays = days;
   const now = Date.now();
   const streak = currentStreak(days, now);
   $("streak").textContent = streak ? `${streak}-day streak` : "Finish a session to start a streak";
-  const week = lastWeek(days, now);
-  const total = week.reduce((sum, d) => sum + d.minutes, 0);
-  $("weekTotal").textContent = `${total} min this week`;
+
+  const week = weekOf(days, now, weeksBack);
+  const range = weeksBack ? weekRangeText(week) : "Last 7 days";
+  $("weekRange").textContent = range;
+  $("prevWeek").disabled = !hasEarlierWeek(days, now, weeksBack);
+  $("nextWeek").disabled = weeksBack === 0;
+  const minutes = week.reduce((sum, d) => sum + d.minutes, 0);
+  const sessions = week.reduce((sum, d) => sum + d.sessions, 0);
+  $("weekTotal").textContent = `${durationText(minutes)} focused · ${sessions} session${sessions === 1 ? "" : "s"} finished`;
+
   const most = Math.max(...week.map((d) => d.minutes), 1);
   $("weekBars").replaceChildren(...week.map((d) => {
     const col = document.createElement("div");
     col.className = d.today ? "bar today" : "bar";
+    const value = document.createElement("b");
+    value.textContent = d.minutes ? durationText(d.minutes) : ""; // nothing on empty days
     const bar = document.createElement("i");
     bar.style.height = `${d.minutes ? Math.max(3, Math.round((d.minutes / most) * 46)) : 0}px`; // the busiest day is full height
     const label = document.createElement("span");
     label.textContent = d.day;
-    col.append(bar, label);
+    col.append(value, bar, label);
     return col;
   }));
   // The chart is a picture, so screen readers get the numbers instead
-  $("weekBars").setAttribute("aria-label", "Focused minutes, last 7 days: " +
+  $("weekBars").setAttribute("aria-label", `Focused minutes, ${weeksBack ? range : "last 7 days"}: ` +
     week.map((d) => `${d.day}${d.today ? " (today)" : ""} ${d.minutes}`).join(", "));
 }
 

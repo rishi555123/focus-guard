@@ -47,7 +47,7 @@ Most of the time, writing the problem down or waiting that minute is enough to g
 
 ## Screenshots
 
-![The Focus Guard popup with the 25, 50 and 90 minute buttons, stats, a 5-day streak with a weekly chart, and the theme buttons](docs/screenshots/popup.png)
+![The Focus Guard popup with the 25, 50 and 90 minute buttons, stats, a 5-day streak and a weekly chart with each day's focused time, and the theme buttons](docs/screenshots/popup.png)
 
 *The popup: pick a session length, start a session and see your stats.*
 

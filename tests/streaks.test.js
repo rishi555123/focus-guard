@@ -96,12 +96,45 @@ test("a streak can cross a month and a year", () => {
 test("the week is the last 7 days, oldest first, ending today", () => {
   const days = { "2026-11-19": { sessions: 1, minutes: 25 }, "2026-11-20": { sessions: 0, minutes: 10 }, "2026-11-25": { sessions: 2, minutes: 115 } };
   assert.deepEqual(lastWeek(days, at("2026-11-25")), [
-    { key: "2026-11-19", day: "Thu", minutes: 25, today: false },
-    { key: "2026-11-20", day: "Fri", minutes: 10, today: false },
-    { key: "2026-11-21", day: "Sat", minutes: 0, today: false },
-    { key: "2026-11-22", day: "Sun", minutes: 0, today: false },
-    { key: "2026-11-23", day: "Mon", minutes: 0, today: false },
-    { key: "2026-11-24", day: "Tue", minutes: 0, today: false },
-    { key: "2026-11-25", day: "Wed", minutes: 115, today: true }
+    { key: "2026-11-19", day: "Thu", minutes: 25, sessions: 1, today: false },
+    { key: "2026-11-20", day: "Fri", minutes: 10, sessions: 0, today: false },
+    { key: "2026-11-21", day: "Sat", minutes: 0, sessions: 0, today: false },
+    { key: "2026-11-22", day: "Sun", minutes: 0, sessions: 0, today: false },
+    { key: "2026-11-23", day: "Mon", minutes: 0, sessions: 0, today: false },
+    { key: "2026-11-24", day: "Tue", minutes: 0, sessions: 0, today: false },
+    { key: "2026-11-25", day: "Wed", minutes: 115, sessions: 2, today: true }
   ]);
+});
+
+// Browsing earlier weeks
+
+const weekOf = plain(get("weekOf")), hasEarlierWeek = get("hasEarlierWeek"), durationText = get("durationText"), weekRangeText = get("weekRangeText");
+
+test("an earlier week is the 7 days before, with no day marked today", () => {
+  const days = { "2026-11-12": { sessions: 1, minutes: 50 }, "2026-11-18": { sessions: 2, minutes: 75 } };
+  const week = weekOf(days, at("2026-11-25"), 1);
+  assert.deepEqual(week.map((d) => d.key), ["2026-11-12", "2026-11-13", "2026-11-14", "2026-11-15", "2026-11-16", "2026-11-17", "2026-11-18"]);
+  assert.deepEqual(week.map((d) => d.minutes), [50, 0, 0, 0, 0, 0, 75]);
+  assert.ok(week.every((d) => !d.today));
+  assert.equal(weekOf(days, at("2026-11-25"), 2)[6].key, "2026-11-11");
+});
+
+test("there's an earlier week only while the history has focus before the week shown", () => {
+  const days = { "2026-11-12": { sessions: 1, minutes: 50 }, "2026-11-01": { sessions: 0, minutes: 0 } };
+  const now = at("2026-11-25");
+  assert.equal(hasEarlierWeek(days, now, 0), true, "19-25 Nov shown, 12 Nov is earlier");
+  assert.equal(hasEarlierWeek(days, now, 1), false, "12-18 Nov shown; an empty day before it doesn't count");
+  assert.equal(hasEarlierWeek({}, now, 0), false);
+  assert.equal(hasEarlierWeek(undefined, now, 0), false);
+});
+
+test("durations are short: minutes, hours, or both", () => {
+  assert.deepEqual([1, 45, 59, 60, 80, 125, 600].map(durationText), ["1m", "45m", "59m", "1h", "1h 20m", "2h 5m", "10h"]);
+});
+
+test("week ranges name the days and months, and the years when they differ", () => {
+  assert.equal(weekRangeText(weekOf({}, at("2026-11-25"), 0)), "19–25 Nov");
+  assert.equal(weekRangeText(weekOf({}, at("2026-11-25"), 4)), "22–28 Oct");
+  assert.equal(weekRangeText(weekOf({}, at("2026-11-03"), 0)), "28 Oct – 3 Nov");
+  assert.equal(weekRangeText(weekOf({}, at("2027-01-02"), 0)), "27 Dec 2026 – 2 Jan 2027");
 });

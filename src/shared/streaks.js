@@ -44,13 +44,41 @@ function currentStreak(days, now) {
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const dateOf = (key) => { const [y, m, d] = key.split("-").map(Number); return new Date(y, m - 1, d, 12); };
 
-// The last 7 days, oldest first, ending today: [{ key, day: "Mon", minutes, today }]
-function lastWeek(days, now) {
+// 7 days, oldest first: the last 7 days ending today, or `weeksBack` weeks before that.
+// [{ key, day: "Mon", minutes, sessions, today }]
+function weekOf(days, now, weeksBack = 0) {
   const today = dayKey(now);
+  const end = addDays(today, -7 * weeksBack);
   return Array.from({ length: 7 }, (_, i) => {
-    const key = addDays(today, i - 6);
-    const [y, m, d] = key.split("-").map(Number);
-    return { key, day: WEEKDAYS[new Date(y, m - 1, d, 12).getDay()], minutes: days?.[key]?.minutes || 0, today: key === today };
+    const key = addDays(end, i - 6);
+    const { minutes = 0, sessions = 0 } = days?.[key] || {};
+    return { key, day: WEEKDAYS[dateOf(key).getDay()], minutes, sessions, today: key === today };
   });
+}
+
+// The last 7 days, ending today
+const lastWeek = (days, now) => weekOf(days, now, 0);
+
+// Whether the history has any focus before that week, so there's an earlier week to show
+function hasEarlierWeek(days, now, weeksBack) {
+  const start = addDays(dayKey(now), -7 * weeksBack - 6);
+  return Object.entries(days || {}).some(([key, d]) => key < start && (d.minutes > 0 || d.sessions > 0));
+}
+
+// "45m", "1h", "1h 20m"
+function durationText(minutes) {
+  const h = Math.floor(minutes / 60), m = minutes % 60;
+  return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+}
+
+// "12-18 Nov", "28 Oct - 3 Nov", "29 Dec 2026 - 4 Jan 2027" (with en dashes)
+function weekRangeText(week) {
+  const a = dateOf(week[0].key), b = dateOf(week[6].key);
+  const dm = (d) => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  if (a.getFullYear() !== b.getFullYear()) return `${dm(a)} ${a.getFullYear()} – ${dm(b)} ${b.getFullYear()}`;
+  if (a.getMonth() !== b.getMonth()) return `${dm(a)} – ${dm(b)}`;
+  return `${a.getDate()}–${dm(b)}`;
 }
