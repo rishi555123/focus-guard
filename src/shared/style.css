@@ -52,4 +52,6 @@ textarea {
 .mark { color: var(--mark-text); background: linear-gradient(transparent 55%, var(--marker) 55%); }
 /* Light text on a half-height highlight is hard to read, so dark mode highlights the whole word */
 [data-theme="dark"] .mark { background: var(--marker); border-radius: 3px; padding: 0 6px; }
+/* The logo is navy and yellow, so dark mode shows a copy with the navy drawn in the light ink */
+[data-theme="dark"] .logo-light, :root:not([data-theme="dark"]) .logo-dark { display: none; }
 .muted { color: var(--pencil); }

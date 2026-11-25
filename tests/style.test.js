@@ -30,3 +30,18 @@ test("the extension pages only use colour variables that style.css defines", () 
     }
   }
 });
+
+test("every logo on an extension page has a dark-mode copy, and style.css swaps them", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  assert.match(EXTENSION_CSS, /\[data-theme="dark"\] \.logo-light, :root:not\(\[data-theme="dark"\]\) \.logo-dark \{ display: none; \}/);
+  for (const page of ["src/popup/popup.html", "src/welcome/welcome.html", "src/blocked/blocked.html"]) {
+    const html = fs.readFileSync(path.join(__dirname, "..", page), "utf8");
+    const logos = [...html.matchAll(/<img\b[^>]*>/g)].map(([tag]) => tag).filter((tag) => /logo-256/.test(tag));
+    assert.ok(logos.length > 0, `${page} shows the logo`);
+    const light = logos.filter((tag) => /class="[^"]*\blogo-light\b[^"]*" src="\.\.\/\.\.\/icons\/logo-256\.png"/.test(tag));
+    const dark = logos.filter((tag) => /class="[^"]*\blogo-dark\b[^"]*" src="\.\.\/\.\.\/icons\/logo-256-dark\.png"/.test(tag));
+    assert.equal(light.length + dark.length, logos.length, `${page}: every logo is marked light or dark`);
+    assert.equal(light.length, dark.length, `${page}: each light logo has a dark copy`);
+  }
+});

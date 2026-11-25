@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Dark mode for the popup, the setup checklist and the block page, in the same colours as the website's dark theme. It follows your system setting, or pick Auto, Light or Dark at the bottom of the popup. Every Focus Guard page switches straight away, with no flash of the wrong theme when one opens.
+- Dark mode for the popup, the setup checklist and the block page, in the same colours as the website's dark theme. It follows your system setting, or pick Auto, Light or Dark at the bottom of the popup. Every Focus Guard page switches straight away, with no flash of the wrong theme when one opens. In dark mode the logo is drawn with light lines.
 
 ### Changed
 
